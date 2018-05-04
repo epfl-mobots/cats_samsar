@@ -16,81 +16,72 @@
 /*!
  * Constructor.
  */
-FishBot::FishBot(QString id) :
-    QObject(nullptr),
-    m_id(id),
-    m_firmwareId(-1),
-    m_name(QString("Fish_bot_%1").arg(m_id)), // NOTE : don't change this name as the .aesl files are searched by it
-    m_ledColor(Qt::black),
-    m_state(),
-    m_sharedRobotInterface(nullptr),
-    m_uniqueRobotInterface(nullptr),
-    m_experimentManager(this),
-    m_controlStateMachine(this),
-    m_navigation(this),
-    m_computeStatistics(CommandLineParameters::get().publishRobotsStatistics())
+FishBot::FishBot(QString id)
+    : QObject(nullptr),
+      m_id(id),
+      m_firmwareId(-1),
+      m_name(QString("Fish_bot_%1")
+                 .arg(m_id)), // NOTE : don't change this name as the .aesl files are searched by it
+      m_ledColor(Qt::black),
+      m_state(),
+      m_sharedRobotInterface(nullptr),
+      m_uniqueRobotInterface(nullptr),
+      m_experimentManager(this),
+      m_controlStateMachine(this),
+      m_navigation(this),
+      m_computeStatistics(CommandLineParameters::get().publishRobotsStatistics())
 {
     // control areas
     connect(&m_experimentManager, &ExperimentManager::notifyPolygons,
-            [=](QList<AnnotatedPolygons> polygons)
-            {
-                emit notifyControlAreasPolygons(m_id, polygons);
-            });
+        [=](QList<AnnotatedPolygons> polygons) {
+            emit notifyControlAreasPolygons(m_id, polygons);
+        });
 
     // fish number by area
     connect(&m_experimentManager, &ExperimentManager::notifyFishNumberByAreas,
-            [=](QMap<QString, int> fishNumberByArea)
-            {
-                emit notifyFishNumberByAreas(m_id, fishNumberByArea);
-            });
+        [=](QMap<QString, int> fishNumberByArea) {
+            emit notifyFishNumberByAreas(m_id, fishNumberByArea);
+        });
     // navigation data
     connect(&m_navigation, &Navigation::notifyTargetPositionChanged,
-            [=](PositionMeters position)
-            {
-                emit notifyTargetPositionChanged(m_id, position);
-            });
+        [=](PositionMeters position) { emit notifyTargetPositionChanged(m_id, position); });
     connect(&m_navigation, &Navigation::notifyTrajectoryChanged,
-            [=](QQueue<PositionMeters> trajectory)
-            {
-                emit notifyTrajectoryChanged(m_id, trajectory);
-            });
+        [=](QQueue<PositionMeters> trajectory) { emit notifyTrajectoryChanged(m_id, trajectory); });
 
     // controller data
+    connect(&m_experimentManager, &ExperimentManager::notifyControllerChanged, this,
+        &FishBot::notifyControllerChanged);
     connect(&m_experimentManager, &ExperimentManager::notifyControllerChanged,
-            this, &FishBot::notifyControllerChanged);
-    connect(&m_experimentManager, &ExperimentManager::notifyControllerChanged,
-            [=]() { releaseModelArea(); });
-    connect(&m_experimentManager, &ExperimentManager::notifyControllerStatus,
-            this, &FishBot::notifyControllerStatus);
+        [=]() { releaseModelArea(); });
+    connect(&m_experimentManager, &ExperimentManager::notifyControllerStatus, this,
+        &FishBot::notifyControllerStatus);
     connect(&m_experimentManager, &ExperimentManager::notifyCircularSetupTurningDirections,
-            [=](QString fishTurningDirection, QString robotTurningDirection)
-            {
-                emit notifyCircularSetupTurningDirections(m_id,
-                                                          fishTurningDirection,
-                                                          robotTurningDirection);
-            });
+        [=](QString fishTurningDirection, QString robotTurningDirection) {
+            emit notifyCircularSetupTurningDirections(
+                m_id, fishTurningDirection, robotTurningDirection);
+        });
 
     // control modes
-    connect(&m_controlStateMachine, &ControlModeStateMachine::notifyControlModeChanged,
-            this, &FishBot::notifyControlModeChanged);
-    connect(&m_controlStateMachine, &ControlModeStateMachine::notifyControlModeStatus,
-            this, &FishBot::notifyControlModeStatus);
-    connect(&m_navigation, &Navigation::notifyMotionPatternChanged,
-            this, &FishBot::notifyMotionPatternChanged);
-    connect(&m_navigation, &Navigation::notifyMotionPatternFrequencyDividerChanged,
-            this, &FishBot::notifyMotionPatternFrequencyDividerChanged);
-    connect(&m_navigation, &Navigation::notifyMotionPatternFrequencyDividerChanged,
-            this, &FishBot::notifyMotionPatternFrequencyDividerChanged);
-    connect(&m_navigation, &Navigation::notifyUsePathPlanningChanged,
-            this, &FishBot::notifyUsePathPlanningChanged);
-    connect(&m_navigation, &Navigation::notifyUseObstacleAvoidanceChanged,
-            this, &FishBot::notifyUseObstacleAvoidanceChanged);
+    connect(&m_controlStateMachine, &ControlModeStateMachine::notifyControlModeChanged, this,
+        &FishBot::notifyControlModeChanged);
+    connect(&m_controlStateMachine, &ControlModeStateMachine::notifyControlModeStatus, this,
+        &FishBot::notifyControlModeStatus);
+    connect(&m_navigation, &Navigation::notifyMotionPatternChanged, this,
+        &FishBot::notifyMotionPatternChanged);
+    connect(&m_navigation, &Navigation::notifyMotionPatternFrequencyDividerChanged, this,
+        &FishBot::notifyMotionPatternFrequencyDividerChanged);
+    connect(&m_navigation, &Navigation::notifyMotionPatternFrequencyDividerChanged, this,
+        &FishBot::notifyMotionPatternFrequencyDividerChanged);
+    connect(&m_navigation, &Navigation::notifyUsePathPlanningChanged, this,
+        &FishBot::notifyUsePathPlanningChanged);
+    connect(&m_navigation, &Navigation::notifyUseObstacleAvoidanceChanged, this,
+        &FishBot::notifyUseObstacleAvoidanceChanged);
 
     // connect to the statistics module
     if (m_computeStatistics) {
         StatisticsPublisher::get().addStatistics(robotFishGroupStatisticsId());
-        connect(this, &FishBot::updateStatistics,
-                &StatisticsPublisher::get(), &StatisticsPublisher::updateStatistics);
+        connect(this, &FishBot::updateStatistics, &StatisticsPublisher::get(),
+            &StatisticsPublisher::updateStatistics);
     }
 }
 
@@ -113,21 +104,17 @@ void FishBot::setSharedRobotInterface(DBusInterfacePtr sharedRobotInterface)
     m_sharedRobotInterface = sharedRobotInterface;
     // add a callback to process the incoming messages from the robot
     if (m_sharedRobotInterface) {
-        m_sharedRobotInterface->
-                connectEvent("PowerDown",
-                             [this](const Values& data) {
-                                // get the firmware's id
-                                if ((data.size() > 0) && (data[0] == m_firmwareId))
-                                    processPowerDownEvent();
-                            });
+        m_sharedRobotInterface->connectEvent("PowerDown", [this](const Values& data) {
+            // get the firmware's id
+            if ((data.size() > 0) && (data[0] == m_firmwareId))
+                processPowerDownEvent();
+        });
 
-        m_sharedRobotInterface->
-                connectEvent("Obstacle",
-                             [this](const Values& data) {
-                                // get the firmware's id
-                                if ((data.size() > 0) && (data[0] == m_firmwareId))
-                                    processObstacleEvent();
-                            });
+        m_sharedRobotInterface->connectEvent("Obstacle", [this](const Values& data) {
+            // get the firmware's id
+            if ((data.size() > 0) && (data[0] == m_firmwareId))
+                processObstacleEvent();
+        });
     }
 }
 
@@ -142,10 +129,9 @@ void FishBot::setupSharedConnection(int robotIndex)
             // FIXME : in the multi-robot/node mode aseba doesn't provide the node list correctly
             // if (m_robotInterface->nodeList.contains(m_name)) {
             m_firmwareId = robotIndex;
-            QString scriptDirPath = QCoreApplication::applicationDirPath() +
-                    QDir::separator() + "aesl";
-            QString scriptPath = scriptDirPath + QDir::separator() +
-                    m_name + ".aesl";
+            QString scriptDirPath
+                = QCoreApplication::applicationDirPath() + QDir::separator() + "aesl";
+            QString scriptPath = scriptDirPath + QDir::separator() + m_name + ".aesl";
             if (QFileInfo(scriptPath).exists()) {
                 m_sharedRobotInterface->loadScript(scriptPath);
                 // set the robots id
@@ -154,14 +140,17 @@ void FishBot::setupSharedConnection(int robotIndex)
                 m_sharedRobotInterface->setVariable(m_name, "IDControl", data);
                 // set the obstacle avoidance on the robot
                 m_navigation.updateLocalObstacleAvoidance();
-            } else {
+            }
+            else {
                 qDebug() << QString("Script %1 could not be found.").arg(scriptPath);
             }
             // }
-        } else {
+        }
+        else {
             emit notifyConnectionStatusChanged(name(), ConnectionStatus::DISCONNECTED);
         }
-    } else {
+    }
+    else {
         qDebug() << QString("The %1 interface is not set").arg(m_name);
         emit notifyConnectionStatusChanged(name(), ConnectionStatus::DISCONNECTED);
     }
@@ -209,35 +198,33 @@ void FishBot::setupUniqueConnection()
 
         qDebug() << QString("Loading the script on %1").arg(m_name);
         // load the script
-        QString scriptDirPath = QCoreApplication::applicationDirPath() +
-                QDir::separator() + "aesl";
-        QString scriptPath = scriptDirPath + QDir::separator() +
-                m_name + ".aesl";
+        QString scriptDirPath = QCoreApplication::applicationDirPath() + QDir::separator() + "aesl";
+        QString scriptPath = scriptDirPath + QDir::separator() + m_name + ".aesl";
         if (QFileInfo(scriptPath).exists()) {
             m_uniqueRobotInterface->loadScript(scriptPath);
             // set the obstacle avoidance on the robot
             m_navigation.updateLocalObstacleAvoidance();
 
             // add a callback to process the incoming messages from the robot
-            m_uniqueRobotInterface->connectEvent("PowerDown",
-                                           [this](const Values& data) {
+            m_uniqueRobotInterface->connectEvent("PowerDown", [this](const Values& data) {
                 // no need to check the id for the unique connection, process
                 // directly
                 processPowerDownEvent();
             });
 
             // add a callback to process the incoming messages from the robot
-            m_uniqueRobotInterface->connectEvent("Obstacle",
-                                           [this](const Values& data) {
+            m_uniqueRobotInterface->connectEvent("Obstacle", [this](const Values& data) {
                 // no need to check the id for the unique connection, process
                 // directly
                 processObstacleEvent();
             });
-        } else {
+        }
+        else {
             qDebug() << QString("Script %1 could not be found.").arg(scriptPath);
             // FIXME : should we disconnect here
         }
-    } else  {
+    }
+    else {
         qDebug() << QString("Could not connect to %1").arg(m_name);
     }
 }
@@ -290,8 +277,8 @@ void FishBot::setControlMode(ControlModeType::Enum type)
         // NOTE : this is disabled because
         // (1) the fish never stop
         // (2) it's better to manage the safety on the level of control modes
-//        // stop the robot for safety reason
-//        m_navigation.stop();
+        //        // stop the robot for safety reason
+        //        m_navigation.stop();
 
         // change the control mode
         m_controlStateMachine.setControlMode(type);
@@ -356,9 +343,8 @@ void FishBot::setModelParameters(ControlModeType::Enum type, ModelParameters par
  * Limits the arena matrix of the model-based control mode by a mask. The mask
  * is defined by a set of polygons and is labeled with an id.
  */
-void FishBot::limitModelArea(ControlModeType::Enum type,
-                             QString maskId,
-                             QList<WorldPolygon> allowedArea)
+void FishBot::limitModelArea(
+    ControlModeType::Enum type, QString maskId, QList<WorldPolygon> allowedArea)
 {
     if (m_controlStateMachine.currentControlMode() == type) {
         m_controlStateMachine.limitModelArea(type, maskId, allowedArea);
@@ -381,10 +367,7 @@ void FishBot::releaseModelArea()
  * Checks that the current control modes can generate targets with
  * different motion patterns.
  */
-bool FishBot::supportsMotionPatterns()
-{
-    return m_controlStateMachine.supportsMotionPatterns();
-}
+bool FishBot::supportsMotionPatterns() { return m_controlStateMachine.supportsMotionPatterns(); }
 
 /*!
  * Sets the motion pattern.
@@ -398,8 +381,7 @@ void FishBot::setMotionPattern(MotionPatternType::Enum type)
  * Sets the motion pattern frequency divider. The goal is to send commands
  * less often to keep the network load low.
  */
-void FishBot::setMotionPatternFrequencyDivider(MotionPatternType::Enum type,
-                                               int frequencyDivider)
+void FishBot::setMotionPatternFrequencyDivider(MotionPatternType::Enum type, int frequencyDivider)
 {
     m_navigation.setMotionPatternFrequencyDivider(type, frequencyDivider);
 }
@@ -437,16 +419,16 @@ void FishBot::stepExperimentManager()
     if (controlData.controlMode != ControlModeType::UNDEFINED) {
         setControlMode(controlData.controlMode);
 
-        // if the control map is set 
+        // if the control map is set
         if ((currentControlMode() == controlData.controlMode)) {
             // and if we can set motion patterns
-            if (supportsMotionPatterns() && (controlData.motionPattern != MotionPatternType::UNDEFINED))
+            if (supportsMotionPatterns()
+                && (controlData.motionPattern != MotionPatternType::UNDEFINED))
                 setMotionPattern(controlData.motionPattern);
-        
+
             // if the control mode uses the extra control data
             switch (controlData.controlMode) {
-            case ControlModeType::GO_TO_POSITION:
-            {
+            case ControlModeType::GO_TO_POSITION: {
                 if (controlData.data.canConvert<PositionMeters>()) {
                     PositionMeters targetPosition(controlData.data.value<PositionMeters>());
                     goToPosition(targetPosition);
@@ -454,27 +436,27 @@ void FishBot::stepExperimentManager()
                 break;
             }
             case ControlModeType::FISH_MODEL:
-            case ControlModeType::FISH_MODEL_WITH_WALLS:
-            {
+            case ControlModeType::FISH_MODEL_WITH_WALLS: {
                 if (controlData.data.canConvert<AnnotatedPolygons>()) {
                     // the polygons that define the limits of the model
-                    AnnotatedPolygons annotatedPolygons(controlData.data.value<AnnotatedPolygons>());
+                    AnnotatedPolygons annotatedPolygons(
+                        controlData.data.value<AnnotatedPolygons>());
                     QString areaId = annotatedPolygons.label;
                     // the id of the limits as they will be reused
                     QString id = QString("%1%2")
-                            .arg(ExperimentControllerType::toSettingsString(
-                                     m_experimentManager.currentController()))
-                            .arg(areaId.left(1).toUpper() + areaId.mid(1));
+                                     .arg(ExperimentControllerType::toSettingsString(
+                                         m_experimentManager.currentController()))
+                                     .arg(areaId.left(1).toUpper() + areaId.mid(1));
                     limitModelArea(controlData.controlMode, id, annotatedPolygons.polygons);
-                } else if (controlData.data.canConvert<ModelParameters>()) {
+                }
+                else if (controlData.data.canConvert<ModelParameters>()) {
                     // define if the model should follow or ignore the fish
                     ModelParameters parameters(controlData.data.value<ModelParameters>());
                     setModelParameters(controlData.controlMode, parameters);
                 }
                 break;
             }
-            case ControlModeType::ZONE_BASED_FISH_MODEL:
-            {
+            case ControlModeType::ZONE_BASED_FISH_MODEL: {
                 if (controlData.data.canConvert<ModelParameters>()) {
                     // define if the model should follow or ignore the fish
                     ModelParameters parameters(controlData.data.value<ModelParameters>());
@@ -500,7 +482,8 @@ void FishBot::sendEvent(const QString& eventName, const Values& data)
 {
     if (m_sharedRobotInterface.data() && m_sharedRobotInterface->isConnected()) {
         m_sharedRobotInterface->sendEventName(eventName, data);
-    } else if (m_uniqueRobotInterface.data() && m_uniqueRobotInterface->isConnected()) {
+    }
+    else if (m_uniqueRobotInterface.data() && m_uniqueRobotInterface->isConnected()) {
         m_uniqueRobotInterface->sendEventName(eventName, data);
     }
 }
@@ -548,8 +531,8 @@ void FishBot::processPowerDownEvent()
     if (!m_powerDownStartTimer.isSet()) {
         qDebug() << QString("Power-down detected on %1, the connection will be "
                             "closed in %2 seconds")
-                    .arg(m_name)
-                    .arg(ToleratedPowerDownDurationSec);
+                        .arg(m_name)
+                        .arg(ToleratedPowerDownDurationSec);
         m_powerDownStartTimer.reset();
         // power down arriving, meaning that we risk to disconnect soon
         emit notifyConnectionStatusChanged(name(), ConnectionStatus::PENDING);
@@ -588,7 +571,8 @@ void FishBot::stepSafetyLogics()
             m_powerDownStartTimer.clear();
             m_powerDownUpdateTimer.clear();
             emit notifyConnectionStatusChanged(name(), ConnectionStatus::CONNECTED);
-        } else {
+        }
+        else {
             // if we have a power down for too long then we disconnect the robot
             if (m_powerDownStartTimer.isTimedOutSec(ToleratedPowerDownDurationSec)) {
                 qDebug() << QString("Disconnecting %1 due to power-down").arg(m_name);
@@ -681,7 +665,7 @@ void FishBot::setCircularSetupTurningDirection(QString message)
  */
 void FishBot::computeStatistics()
 {
-    // the distance between the robot and the center 
+    // the distance between the robot and the center
     if (m_fishStates.size() > 0) {
         WorldPolygon fishPositions;
         for (auto& state : m_fishStates) {
@@ -690,7 +674,6 @@ void FishBot::computeStatistics()
         double distance = m_state.position().distance2dTo(fishPositions.center());
         emit updateStatistics(robotFishGroupStatisticsId(), distance);
     }
-
 }
 
 /*!

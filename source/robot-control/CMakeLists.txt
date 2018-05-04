@@ -24,6 +24,10 @@ makeLink(dependencies/fish-model/zones.cpp model/zones.cpp)
 makeLink(dependencies/fish-model/bmWithWalls.hpp model/bmWithWalls.hpp)
 makeLink(dependencies/fish-model/bmWithWalls.cpp model/bmWithWalls.cpp)
 
+makeLink(dependencies/social-fish-model/socialFishModel.hpp model/socialFishModel.hpp)
+makeLink(dependencies/social-fish-model/socialFishModel.cpp model/socialFishModel.cpp)
+makeLink(dependencies/social-fish-model/utils model/utils)
+
 set(srcs
     settings/RobotControlSettings.cpp
     settings/ExperimentControllerSettings.cpp
@@ -78,6 +82,11 @@ set(srcs
     SetupMap.cpp
     statistics/StatisticsSubscriber.cpp
     statistics/StatisticsPublisher.cpp
+
+    model/socialFishModel.cpp
+    control-modes/SocialFishControlMode.cpp
+    model/utils/heading.cpp
+    model/utils/random/random_generator.cpp
 )
 
 set(hdrs
@@ -90,6 +99,11 @@ set(hdrs
     control-modes/ModelParameters.hpp
     experiment-controllers/ExperimentControllerType.hpp
     experiment-controllers/ExperimentControllerFactory.hpp
+
+    model/socialFishModel.hpp
+    control-modes/SocialFishControlMode.hpp
+    model/utils/heading.hpp
+    model/utils/random/random_generator.hpp
 )
 
 qt5_wrap_ui(uis_hdrs gui/RobotControlWidget.ui gui/RobotsWidget.ui gui/PotentialFieldWidget.ui)

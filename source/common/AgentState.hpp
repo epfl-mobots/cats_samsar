@@ -3,21 +3,20 @@
 
 #include <opencv2/core/types.hpp>
 
-#include <QtCore/QString>
-#include <QtCore/QObject>
-#include <QtCore/QtMath>
 #include <QtCore/QDebug>
+#include <QtCore/QObject>
+#include <QtCore/QString>
+#include <QtCore/QtMath>
 #include <QtGui/QColor>
 #include <QtGui/QPolygonF>
 
 /*
  * The position and orientation classes that define the agent's state.
  */
-enum class OrientationValidity
-{
-    VALID,      // certain value
-    AMBIGUOUS,  // +/- 180 degrees
-    INVALID     // unknown value
+enum class OrientationValidity {
+    VALID, // certain value
+    AMBIGUOUS, // +/- 180 degrees
+    INVALID // unknown value
 };
 
 /*!
@@ -25,11 +24,10 @@ enum class OrientationValidity
  * NOTE : it would me ideologically more correct to have two classes : OrientationImageRad and
  * OrientationWorldRad to not eventually mix the things up.
  */
-class OrientationRad
-{
+class OrientationRad {
 public:
     //! Constructor.
-    explicit OrientationRad(double angleRad = 0, bool valid = true): m_angleRad(angleRad)
+    explicit OrientationRad(double angleRad = 0, bool valid = true) : m_angleRad(angleRad)
     {
         setValid(valid);
     }
@@ -72,7 +70,7 @@ public:
 
 private:
     //! The angle value.
-    double m_angleRad;  // [-pi,+pi] radians.
+    double m_angleRad; // [-pi,+pi] radians.
     //! The angle validity.
     OrientationValidity m_validity;
 };
@@ -80,19 +78,24 @@ private:
 // forward declarations
 class PositionMeters;
 PositionMeters operator-(const PositionMeters& lhs, const PositionMeters& rhs);
-PositionMeters operator*(const double &v, const PositionMeters& rhs);
+PositionMeters operator*(const double& v, const PositionMeters& rhs);
 PositionMeters operator+(const PositionMeters& lhs, const PositionMeters& rhs);
 
 /*!
  * \brief The class that stores the position in meters.
  */
-class PositionMeters
-{
+class PositionMeters {
 public:
     //! Constructor.
-    explicit PositionMeters(double x = 0, double y = 0, double z = 0, bool valid = true): m_x(x), m_y(y), m_z(z), m_valid(valid) { }
+    explicit PositionMeters(double x = 0, double y = 0, double z = 0, bool valid = true)
+        : m_x(x), m_y(y), m_z(z), m_valid(valid)
+    {
+    }
     //! Constructor.
-    explicit PositionMeters(cv::Point2f point, bool valid = true) : m_x(point.x), m_y(point.y), m_z(0.), m_valid(valid) { }
+    explicit PositionMeters(cv::Point2f point, bool valid = true)
+        : m_x(point.x), m_y(point.y), m_z(0.), m_valid(valid)
+    {
+    }
     //! Copy constructor.
     PositionMeters(const PositionMeters&) = default;
     //! Copy operator.
@@ -120,7 +123,11 @@ public:
     //! Set the validity status.
     void setValid(bool valid) { m_valid = valid; }
     //! Return the position validity status.
-    bool isValid() const { return m_valid; }
+    bool isValid() const
+    {
+        return true;
+        return m_valid;
+    }
 
     //! Returns the position as text. Only x and y coordinates are shown.
     QString toString() const
@@ -134,37 +141,37 @@ public:
     //! Computes the distance to another position.
     double distanceTo(const PositionMeters& other) const
     {
-        return qSqrt((m_x - other.x()) * (m_x - other.x()) +
-                     (m_y - other.y()) * (m_y - other.y()) +
-                     (m_z - other.z()) * (m_z - other.z()));
+        return qSqrt((m_x - other.x()) * (m_x - other.x()) + (m_y - other.y()) * (m_y - other.y())
+            + (m_z - other.z()) * (m_z - other.z()));
     }
 
     //! Only x and y coordinates are taken into account.
     double distance2dTo(const PositionMeters& other) const
     {
-        return qSqrt((m_x - other.x()) * (m_x - other.x()) +
-                     (m_y - other.y()) * (m_y - other.y()));
+        return qSqrt((m_x - other.x()) * (m_x - other.x()) + (m_y - other.y()) * (m_y - other.y()));
     }
 
     //! Computes the distance between the point and a line segment p1->p2.
-    double distance2dToSegment(const PositionMeters& p1,
-                               const PositionMeters& p2) const
+    double distance2dToSegment(const PositionMeters& p1, const PositionMeters& p2) const
     {
         double l = p1.distance2dTo(p2);
         // line is defined as p(t) = p1 + t(p2 - p1), if t is in [0,1] then the
         // point is on the edge
-        double t = - ((p2.x() - p1.x()) * (p1.x() - m_x) + (p2.y() - p1.y()) * (p1.y() - m_y)) /
-                (l * l);
+        double t
+            = -((p2.x() - p1.x()) * (p1.x() - m_x) + (p2.y() - p1.y()) * (p1.y() - m_y)) / (l * l);
         if ((t >= 0) && (t <= 1)) {
             // compute the projection of the point 'p' to the edge
             PositionMeters proj = p1 + t * (p2 - p1);
             // return the distance to this projection
             return distance2dTo(proj);
-        } else if (t < 0) {
+        }
+        else if (t < 0) {
             return distance2dTo(p1);
-        } else if (t > 1) {
+        }
+        else if (t > 1) {
             return distance2dTo(p2);
-        } else {
+        }
+        else {
             qDebug() << "Invalid code";
             return 0;
         }
@@ -180,7 +187,7 @@ public:
     }
 
     //! Operator +=.
-    PositionMeters& operator+=(const PositionMeters &rhs)
+    PositionMeters& operator+=(const PositionMeters& rhs)
     {
         m_x += rhs.x();
         m_y += rhs.y();
@@ -190,13 +197,14 @@ public:
     }
 
     //! Operator /=.
-    PositionMeters& operator/=(const double &value)
+    PositionMeters& operator/=(const double& value)
     {
         if (!qFuzzyIsNull(value)) {
             m_x /= value;
             m_y /= value;
             m_z /= value;
-        } else {
+        }
+        else {
             qDebug() << "Division by zero";
             setValid(false);
         }
@@ -204,7 +212,7 @@ public:
     }
 
     //! Operator *=.
-    PositionMeters& operator*=(const double &value)
+    PositionMeters& operator*=(const double& value)
     {
         m_x *= value;
         m_y *= value;
@@ -213,21 +221,20 @@ public:
     }
 
     //! Return an invalid point.
-    static PositionMeters invalidPosition()
-    {
-        return PositionMeters(0, 0, 0, false);
-    }
+    static PositionMeters invalidPosition() { return PositionMeters(0, 0, 0, false); }
 
     //! Returns the point rotates by theta radians.
     PositionMeters rotated2d(double thetaRad, PositionMeters center) const
     {
-        double rotated_x = (m_x - center.x()) * qCos(thetaRad) - (m_y - center.y() / 2) * qSin(thetaRad);
-        double rotated_y = (m_x - center.x()) * qSin(thetaRad) + (m_y - center.y() / 2) * qCos(thetaRad);
+        double rotated_x
+            = (m_x - center.x()) * qCos(thetaRad) - (m_y - center.y() / 2) * qSin(thetaRad);
+        double rotated_y
+            = (m_x - center.x()) * qSin(thetaRad) + (m_y - center.y() / 2) * qCos(thetaRad);
         return PositionMeters(rotated_x + center.x(), rotated_y + center.y() / 2);
     }
 
     //! Returns the angle to another point.
-    double angleRadTo(const PositionMeters &other)
+    double angleRadTo(const PositionMeters& other)
     {
         if (qFuzzyCompare(other.y(), m_y) && qFuzzyCompare(other.x(), m_x))
             return 0;
@@ -245,9 +252,9 @@ public:
 
 private:
     //! Position x.
-    double m_x;  // [m]
+    double m_x; // [m]
     //! Position y.
-    double m_y;  // [m]
+    double m_y; // [m]
     //! Position z.
     double m_z; // [m]
     //! Position validity, set to false when the position could not be determined.
@@ -276,24 +283,22 @@ inline PositionMeters operator-(const PositionMeters& lhs, const PositionMeters&
 }
 
 //! Multiplication by a scalar operator.
-inline PositionMeters operator*(const double &v, const PositionMeters& rhs)
+inline PositionMeters operator*(const double& v, const PositionMeters& rhs)
 {
-    return PositionMeters(v * rhs.x() , v * rhs.y(), v * rhs.z());
+    return PositionMeters(v * rhs.x(), v * rhs.y(), v * rhs.z());
 }
 
 //! Comparison operator.
 inline bool operator==(const PositionMeters& lhs, const PositionMeters& rhs)
 {
-    return (qFuzzyCompare(lhs.x(), rhs.x())
-            && qFuzzyCompare(lhs.y(), rhs.y())
-            && qFuzzyCompare(lhs.z(), rhs.z())
-            && (lhs.isValid() == rhs.isValid()));
+    return (qFuzzyCompare(lhs.x(), rhs.x()) && qFuzzyCompare(lhs.y(), rhs.y())
+        && qFuzzyCompare(lhs.z(), rhs.z()) && (lhs.isValid() == rhs.isValid()));
 }
 
 //! Non-equality operator.
 inline bool operator!=(const PositionMeters& lhs, const PositionMeters& rhs)
 {
-    return !operator==(lhs,rhs);
+    return !operator==(lhs, rhs);
 }
 
 /*!
@@ -301,13 +306,18 @@ inline bool operator!=(const PositionMeters& lhs, const PositionMeters& rhs)
  * Use CoordiantesTransformation class to convert the position in pixels to
  * the position in meters.
  */
-class PositionPixels
-{
+class PositionPixels {
 public:
     //! Constructor.
-    explicit PositionPixels(double x = 0, double y = 0, bool valid = true) : m_x(x), m_y(y), m_valid(valid) { }
+    explicit PositionPixels(double x = 0, double y = 0, bool valid = true)
+        : m_x(x), m_y(y), m_valid(valid)
+    {
+    }
     //! Constructor.
-    explicit PositionPixels(cv::Point2f point, bool valid = true) : m_x(point.x), m_y(point.y), m_valid(valid) { }
+    explicit PositionPixels(cv::Point2f point, bool valid = true)
+        : m_x(point.x), m_y(point.y), m_valid(valid)
+    {
+    }
     //! Copy constructor.
     PositionPixels(const PositionPixels&) = default;
     //! Copy operator.
@@ -342,24 +352,23 @@ public:
     }
 
     //! Returns the position as cv::Point2f
-    cv::Point2f toCvPoint2f() const
-    {
-        return cv::Point2f(m_x, m_y);
-    }
+    cv::Point2f toCvPoint2f() const { return cv::Point2f(m_x, m_y); }
 
     //! Returns the point rotates by theta radians.
     PositionPixels rotated2d(double thetaRad, PositionPixels center) const
     {
-        double rotated_x = (m_x - center.x()) * qCos(thetaRad) - (m_y - center.y() / 2) * qSin(thetaRad);
-        double rotated_y = (m_x - center.x()) * qSin(thetaRad) + (m_y - center.y() / 2) * qCos(thetaRad);
+        double rotated_x
+            = (m_x - center.x()) * qCos(thetaRad) - (m_y - center.y() / 2) * qSin(thetaRad);
+        double rotated_y
+            = (m_x - center.x()) * qSin(thetaRad) + (m_y - center.y() / 2) * qCos(thetaRad);
         return PositionPixels(rotated_x + center.x(), rotated_y + center.y() / 2);
     }
 
 private:
     //! Position x.
-    double m_x;  // [pixels]
+    double m_x; // [pixels]
     //! Position y.
-    double m_y;  // [pixels]
+    double m_y; // [pixels]
     //! Position validity, set to false when the position could not be determined.
     bool m_valid;
 };
@@ -367,15 +376,13 @@ private:
 /*!
  * \brief The class that stores the position in meters and the orientation.
  */
-class StateWorld
-{
+class StateWorld {
 public:
     //! Constructor. If position or orientation are not provided then they are
     //! considered unknown.
     explicit StateWorld(PositionMeters position = PositionMeters(0, 0, 0, false),
-                        OrientationRad orientation = OrientationRad(0, false)) :
-        m_positionMeters(position),
-        m_orientationRad(orientation)
+        OrientationRad orientation = OrientationRad(0, false))
+        : m_positionMeters(position), m_orientationRad(orientation)
     {
     }
     //! Copy constructor.
@@ -400,13 +407,13 @@ public:
     QString toString() const
     {
         return QString("Position: %1, orientation : %2 deg")
-                .arg(position().toString())
-                .arg(orientation().angleDeg());
+            .arg(position().toString())
+            .arg(orientation().angleDeg());
     }
 
 private:
     //! Position in meters.
-    PositionMeters m_positionMeters;  // [m]
+    PositionMeters m_positionMeters; // [m]
     //! The orientation of the agent, with respect to the horizontal x axis.
     OrientationRad m_orientationRad;
 };
@@ -414,15 +421,13 @@ private:
 /*!
  * \brief The class that stores the position in pixels and the orientation.
  */
-class StateImage
-{
+class StateImage {
 public:
     //! Constructor. If position or orientation are not provided then they are
     //! considered unknown.
     explicit StateImage(PositionPixels position = PositionPixels(0, 0, false),
-                        OrientationRad orientation = OrientationRad(0, false)) :
-        m_positionPixels(position),
-        m_orientationRad(orientation)
+        OrientationRad orientation = OrientationRad(0, false))
+        : m_positionPixels(position), m_orientationRad(orientation)
     {
     }
     //! Copy constructor.
@@ -441,10 +446,7 @@ public:
         m_orientationRad.setValid(false);
     }
     //! Invalidates the orientation.
-    void invalidateOrientation()
-    {
-        m_orientationRad.setValid(false);
-    }
+    void invalidateOrientation() { m_orientationRad.setValid(false); }
     //! Sets the validity of the orientation.
     void setOrientationValidity(OrientationValidity validity)
     {
@@ -454,20 +456,26 @@ public:
     //! Sets the position.
     void setPosition(PositionPixels position) { m_positionPixels = position; }
     //! Sets the position from the cv::Point2f value.
-    void setPosition(cv::Point2f position) { m_positionPixels = PositionPixels(position.x, position.y); }
+    void setPosition(cv::Point2f position)
+    {
+        m_positionPixels = PositionPixels(position.x, position.y);
+    }
     //! Return the position.
     PositionPixels position() const { return m_positionPixels; }
 
     //! Sets the orientation.
     void setOrientation(OrientationRad orientationRad) { m_orientationRad = orientationRad; }
     //! Sets the orientation from the double value.
-    void setOrientation(double orientationRad) { m_orientationRad = OrientationRad(orientationRad); }
+    void setOrientation(double orientationRad)
+    {
+        m_orientationRad = OrientationRad(orientationRad);
+    }
     //! Return the orientation.
     OrientationRad orientation() const { return m_orientationRad; }
 
 private:
     //! Position in meters.
-    PositionPixels m_positionPixels;  // [m]
+    PositionPixels m_positionPixels; // [m]
     //! The orientation of the agent, with respect to the horizontal x axis.
     OrientationRad m_orientationRad;
 };
@@ -475,14 +483,12 @@ private:
 /*!
  *  The structure defining a line segment.
  */
-class WorldLine
-{
+class WorldLine {
 public:
     //! Constructor.
     explicit WorldLine(PositionMeters p1 = PositionMeters::invalidPosition(),
-                       PositionMeters p2 = PositionMeters::invalidPosition()) :
-        m_p1(p1),
-        m_p2(p2)
+        PositionMeters p2 = PositionMeters::invalidPosition())
+        : m_p1(p1), m_p2(p2)
     {
     }
 
@@ -531,15 +537,14 @@ Q_DECLARE_METATYPE(WorldLine)
 //! Comparison operator.
 inline bool operator==(const WorldLine& lhs, const WorldLine& rhs)
 {
-    return (((lhs.p1() == rhs.p1()) && (lhs.p2() == rhs.p2())) ||
-            ((lhs.p1() == rhs.p2()) && (lhs.p2() == rhs.p1())));
+    return (((lhs.p1() == rhs.p1()) && (lhs.p2() == rhs.p2()))
+        || ((lhs.p1() == rhs.p2()) && (lhs.p2() == rhs.p1())));
 }
 
 /*!
  * The class for the list of points.
  */
-class WorldPolygon : public QList<PositionMeters>
-{
+class WorldPolygon : public QList<PositionMeters> {
 public:
     //! Checks if the polygon contains given point.
     // FIXME FIXME FIXME : fast and dirty implementation, redo
@@ -601,11 +606,7 @@ public:
 //! the label. Used to store the data to be drawn on the gui.
 struct AnnotatedPolygons {
     //! Initialization.
-    AnnotatedPolygons()
-        : label(""),
-          color(Qt::black),
-          polygons()
-    {}
+    AnnotatedPolygons() : label(""), color(Qt::black), polygons() {}
     //! The label.
     QString label;
     //! The color.

@@ -6,8 +6,7 @@
 /*!
  * Provides an enum for control mode type.
  */
-class ControlModeType
-{
+class ControlModeType {
 public:
     enum Enum {
         IDLE,
@@ -19,6 +18,7 @@ public:
         ZONE_BASED_FISH_MODEL,
         TRAJECTORY,
         FOLLOW_GROUP,
+        SOCIAL_FISH_MODEL,
         UNDEFINED
     };
 
@@ -43,12 +43,15 @@ public:
             return TRAJECTORY;
         else if (modeName.toLower() == "followgroup")
             return FOLLOW_GROUP;
+        else if (modeName.toLower() == "socialfishmodel")
+            return SOCIAL_FISH_MODEL;
         else
             return UNDEFINED;
     }
 
     //! Returns that control mode type string in human friendly format.
-    static QString toString(Enum controlModeType) {
+    static QString toString(Enum controlModeType)
+    {
         QString string;
 
         switch (controlModeType) {
@@ -76,6 +79,9 @@ public:
         case FOLLOW_GROUP:
             string = "Follow group";
             break;
+        case SOCIAL_FISH_MODEL:
+            string = "Social Fish Model";
+            break;
         case IDLE:
         default:
             string = "Idle";
@@ -86,4 +92,3 @@ public:
 };
 
 #endif // CATS2_CONTROL_MODE_TYPE_HPP
-

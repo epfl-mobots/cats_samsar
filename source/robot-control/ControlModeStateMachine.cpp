@@ -1,55 +1,50 @@
 #include "ControlModeStateMachine.hpp"
 
+#include "FishBot.hpp"
 #include "control-modes/ControlMode.hpp"
 #include "control-modes/ControlModeType.hpp"
+#include "control-modes/FishModelWithWalls.hpp"
+#include "control-modes/FollowGroup.hpp"
+#include "control-modes/GenericFishModel.hpp"
 #include "control-modes/GoStraight.hpp"
 #include "control-modes/GoToPosition.hpp"
 #include "control-modes/Idle.hpp"
 #include "control-modes/Manual.hpp"
 #include "control-modes/ModelBased.hpp"
-#include "control-modes/GenericFishModel.hpp"
-#include "control-modes/FishModelWithWalls.hpp"
-#include "control-modes/ZoneBasedFishModel.hpp"
+#include "control-modes/SocialFishControlMode.hpp"
 #include "control-modes/Trajectory.hpp"
-#include "control-modes/FollowGroup.hpp"
-#include "FishBot.hpp"
+#include "control-modes/ZoneBasedFishModel.hpp"
 
 #include <QtCore/QDebug>
 
 /*!
  * Constructor.
  */
-ControlModeStateMachine::ControlModeStateMachine(FishBot* robot, QObject *parent) :
-    QObject(parent),
-    m_currentControlMode(ControlModeType::IDLE),
-    m_robot(robot)
+ControlModeStateMachine::ControlModeStateMachine(FishBot* robot, QObject* parent)
+    : QObject(parent), m_currentControlMode(ControlModeType::IDLE), m_robot(robot)
 {
     // fill the map will all control modes
-    m_controlModes.insert(ControlModeType::IDLE,
-                          ControlModePtr(new Idle(m_robot)));
-    m_controlModes.insert(ControlModeType::MANUAL,
-                          ControlModePtr(new Manual(m_robot)));
-    m_controlModes.insert(ControlModeType::GO_STRAIGHT,
-                          ControlModePtr(new GoStraight(m_robot)));
-    m_controlModes.insert(ControlModeType::GO_TO_POSITION,
-                          ControlModePtr(new GoToPosition(m_robot)));
-    m_controlModes.insert(ControlModeType::FISH_MODEL,
-                          ControlModePtr(new ModelBased(m_robot)));
-    m_controlModes.insert(ControlModeType::FISH_MODEL_WITH_WALLS,
-                          ControlModePtr(new FishModelWithWalls(m_robot)));
-    m_controlModes.insert(ControlModeType::ZONE_BASED_FISH_MODEL,
-                          ControlModePtr(new ZoneBasedFishModel(m_robot)));
-    m_controlModes.insert(ControlModeType::TRAJECTORY,
-                          ControlModePtr(new Trajectory(m_robot)));
-    m_controlModes.insert(ControlModeType::FOLLOW_GROUP,
-                          ControlModePtr(new FollowGroup(m_robot)));
+    m_controlModes.insert(ControlModeType::IDLE, ControlModePtr(new Idle(m_robot)));
+    m_controlModes.insert(ControlModeType::MANUAL, ControlModePtr(new Manual(m_robot)));
+    m_controlModes.insert(ControlModeType::GO_STRAIGHT, ControlModePtr(new GoStraight(m_robot)));
+    m_controlModes.insert(
+        ControlModeType::GO_TO_POSITION, ControlModePtr(new GoToPosition(m_robot)));
+    m_controlModes.insert(ControlModeType::FISH_MODEL, ControlModePtr(new ModelBased(m_robot)));
+    m_controlModes.insert(
+        ControlModeType::FISH_MODEL_WITH_WALLS, ControlModePtr(new FishModelWithWalls(m_robot)));
+    m_controlModes.insert(
+        ControlModeType::ZONE_BASED_FISH_MODEL, ControlModePtr(new ZoneBasedFishModel(m_robot)));
+    m_controlModes.insert(ControlModeType::TRAJECTORY, ControlModePtr(new Trajectory(m_robot)));
+    m_controlModes.insert(ControlModeType::FOLLOW_GROUP, ControlModePtr(new FollowGroup(m_robot)));
+    m_controlModes.insert(
+        ControlModeType::SOCIAL_FISH_MODEL, ControlModePtr(new SocialFishControlMode(m_robot)));
 
     // make necessary connections
     foreach (ControlModePtr controlMode, m_controlModes.values()) {
-       connect(controlMode.data(), &ControlMode::requestControlModeChange,
-               this, &ControlModeStateMachine::setControlMode);
-       connect(controlMode.data(), &ControlMode::notifyControlModeStatus,
-               this, &ControlModeStateMachine::notifyControlModeStatus);
+        connect(controlMode.data(), &ControlMode::requestControlModeChange, this,
+            &ControlModeStateMachine::setControlMode);
+        connect(controlMode.data(), &ControlMode::notifyControlModeStatus, this,
+            &ControlModeStateMachine::notifyControlModeStatus);
     }
 }
 
@@ -65,16 +60,16 @@ bool ControlModeStateMachine::setControlMode(ControlModeType::Enum type)
 
     if (!isTransitionAuthorized(type)) {
         qDebug() << QString("Impossible to change the control mode from %1 to %2")
-                    .arg(ControlModeType::toString(m_currentControlMode))
-                    .arg(ControlModeType::toString(type));
+                        .arg(ControlModeType::toString(m_currentControlMode))
+                        .arg(ControlModeType::toString(type));
         return false;
     }
 
     if (type != m_currentControlMode) {
         qDebug() << QString("Changing the control mode from %1 to %2 for %3")
-                    .arg(ControlModeType::toString(m_currentControlMode))
-                    .arg(ControlModeType::toString(type))
-                    .arg(m_robot->name());
+                        .arg(ControlModeType::toString(m_currentControlMode))
+                        .arg(ControlModeType::toString(type))
+                        .arg(m_robot->name());
 
         // first stop the current control mode
         m_controlModes[m_currentControlMode]->finish();
@@ -94,7 +89,8 @@ bool ControlModeStateMachine::setControlMode(ControlModeType::Enum type)
 void ControlModeStateMachine::setUserDefinedTargetPosition(PositionMeters position)
 {
     if (m_controlModes.contains(ControlModeType::GO_TO_POSITION)) {
-        GoToPosition* controlMode = qobject_cast<GoToPosition*>(m_controlModes[ControlModeType::GO_TO_POSITION].data());
+        GoToPosition* controlMode
+            = qobject_cast<GoToPosition*>(m_controlModes[ControlModeType::GO_TO_POSITION].data());
         if (controlMode)
             controlMode->setTargetPosition(position);
     }
@@ -125,14 +121,15 @@ bool ControlModeStateMachine::isTransitionAuthorized(ControlModeType::Enum state
 void ControlModeStateMachine::setTargetPosition(PositionMeters position)
 {
     if (m_controlModes.contains(ControlModeType::GO_TO_POSITION))
-        dynamic_cast<GoToPosition*>(m_controlModes[ControlModeType::GO_TO_POSITION].data())->setTargetPosition(position);
+        dynamic_cast<GoToPosition*>(m_controlModes[ControlModeType::GO_TO_POSITION].data())
+            ->setTargetPosition(position);
 }
 
 /*!
  * Sets the parameters of the fish model.
  */
-void ControlModeStateMachine::setModelParameters(ControlModeType::Enum type,
-                                                 ModelParameters parameters)
+void ControlModeStateMachine::setModelParameters(
+    ControlModeType::Enum type, ModelParameters parameters)
 {
     if (m_controlModes.contains(type)) {
         GenericFishModel* mode = dynamic_cast<GenericFishModel*>(m_controlModes[type].data());
@@ -145,18 +142,17 @@ void ControlModeStateMachine::setModelParameters(ControlModeType::Enum type,
  * Limits the arena matrix of the model-based control mode by a mask. The mask
  * is defined by a set of polygons and is labeled with an id.
  */
-void ControlModeStateMachine::limitModelArea(ControlModeType::Enum type,
-                                             QString maskId,
-                                             QList<WorldPolygon> allowedArea)
+void ControlModeStateMachine::limitModelArea(
+    ControlModeType::Enum type, QString maskId, QList<WorldPolygon> allowedArea)
 {
     if (m_controlModes.contains(type)) {
         GenericFishModel* mode = dynamic_cast<GenericFishModel*>(m_controlModes[type].data());
         if (mode)
             mode->setAreaMask(maskId, allowedArea);
-            // FIXME : we might need to reset the model after applying the mask,
-            // but since the cv::Mat setup grid is directly used by the Arena
-            // and cv::Mat is a smart pointer hence all changes will be present
-            // in the simulator right away
+        // FIXME : we might need to reset the model after applying the mask,
+        // but since the cv::Mat setup grid is directly used by the Arena
+        // and cv::Mat is a smart pointer hence all changes will be present
+        // in the simulator right away
     }
 }
 
@@ -165,11 +161,10 @@ void ControlModeStateMachine::limitModelArea(ControlModeType::Enum type,
  */
 void ControlModeStateMachine::releaseModelArea(ControlModeType::Enum type)
 {
-    for (int type = ControlModeType::FISH_MODEL;
-         type <= ControlModeType::FISH_MODEL_WITH_WALLS;
-         ++type)
-    {
-        GenericFishModel* mode = dynamic_cast<GenericFishModel*>(m_controlModes[static_cast<ControlModeType::Enum>(type)].data());
+    for (int type = ControlModeType::FISH_MODEL; type <= ControlModeType::FISH_MODEL_WITH_WALLS;
+         ++type) {
+        GenericFishModel* mode = dynamic_cast<GenericFishModel*>(
+            m_controlModes[static_cast<ControlModeType::Enum>(type)].data());
         if (mode)
             mode->clearAreaMask();
     }
@@ -181,5 +176,6 @@ void ControlModeStateMachine::releaseModelArea(ControlModeType::Enum type)
  */
 bool ControlModeStateMachine::supportsMotionPatterns()
 {
-    return m_controlModes[m_currentControlMode]->supportedTargets().contains(ControlTargetType::POSITION);
+    return m_controlModes[m_currentControlMode]->supportedTargets().contains(
+        ControlTargetType::POSITION);
 }

@@ -1,0 +1,200 @@
+<?xml version="1.0"?>
+<opencv_storage>
+    <experiment>
+        <type>Interspecies</type>
+        <name>Discrete-circular</name>
+        <agents>
+            <numberOfAnimals>5</numberOfAnimals>
+        </agents>
+        <setupMapPath>setup/epfl-circular.xml</setupMapPath>
+    </experiment>
+    <robots>
+        <numberOfRobots>1</numberOfRobots>
+        <controlFrequencyHz>20</controlFrequencyHz>
+        <fishModel>
+            <agent>
+                <length>0.02</length>
+                <width>0.02</width>
+                <height>0.01</height>
+                <fov>169</fov>
+                <meanSpeed>-2.65</meanSpeed>
+                <varSpeed>0.51</varSpeed>
+            </agent>
+            <SFM>
+                <numCells>40</numCells>
+                <groupThreshold>3</groupThreshold>
+                <cellsForward>5</cellsForward>
+                <cellsBackward>8</cellsBackward>
+                <minSpeed>1</minSpeed>
+                <maxSpeed>1</maxSpeed>
+                <probObey>1.0</probObey>
+                <probMove>0.901</probMove>
+                <probChangeSpeed>0.1</probChangeSpeed>
+                <headingChangeDuration>8</headingChangeDuration>
+                <sumWeight>0.3 -2.0</sumWeight>
+                <influenceAlpha>6</influenceAlpha>
+                <!-- <headingBias>-1</headingBias> -->
+                <headingBias>0</headingBias>
+
+                <!-- <numCells>40</numCells>
+                <groupThreshold>2</groupThreshold>
+                <cellsForward>1</cellsForward>
+                <cellsBackward>1</cellsBackward>
+                <minSpeed>1</minSpeed>
+                <maxSpeed>1</maxSpeed>
+                <probObey>1.0</probObey>
+                <probMove>1.0</probMove>
+                <probChangeSpeed>0.1</probChangeSpeed>
+                <headingChangeDuration>5</headingChangeDuration>
+                <sumWeight>-3.0 -3.0</sumWeight>
+                <influenceAlpha>8</influenceAlpha> -->
+
+                <targetResetThreshold>3</targetResetThreshold>
+                <historyReset>5</historyReset>
+            </SFM>
+            <simulation>
+                <dt>0.2</dt>
+            </simulation>
+        </fishModel>
+        <pathPlanning>
+            <gridSizeM>0.2</gridSizeM>
+        </pathPlanning>
+        <obstacleAvoidance>
+            <potentialField>
+                <influenceDistanceArenaM>0.04</influenceDistanceArenaM>
+                <influenceStrengthArena>20</influenceStrengthArena>
+                <influenceDistanceRobotsM>0.05</influenceDistanceRobotsM>
+                <influenceStrengthRobots>200</influenceStrengthRobots>
+                <influenceDistanceTargetM>0.05</influenceDistanceTargetM>
+                <influenceStrengthTarget>400</influenceStrengthTarget>
+                <maxForce>1000</maxForce>
+                <maxAngleDeg>60</maxAngleDeg>
+                <obstacleAvoidanceAreaDiameterM>0.15</obstacleAvoidanceAreaDiameterM>
+            </potentialField>
+        </obstacleAvoidance>
+        <controlModes>
+            <trajectory>
+                <!-- <points>trajectories/fish-two-rooms-small.xml</points>
+                <loopTrajectory>1</loopTrajectory>
+                <providePointsOnTimer>1</providePointsOnTimer>
+                <updateRateHz>15</updateRateHz> -->
+            </trajectory>
+        </controlModes>
+        <!-- Navigation settings. -->
+        <navigation>
+            <fishMotionPatternFrequencyDivider>10</fishMotionPatternFrequencyDivider>
+            <fishMotionPattern>
+                <distanceCm>25</distanceCm>
+                <speedCmSec>14</speedCmSec> <!--Speed fish behaviour -->
+            </fishMotionPattern>
+            <pid>
+                <kp>2.0</kp>
+                <ki>0.05</ki>
+                <kd>0.00</kd>
+                <kpDist>70.0</kpDist>
+                <kiDist>1.00</kiDist>
+                <kdDist>2.00</kdDist>
+            </pid>
+            <defaultLinearSpeedCmSec>25</defaultLinearSpeedCmSec>
+            <needOrientationToNavigate>0</needOrientationToNavigate>
+        </navigation>
+        <!-- Controllers settings. Controller is available only if its settings are provided -->
+        <controllers>
+            <controlMap>
+                <controlAreasPath>control-maps/epfl-four-sectors-control-map.xml</controlAreasPath>
+            </controlMap>
+            <circularSetup>
+                <controlAreasPath>control-maps/epfl-four-sectors-control-map.xml</controlAreasPath>
+                <targetPositionRadius>0.26</targetPositionRadius>
+                <targetDeltaAngleDeg>20.</targetDeltaAngleDeg>
+            </circularSetup>
+        </controllers>
+        <fishBot_1>
+            <id>H</id>
+            <ledColor>
+                <r>90</r>
+                <g>150</g>
+                <b>200</b>
+            </ledColor>
+            <connectionTarget>ser:device=/dev/rfcomm1</connectionTarget>
+        </fishBot_1>
+        <fishBot_2>
+        <id>C</id>
+            <ledColor>
+                <r>190</r>
+                <g>255</g>
+                <b>190</b>
+            </ledColor>
+            <connectionTarget>ser:device=/dev/rfcomm2</connectionTarget>
+        </fishBot_2>
+        <fishBot_3>
+            <id>B</id>
+            <ledColor>
+                <r>207</r>
+                <g>91</g>
+                <b>93</b>
+            </ledColor>
+            <connectionTarget>ser:device=/dev/rfcomm0</connectionTarget>
+        </fishBot_3>
+    </robots>
+    <setups>
+        <mainCamera>
+            <!--
+                TODO : consider adding here the camera type or id to compare with the
+                value in the calibration file.
+            -->
+            <imageSize>
+                <width>500</width>
+                <height>500</height>                
+
+<!--                 <width>512</width>
+                <height>512</height> -->
+            </imageSize>
+            <cameraCalibrationFile>camera-calibration/epfl-setup-180/cats2-epfl-main-camera-basler.xml</cameraCalibrationFile>
+            <tracking>
+                <trackingMethod>blobDetector</trackingMethod>
+                <numberOfAgents>6</numberOfAgents>
+                <blobDetector>
+                    <minBlobSizePx>3</minBlobSizePx>
+                    <qualityLevel>0.01</qualityLevel>
+                    <minDistance>5.0</minDistance>
+                    <blockSize>5</blockSize>
+                    <useHarrisDetector>1</useHarrisDetector>
+                    <k>0.04</k>
+            </blobDetector>
+            </tracking>
+        </mainCamera>
+        <cameraBelow>
+            <imageSize>
+                <width>640</width>
+                <height>480</height>
+            </imageSize>
+            <cameraCalibrationFile>camera-calibration/epfl-setup-180/cats2-epfl-180-angle-below-camera.xml</cameraCalibrationFile>
+            <tracking>
+                <trackingMethod>fishBotLedsTracking</trackingMethod>
+                <maskFile>bottom-camera-mask.png</maskFile>
+                <fishBotLedsTracking>
+                    <fishBot_C>
+                        <threshold>70</threshold>
+                    </fishBot_C>
+                    <fishBot_H>
+                        <threshold>30</threshold>
+                    </fishBot_H>
+                    <fishBot_B>
+                        <threshold>70</threshold>
+                    </fishBot_B>
+                </fishBotLedsTracking>
+            </tracking>
+        </cameraBelow>
+    </setups>
+    <interSpecies>
+        <!-- where we send data -->
+        <publisherAddress>tcp://143.50.158.98:5556</publisherAddress>
+        <!-- from where we get data -->
+        <subscriberAddresses>tcp://143.50.158.98:5555</subscriberAddresses>
+        <!-- local addresses
+            <publisherAddress>tcp://127.0.0.1:5555</publisherAddress>
+            <subscriberAddresses>tcp://127.0.0.1:5556</subscriberAddresses>
+        -->
+    </interSpecies>
+</opencv_storage>

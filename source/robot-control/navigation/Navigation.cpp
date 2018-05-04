@@ -1,39 +1,35 @@
 ﻿#include "Navigation.hpp"
 
-#include "interfaces/DBusInterface.hpp"
-#include "control-modes/ControlTarget.hpp"
 #include "FishBot.hpp"
+#include "control-modes/ControlTarget.hpp"
+#include "interfaces/DBusInterface.hpp"
 
 /*!
  * Constructor.
  */
-Navigation::Navigation(FishBot* robot):
-    QObject(nullptr),
-    m_robot(robot),
-    m_motionPattern(MotionPatternType::PID),
-    m_pathPlanner(),
-    m_usePathPlanning(false),
-    m_currentWaypoint(PositionMeters::invalidPosition()),
-    m_obstacleAvoidance(robot),
-    m_useObstacleAvoidance(false),
-    m_needOrientationToNavigate(RobotControlSettings::get().
-                                needOrientationToNavigate()),
-    m_stopOnceOnTarget(false),
-    m_fishMotionPatternSettings(RobotControlSettings::get().
-                                fishMotionPatternSettings()),
-    m_fishMotionFrequencyDivider(RobotControlSettings::get().
-                                 fishMotionPatternFrequencyDivider()),
-    m_fishMotionStepCounter(0),
-    m_pidControllerSettings(RobotControlSettings::get().pidControllerSettings()),
-    m_dt(1. / RobotControlSettings::get().controlFrequencyHz())
+Navigation::Navigation(FishBot* robot)
+    : QObject(nullptr),
+      m_robot(robot),
+      m_motionPattern(MotionPatternType::PID),
+      m_pathPlanner(),
+      m_usePathPlanning(false),
+      m_currentWaypoint(PositionMeters::invalidPosition()),
+      m_obstacleAvoidance(robot),
+      m_useObstacleAvoidance(false),
+      m_needOrientationToNavigate(RobotControlSettings::get().needOrientationToNavigate()),
+      m_stopOnceOnTarget(false),
+      m_fishMotionPatternSettings(RobotControlSettings::get().fishMotionPatternSettings()),
+      m_fishMotionFrequencyDivider(RobotControlSettings::get().fishMotionPatternFrequencyDivider()),
+      m_fishMotionStepCounter(0),
+      m_pidControllerSettings(RobotControlSettings::get().pidControllerSettings()),
+      m_dt(1. / RobotControlSettings::get().controlFrequencyHz())
 {
-    connect(&m_pathPlanner, &PathPlanner::notifyTrajectoryChanged,
-            this, &Navigation::notifyTrajectoryChanged);
+    connect(&m_pathPlanner, &PathPlanner::notifyTrajectoryChanged, this,
+        &Navigation::notifyTrajectoryChanged);
     connect(&RobotControlSettings::get(), &RobotControlSettings::notifyPidControllerSettingsChanged,
-            [this]()
-            {
-                m_pidControllerSettings = RobotControlSettings::get().pidControllerSettings();
-            });
+        [this]() {
+            m_pidControllerSettings = RobotControlSettings::get().pidControllerSettings();
+        });
 }
 
 /*!
@@ -82,18 +78,19 @@ void Navigation::setTargetPosition(TargetPosition* targetPosition)
     if (m_robot->state().position().isValid() && targetPosition->position().isValid()) {
         // first check if we are already in the target position
         if (m_robot->state().position().closeTo(targetPosition->position()) && m_stopOnceOnTarget) {
-//            qDebug() << "Arrived to target, stoped";
+            //            qDebug() << "Arrived to target, stoped";
             // stop the robot
             stop();
             // reset the path planner
             if (m_usePathPlanning)
                 m_pathPlanner.clearTrajectory();
-        } else {
+        }
+        else {
             PositionMeters currentWaypoint;
             if (m_usePathPlanning)
                 // get the new position from the path planner
-                currentWaypoint = m_pathPlanner.currentWaypoint(m_robot->state().position(),
-                                                                targetPosition->position());
+                currentWaypoint = m_pathPlanner.currentWaypoint(
+                    m_robot->state().position(), targetPosition->position());
             else
                 currentWaypoint = targetPosition->position();
             // check the validity of the current target
@@ -115,7 +112,8 @@ void Navigation::setTargetPosition(TargetPosition* targetPosition)
                 break;
             }
         }
-    } else {
+    }
+    else {
         qDebug() << "Invalid robot or target position";
     }
 }
@@ -143,10 +141,10 @@ void Navigation::sendMotorSpeed(int leftSpeed, int rightSpeed)
 {
     // TODO : to add some safety checks on the speed and eventually convertions
 
-//        // debug info
-//        if ((leftSpeed == 0) && (rightSpeed == 0)) {
-//            qDebug() << "Got instructions to stop the robot, executing";
-//        }
+    //        // debug info
+    //        if ((leftSpeed == 0) && (rightSpeed == 0)) {
+    //            qDebug() << "Got instructions to stop the robot, executing";
+    //        }
 
     // event to send
     QString eventName;
@@ -165,7 +163,7 @@ void Navigation::sendMotorSpeed(int leftSpeed, int rightSpeed)
 void Navigation::sendMotorSpeed(double angularSpeed)
 {
     int linearSpeed = RobotControlSettings::get().defaultLinearSpeedCmSec();
-    int leftSpeed =  linearSpeed + (angularSpeed * FishBot::InterWheelsDistanceCm) / 2.0;
+    int leftSpeed = linearSpeed + (angularSpeed * FishBot::InterWheelsDistanceCm) / 2.0;
     int rightSpeed = linearSpeed - (angularSpeed * FishBot::InterWheelsDistanceCm) / 2.0;
     sendMotorSpeed(leftSpeed, rightSpeed);
 }
@@ -220,14 +218,16 @@ void Navigation::sendLocalObstacleAvoidance(LocalObstacleAvoidanceType type)
 double Navigation::computeAngleToTurn(PositionMeters position)
 {
     // FIXME : consider making calculations in the body frame
-    //    double robotCenteredTargetPositionX = qCos(robotOrientation) * dx - qSin(robotOrientation) * dy;
-    //    double robotCenteredTargetPositionY = qSin(robotOrientation) * dx + qCos(robotOrientation) * dy;
-    //    double angleToTurn = qAtan2(robotCenteredTargetPositionY, robotCenteredTargetPositionX);
+    //    double robotCenteredTargetPositionX = qCos(robotOrientation) * dx - qSin(robotOrientation)
+    //    * dy; double robotCenteredTargetPositionY = qSin(robotOrientation) * dx +
+    //    qCos(robotOrientation) * dy; double angleToTurn = qAtan2(robotCenteredTargetPositionY,
+    //    robotCenteredTargetPositionX);
 
     double targetOrientation;
     if (m_useObstacleAvoidance) {
         targetOrientation = m_obstacleAvoidance.targetOrientationRad(position);
-    } else {
+    }
+    else {
         double dx = position.x() - m_robot->state().position().x();
         double dy = position.y() - m_robot->state().position().y();
         targetOrientation = qAtan2(dy, dx);
@@ -235,7 +235,7 @@ double Navigation::computeAngleToTurn(PositionMeters position)
     double robotOrientation = m_robot->state().orientation().angleRad();
     double angleToTurn = robotOrientation - targetOrientation;
     // normalize to [-pi;pi]
-    if (angleToTurn < - M_PI)
+    if (angleToTurn < -M_PI)
         angleToTurn += 2 * M_PI;
     if (angleToTurn > M_PI)
         angleToTurn -= 2 * M_PI;
@@ -251,13 +251,14 @@ void Navigation::fishMotionToPosition(PositionMeters targetPosition)
     if (m_robot->state().orientation().isValid() || !m_needOrientationToNavigate) {
         m_fishMotionStepCounter++;
         // if we waited enough steps
-        if (m_fishMotionStepCounter >=  m_fishMotionFrequencyDivider) {
+        if (m_fishMotionStepCounter >= m_fishMotionFrequencyDivider) {
             m_fishMotionStepCounter = 0;
             double angleToTurn = computeAngleToTurn(targetPosition);
             // FIXME : to check why the angle to send is negative
-            sendFishMotionParameters(- angleToTurn * 180 / M_PI,
-                                     m_fishMotionPatternSettings.distanceCm(), // FIXME : store this parameters somewhere in this class
-                                     m_fishMotionPatternSettings.speedCmSec());
+            sendFishMotionParameters(-angleToTurn * 180 / M_PI,
+                m_fishMotionPatternSettings
+                    .distanceCm(), // FIXME : store this parameters somewhere in this class
+                m_fishMotionPatternSettings.speedCmSec());
         }
     }
 }
@@ -269,7 +270,7 @@ void Navigation::pidControlToPosition(PositionMeters targetPosition)
 {
     if (m_robot->state().orientation().isValid() || !m_needOrientationToNavigate) {
 
-        //PID on the angle error
+        // PID on the angle error
 
         double angleToTurn = computeAngleToTurn(targetPosition);
         // proportional term
@@ -281,18 +282,19 @@ void Navigation::pidControlToPosition(PositionMeters targetPosition)
         // integral term
         double integralTermAngle = 0;
         m_errorBufferAngle.enqueue(angleToTurn);
-        if (m_errorBufferAngle.size() > ErrorBufferDepth) { // the buffer if full, i.e. we can use it
+        if (m_errorBufferAngle.size()
+            > ErrorBufferDepth) { // the buffer if full, i.e. we can use it
             // forget the oldest element
             m_errorBufferAngle.dequeue();
             // and sum the rest of them
             for (double error : m_errorBufferAngle)
                 integralTermAngle += error;
         }
-        double angularVelocity = m_pidControllerSettings.kp() * proportionalTermAngle +
-                m_pidControllerSettings.ki() * integralTermAngle +
-                m_pidControllerSettings.kd() * derivativeTermAngle;
+        double angularVelocity = m_pidControllerSettings.kp() * proportionalTermAngle
+            + m_pidControllerSettings.ki() * integralTermAngle
+            + m_pidControllerSettings.kd() * derivativeTermAngle;
 
-        //PID on the distance error
+        // PID on the distance error
         double distanceToTravel = m_robot->state().position().distance2dTo(targetPosition);
         // proportional term
         double proportionalTermDistance = distanceToTravel;
@@ -303,22 +305,23 @@ void Navigation::pidControlToPosition(PositionMeters targetPosition)
         // integral term
         double integralTermDistance = 0;
         m_errorBufferDistance.enqueue(distanceToTravel);
-        if (m_errorBufferDistance.size() > ErrorBufferDepth) { // the buffer if full, i.e. we can use it
+        if (m_errorBufferDistance.size()
+            > ErrorBufferDepth) { // the buffer if full, i.e. we can use it
             // forget the oldest element
             m_errorBufferDistance.dequeue();
             for (double errorDistance : m_errorBufferDistance)
                 integralTermDistance += errorDistance;
         }
-        double linearVelocity = m_pidControllerSettings.kpDist() * proportionalTermDistance +
-                m_pidControllerSettings.kiDist() * integralTermDistance +
-                m_pidControllerSettings.kdDist() * derivativeTermDistance;
+        double linearVelocity = m_pidControllerSettings.kpDist() * proportionalTermDistance
+            + m_pidControllerSettings.kiDist() * integralTermDistance
+            + m_pidControllerSettings.kdDist() * derivativeTermDistance;
 
         int linearSpeedMax = RobotControlSettings::get().defaultLinearSpeedCmSec();
 
-        if(linearVelocity > linearSpeedMax)
+        if (linearVelocity > linearSpeedMax)
             linearVelocity = linearSpeedMax;
 
-        int leftSpeed =  linearVelocity + (angularVelocity * FishBot::InterWheelsDistanceCm) / 2.0;
+        int leftSpeed = linearVelocity + (angularVelocity * FishBot::InterWheelsDistanceCm) / 2.0;
         int rightSpeed = linearVelocity - (angularVelocity * FishBot::InterWheelsDistanceCm) / 2.0;
 
         sendMotorSpeed(leftSpeed, rightSpeed);
@@ -332,9 +335,9 @@ void Navigation::setMotionPattern(MotionPatternType::Enum type)
 {
     if (type != m_motionPattern) {
         qDebug() << QString("Changing the motion pattern from from %1 to %2 for %3")
-                    .arg(MotionPatternType::toString(m_motionPattern))
-                    .arg(MotionPatternType::toString(type))
-                    .arg(m_robot->name());
+                        .arg(MotionPatternType::toString(m_motionPattern))
+                        .arg(MotionPatternType::toString(type))
+                        .arg(m_robot->name());
 
         m_motionPattern = type;
         // reset the steps counter
@@ -353,15 +356,15 @@ void Navigation::setMotionPattern(MotionPatternType::Enum type)
  * is supported for the fish motion pattern only, but it can be used for
  * other motion patterns as well.
  */
-void Navigation::setMotionPatternFrequencyDivider(MotionPatternType::Enum type,
-                                                  int frequencyDivider)
+void Navigation::setMotionPatternFrequencyDivider(
+    MotionPatternType::Enum type, int frequencyDivider)
 {
     if (type == MotionPatternType::FISH_MOTION) {
         if (frequencyDivider != m_fishMotionFrequencyDivider) {
             m_fishMotionFrequencyDivider = frequencyDivider;
             m_fishMotionStepCounter = 0;
-            emit notifyMotionPatternFrequencyDividerChanged(MotionPatternType::FISH_MOTION,
-                                                            frequencyDivider);
+            emit notifyMotionPatternFrequencyDividerChanged(
+                MotionPatternType::FISH_MOTION, frequencyDivider);
         }
     }
 }
@@ -373,18 +376,19 @@ int Navigation::motionPatternFrequencyDivider(MotionPatternType::Enum type)
 {
     if (type == MotionPatternType::FISH_MOTION) {
         return m_fishMotionFrequencyDivider;
-    } else {
+    }
+    else {
         qDebug() << QString("The motion frequency divider is not supported for %1")
-                    .arg(MotionPatternType::toString(type));
+                        .arg(MotionPatternType::toString(type));
         return 1;
     }
 }
 
-/*! 
+/*!
  * Sets the path planning usage flag.
- */ 
-void Navigation::setUsePathPlanning(bool usePathPlanning) 
-{ 
+ */
+void Navigation::setUsePathPlanning(bool usePathPlanning)
+{
     if (m_usePathPlanning != usePathPlanning) {
         m_usePathPlanning = usePathPlanning;
         // clean up when path planning is disactivated
@@ -434,4 +438,3 @@ void Navigation::updateCurrentWaypoint(PositionMeters currentWaypoint)
         emit notifyTargetPositionChanged(m_currentWaypoint);
     }
 }
-

@@ -1,14 +1,16 @@
 #ifndef CATS2_ROBOT_CONTROL_SETTINGS_HPP
 #define CATS2_ROBOT_CONTROL_SETTINGS_HPP
 
+#include "RobotControlPointerTypes.hpp"
 #include "SetupMap.hpp"
 #include "experiment-controllers/ExperimentControllerType.hpp"
-#include "RobotControlPointerTypes.hpp"
+
+#include "model/utils/heading.hpp"
 
 #include <settings/ReadSettingsHelper.hpp>
 
-#include <QtCore/QString>
 #include <QtCore/QMap>
+#include <QtCore/QString>
 
 #include <functional>
 
@@ -30,6 +32,29 @@ public:
 
     //! Simulation parameters.
     float dt = 0.2;
+};
+
+struct SocialFishModelSettings {
+public:
+    //! Constructor.
+    explicit SocialFishModelSettings() {}
+
+    int numCells = 40;
+    int groupThreshold = 3;
+    int cellsForward = 5;
+    int cellsBackward = 5;
+    int minSpeed = 1;
+    int maxSpeed = 1;
+    float probObey = 1.0f;
+    float probMove = 0.901f;
+    float probChangeSpeed = 0.1f;
+    int headingChangeDuration = 3;
+    std::vector<float> sumWeight = {0.3f, -2.0f};
+    int influence_alpha = 4;
+    int heading_bias = 0;
+
+    int targetResetThreshold = 3;
+    int historyReset = 5;
 };
 
 /*!
@@ -58,18 +83,18 @@ public:
     explicit FishModelWithWallsSettings() {}
 
     //! BMWithWalls parameters.
-    float kappaFishes = 10.0;  //! \kappa_f
-    float alpha = 25.0;   //! \alpha_0
+    float kappaFishes = 10.0; //! \kappa_f
+    float alpha = 25.0; //! \alpha_0
     float kappaNeutCenter = 6.3; //! \kappa_0
     float repulsionFromAgentsAtDist = 0.02; //! Repulsion from agent if other is too close
-    float wallDistanceThreshold = 0.02;  //! d
+    float wallDistanceThreshold = 0.02; //! d
 };
 
 /*!
  * Stores settings of the zoned fish model.
  */
 // TODO : make the class and members private.
-struct ZonedFishModelSettings : public BasicFishModelSettings{
+struct ZonedFishModelSettings : public BasicFishModelSettings {
 public:
     //! Constructor.
     explicit ZonedFishModelSettings() {}
@@ -107,13 +132,14 @@ public:
 
     //! Reads the settings.
     bool readModelSettings(ReadSettingsHelper& reader,
-                           std::map<std::string, std::function<double()>>& m_parametersGetters,
-                           std::map<std::string, std::function<void(double)>>& m_parametersSetters);
+        std::map<std::string, std::function<double()>>& m_parametersGetters,
+        std::map<std::string, std::function<void(double)>>& m_parametersSetters);
 
     AgentParameters agentParameters;
 
     BasicFishModelSettings basicFishModelSettings;
     FishModelWithWallsSettings fishModelWithWallsSettings;
+    SocialFishModelSettings socialFishModelSettings;
 
     QList<ZonedFishModelSettings> zonedFishModelSettings;
     //! Gets a path in the configuration file and tells to which zone it belongs
@@ -124,11 +150,10 @@ public:
 /*!
  * Stores settings of one robot.
  */
-class RobotSettings
-{
+class RobotSettings {
 public:
     //! Constructor.
-    explicit RobotSettings() { }
+    explicit RobotSettings() {}
 
     //! Sets id.
     void setId(QString id) { m_id = id; }
@@ -175,14 +200,10 @@ private:
 /*!
  * Stores settings of fish motion pattern.
  */
-class FishMotionPatternSettings
-{
+class FishMotionPatternSettings {
 public:
     //! Constructor.
-    explicit FishMotionPatternSettings():
-        m_distanceCm(10.),
-        m_speedCmSec(15.)
-    { }
+    explicit FishMotionPatternSettings() : m_distanceCm(10.), m_speedCmSec(15.) {}
 
     //! Sets distance to accelerate.
     void setDistanceCm(int distance) { m_distanceCm = distance; }
@@ -207,18 +228,13 @@ private:
 /*!
  * Stores settings of PID controller.
  */
-class PidControllerSettings
-{
+class PidControllerSettings {
 public:
     //! Constructor.
-    explicit PidControllerSettings():
-        m_kp(1),
-        m_ki(0),
-        m_kd(0),
-        m_kpDist(100),
-        m_kiDist(0),
-        m_kdDist(0)
-    { }
+    explicit PidControllerSettings()
+        : m_kp(1), m_ki(0), m_kd(0), m_kpDist(100), m_kiDist(0), m_kdDist(0)
+    {
+    }
 
     //! Sets proportional coefficient.
     void setKp(double kp) { m_kp = kp; }
@@ -268,12 +284,10 @@ private:
 /*!
  * Stores settings of path planning.
  */
-class PathPlanningSettings
-{
+class PathPlanningSettings {
 public:
     //! Constructor.
-    explicit PathPlanningSettings() : m_gridSizeMeters(0.0)
-    { }
+    explicit PathPlanningSettings() : m_gridSizeMeters(0.0) {}
 
     //! Sets the grid size.
     void setGridSizeMeters(double gridSize) { m_gridSizeMeters = gridSize; }
@@ -288,20 +302,20 @@ private:
 /*!
  * Stores settings for the potential field obstacle avoidance
  */
-struct PotentialFieldSettings
-{
+struct PotentialFieldSettings {
     //! Constructor.
-    explicit PotentialFieldSettings() :
-        influenceDistanceArenaMeters(0.03),
-        influenceStrengthArena(10),
-        influenceDistanceRobotsMeters(0.09),
-        influenceStrengthRobots(20),
-        influenceDistanceTargetMeters(0.03),
-        influenceStrengthTarget(2),
-        maxForce(1000),
-        maxAngleDeg(60),
-        obstacleAvoidanceAreaDiameterMeters(0.1)
-    { }
+    explicit PotentialFieldSettings()
+        : influenceDistanceArenaMeters(0.03),
+          influenceStrengthArena(10),
+          influenceDistanceRobotsMeters(0.09),
+          influenceStrengthRobots(20),
+          influenceDistanceTargetMeters(0.03),
+          influenceStrengthTarget(2),
+          maxForce(1000),
+          maxAngleDeg(60),
+          obstacleAvoidanceAreaDiameterMeters(0.1)
+    {
+    }
 
     //! Repulsive parameters rho0 being the distance of influence and nu the
     //! "strength" of the repulsion.
@@ -326,9 +340,8 @@ struct PotentialFieldSettings
  * NOTE : All the settings are made as singltons to simplify the access to them;
  * the drawback is that initialization of many objects becomes obscure because of this.
  * NOTE : All the settings must be initialized on the program startup.
-*/
-class RobotControlSettings : public QObject
-{
+ */
+class RobotControlSettings : public QObject {
     Q_OBJECT
 public:
     //! The singleton getter.
@@ -345,7 +358,7 @@ public:
     //! Copy assignment.
     RobotControlSettings& operator=(RobotControlSettings const&) = delete;
     //! Move assignment.
-    RobotControlSettings& operator=(RobotControlSettings &&) = delete;
+    RobotControlSettings& operator=(RobotControlSettings&&) = delete;
 
 public:
     //! Returns the number of robots.
@@ -353,7 +366,10 @@ public:
     //! Returns the contol loop frequency.
     int controlFrequencyHz() const { return m_controlFrequencyHz; }
     //! Gives the reference to the fish motion pattern settngs.
-    const FishMotionPatternSettings& fishMotionPatternSettings() const { return m_fishMotionPatternSettings; }
+    const FishMotionPatternSettings& fishMotionPatternSettings() const
+    {
+        return m_fishMotionPatternSettings;
+    }
     //! Returns the frequency divider for the navigation commands
     //! for fish motion pattern.
     int fishMotionPatternFrequencyDivider() const { return m_fishMotionPatternFrequencyDivider; }
@@ -363,7 +379,7 @@ public:
     //! Returns the settings for given robot.
     RobotSettings robotSettings(QString id) const { return m_robotsSettings[id]; }
     //! Returns the list of all robot ids.
-    QList<QString > ids() const { return m_robotsSettings.keys(); }
+    QList<QString> ids() const { return m_robotsSettings.keys(); }
 
     //! Returns the default linear speed.
     int defaultLinearSpeedCmSec() const { return m_defaultLinearSpeedCmSec; }
@@ -379,10 +395,7 @@ public:
     int numberOfAnimals() const { return m_numberOfAnimals; }
 
     //! Gives the const reference to the basic fish model parameters.
-    const FishModelSettings& fishModelSettings() const
-    {
-        return m_fishModelSettings;
-    }
+    const FishModelSettings& fishModelSettings() const { return m_fishModelSettings; }
 
     //! Gives the settings for the given controller type.
     ExperimentControllerSettingsPtr controllerSettings(ExperimentControllerType::Enum type);
@@ -396,7 +409,10 @@ public:
     const PathPlanningSettings& pathPlanningSettings() const { return m_pathPlanningSettings; }
 
     //! Gives the reference to the potential field obstacle avoidance settings.
-    const PotentialFieldSettings& potentialFieldSettings() const { return m_potentialFieldSettings; }
+    const PotentialFieldSettings& potentialFieldSettings() const
+    {
+        return m_potentialFieldSettings;
+    }
 
     //! Returns the predefined trajectory for the Trajectory control mode.
     QList<PositionMeters> trajectory() const { return m_trajectory; }
@@ -463,8 +479,7 @@ private:
     void readFishModelSettings(ReadSettingsHelper& settings);
 
     //! The settings for specific experiment controllers.
-    QMap<ExperimentControllerType::Enum,
-         ExperimentControllerSettingsPtr> m_controllerSettings;
+    QMap<ExperimentControllerType::Enum, ExperimentControllerSettingsPtr> m_controllerSettings;
 
     // TODO : to make a map of usefull settings for every control mode
     //! The predefined trajectory for the Trajectory control mode.
@@ -482,7 +497,8 @@ private:
     //! Map that stores the paramers getters.
     std::map<std::string, std::function<std::vector<double>(std::string)>> m_parametersGetters;
     //! Map that stores the paramers setters.
-    std::map<std::string, std::function<void(std::vector<double>, std::string)>> m_parametersSetters;
+    std::map<std::string, std::function<void(std::vector<double>, std::string)>>
+        m_parametersSetters;
 };
 
 #endif // CATS2_ROBOT_CONTROL_SETTINGS_HPP

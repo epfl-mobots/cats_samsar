@@ -10,19 +10,18 @@
 /*!
  * Constructor.
  */
-GenericFishModel::GenericFishModel(FishBot* robot, ControlModeType::Enum type) :
-    ControlMode(robot, type),
-    GridBasedMethod(ModelResolutionM),
-    m_arena(nullptr),
-    m_sim(nullptr),
-    m_parameters(),
-    m_targetPosition(PositionMeters::invalidPosition()),
-    m_targetUpdateTimer()
+GenericFishModel::GenericFishModel(FishBot* robot, ControlModeType::Enum type)
+    : ControlMode(robot, type),
+      GridBasedMethod(ModelResolutionM),
+      m_arena(nullptr),
+      m_sim(nullptr),
+      m_parameters(),
+      m_targetPosition(PositionMeters::invalidPosition()),
+      m_targetUpdateTimer()
 {
     // updates the model parameters on change
-    connect(&RobotControlSettings::get(),
-            &RobotControlSettings::notifyFishModelSettingsChanged,
-            this, &GenericFishModel::updateModelParameters);
+    connect(&RobotControlSettings::get(), &RobotControlSettings::notifyFishModelSettingsChanged,
+        this, &GenericFishModel::updateModelParameters);
 }
 
 /*!
@@ -30,7 +29,7 @@ GenericFishModel::GenericFishModel(FishBot* robot, ControlModeType::Enum type) :
  */
 GenericFishModel::~GenericFishModel()
 {
-//    cv::destroyWindow("ModelGrid");
+    //    cv::destroyWindow("ModelGrid");
     qDebug() << "Destroying the object";
 }
 
@@ -40,7 +39,8 @@ GenericFishModel::~GenericFishModel()
 void GenericFishModel::start()
 {
     // in the beginning the model always check the position of fish
-    m_parameters.ignoreFish = false; // TODO : better move this to GUI instead and do not reset it here
+    m_parameters.ignoreFish
+        = false; // TODO : better move this to GUI instead and do not reset it here
     m_targetUpdateTimer.reset();
     // compute the first target position
     m_targetPosition = computeTargetPosition();
@@ -66,7 +66,7 @@ ControlTargetPtr GenericFishModel::step()
             status = "follow fish";
         if (robotPosition.isValid()) {
             status += QString(", dist. %1 m")
-                    .arg(robotPosition.distance2dTo(m_targetPosition), 0, 'f', 3);
+                          .arg(robotPosition.distance2dTo(m_targetPosition), 0, 'f', 3);
         }
         // TODO : temporary, to remove
         // check if the target position is inside the model area
@@ -85,8 +85,7 @@ ControlTargetPtr GenericFishModel::step()
  */
 QList<ControlTargetType> GenericFishModel::supportedTargets()
 {
-    return QList<ControlTargetType>({ControlTargetType::SPEED,
-                                     ControlTargetType::POSITION});
+    return QList<ControlTargetType>({ControlTargetType::SPEED, ControlTargetType::POSITION});
 }
 
 /*!
@@ -98,14 +97,14 @@ PositionMeters GenericFishModel::computeTargetPosition()
         return PositionMeters::invalidPosition();
     }
 
-//    cv::imshow( "ModelGrid", m_currentGrid);
+    //    cv::imshow( "ModelGrid", m_currentGrid);
 
-//    // if no data is available, don't update the target
-//    if (m_robot->fishStates().size() == 0) {
-//        qDebug() << "No fish detected, impossible to run the model";
-//        // returning the previous target
-//        return m_targetPosition;
-//    }
+    //    // if no data is available, don't update the target
+    //    if (m_robot->fishStates().size() == 0) {
+    //        qDebug() << "No fish detected, impossible to run the model";
+    //        // returning the previous target
+    //        return m_targetPosition;
+    //    }
 
     // set the target invalid until it's computed
     PositionMeters targetPosition;
@@ -114,7 +113,7 @@ PositionMeters GenericFishModel::computeTargetPosition()
     size_t agentIndex = 0;
     if (!m_parameters.ignoreFish) {
         // update the fish positions in the model
-        for (StateWorld& state : m_robot->fishStates()){
+        for (StateWorld& state : m_robot->fishStates()) {
             if (agentIndex < m_sim->fishes.size()) {
                 if (state.position().isValid() && containsPoint(state.position())) {
                     // the positions are normalized to fit the matrix
@@ -122,25 +121,23 @@ PositionMeters GenericFishModel::computeTargetPosition()
                     m_sim->fishes[agentIndex].first->headPos.second = state.position().y() - minY();
 
                     if (state.orientation().isValid())
-                        m_sim->fishes[agentIndex].first->direction =
-                                state.orientation().angleRad();
+                        m_sim->fishes[agentIndex].first->direction = state.orientation().angleRad();
                     else
                         m_sim->fishes[agentIndex].first->direction = 0;
 
                     m_sim->fishes[agentIndex].first->present = true;
                     agentIndex++;
                 }
-            } else {
+            }
+            else {
                 qDebug() << "Number of fish in the simulator is wrongly initialized.";
                 break;
             }
         }
     }
     size_t detectedAgentNum = agentIndex;
-    for (agentIndex = detectedAgentNum;
-         agentIndex < RobotControlSettings::get().numberOfAnimals();
-         ++agentIndex)
-    {
+    for (agentIndex = detectedAgentNum; agentIndex < RobotControlSettings::get().numberOfAnimals();
+         ++agentIndex) {
         m_sim->fishes[agentIndex].first->present = false;
     }
 
@@ -148,24 +145,26 @@ PositionMeters GenericFishModel::computeTargetPosition()
     if (!m_parameters.ignoreRobot) {
         PositionMeters robotPosition = m_robot->state().position();
         OrientationRad robotOrientation = m_robot->state().orientation();
-        if (robotPosition.isValid() && containsPoint(robotPosition) &&
-            (m_sim->robots.size() == 1))
-        {
+        if (robotPosition.isValid() && containsPoint(robotPosition)
+            && (m_sim->robots.size() == 1)) {
             m_sim->robots[0].first->headPos.first = robotPosition.x() - minX();
             m_sim->robots[0].first->headPos.second = robotPosition.y() - minY();
 
             if (robotOrientation.isValid()) {
                 m_sim->robots[0].first->direction = robotOrientation.angleRad();
-            } else {
+            }
+            else {
                 m_sim->robots[0].first->direction = 0;
             }
             m_sim->robots[0].first->present = true;
-        } else {
+        }
+        else {
             qDebug() << "The robot position is outside of the setup "
-                                       "area or invalid";
+                        "area or invalid";
             m_sim->robots[0].first->present = false;
         }
-    } else {
+    }
+    else {
         m_sim->robots[0].first->present = false;
     }
 
@@ -173,13 +172,14 @@ PositionMeters GenericFishModel::computeTargetPosition()
     m_sim->step();
     // get the target value
     if (m_sim->robots.size() > 0) { // we have only one robot so it is #0
-        targetPosition.setX((m_sim->robots[0].first->headPos.first +
-                            m_sim->robots[0].first->tailPos.first) / 2. + minX());
-        targetPosition.setY((m_sim->robots[0].first->headPos.second +
-                            m_sim->robots[0].first->tailPos.second) / 2. + minY());
+        targetPosition.setX(
+            (m_sim->robots[0].first->headPos.first + m_sim->robots[0].first->tailPos.first) / 2.
+            + minX());
+        targetPosition.setY(
+            (m_sim->robots[0].first->headPos.second + m_sim->robots[0].first->tailPos.second) / 2.
+            + minY());
         targetPosition.setValid(true);
-//        qDebug() << QString("New target is %1")
-//                    .arg(targetPosition.toString());
+        qDebug() << QString("New target is %1").arg(targetPosition.toString());
     }
 
     return targetPosition;
@@ -195,8 +195,8 @@ void GenericFishModel::setParameters(ModelParameters parameters)
         m_parameters = parameters;
         qDebug() << QString("Model parameters are updated, ignore-fish:%1,"
                             "ignore-robot:%2")
-                    .arg(m_parameters.ignoreFish)
-                    .arg(m_parameters.ignoreRobot);
+                        .arg(m_parameters.ignoreFish)
+                        .arg(m_parameters.ignoreRobot);
         resetModel(); // FIXME : this looks like a serious overkill, really necessary?
     }
 }

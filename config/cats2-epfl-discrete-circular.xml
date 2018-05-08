@@ -144,11 +144,11 @@
                 value in the calibration file.
             -->
             <imageSize>
-                <width>500</width>
+<!--                 <width>500</width>
                 <height>500</height>                
-
-<!--                 <width>512</width>
-                <height>512</height> -->
+ -->
+                <width>512</width>
+                <height>512</height>
             </imageSize>
             <cameraCalibrationFile>camera-calibration/epfl-setup-180/cats2-epfl-main-camera-basler.xml</cameraCalibrationFile>
             <tracking>

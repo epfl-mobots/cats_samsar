@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <opencv_storage>
     <experiment>
-        <type>Interspecies</type>
+        <type>Circular</type>
         <name>Discrete-circular</name>
         <agents>
-            <numberOfAnimals>5</numberOfAnimals>
+            <numberOfAnimals>1</numberOfAnimals>
         </agents>
         <setupMapPath>setup/epfl-circular.xml</setupMapPath>
     </experiment>
@@ -27,12 +27,12 @@
                 <cellsBackward>8</cellsBackward>
                 <minSpeed>1</minSpeed>
                 <maxSpeed>1</maxSpeed>
-                <probObey>1.0</probObey>
+                <probObey>0.94</probObey>
                 <probMove>0.901</probMove>
                 <probChangeSpeed>0.1</probChangeSpeed>
-                <headingChangeDuration>8</headingChangeDuration>
+                <headingChangeDuration>10</headingChangeDuration>
                 <sumWeight>0.3 -2.0</sumWeight>
-                <influenceAlpha>6</influenceAlpha>
+                <influenceAlpha>10</influenceAlpha>
                 <!-- <headingBias>-1</headingBias> -->
                 <headingBias>0</headingBias>
 
@@ -53,11 +53,11 @@
                 <historyReset>5</historyReset>
             </SFM>
             <simulation>
-                <dt>0.2</dt>
+                <dt>0.25</dt>
             </simulation>
         </fishModel>
         <pathPlanning>
-            <gridSizeM>0.2</gridSizeM>
+            <gridSizeM>0.01</gridSizeM>
         </pathPlanning>
         <obstacleAvoidance>
             <potentialField>
@@ -74,10 +74,10 @@
         </obstacleAvoidance>
         <controlModes>
             <trajectory>
-                <!-- <points>trajectories/fish-two-rooms-small.xml</points>
+                <points>trajectories/fish-two-rooms-small.xml</points>
                 <loopTrajectory>1</loopTrajectory>
                 <providePointsOnTimer>1</providePointsOnTimer>
-                <updateRateHz>15</updateRateHz> -->
+                <updateRateHz>15</updateRateHz>
             </trajectory>
         </controlModes>
         <!-- Navigation settings. -->
@@ -88,9 +88,9 @@
                 <speedCmSec>14</speedCmSec> <!--Speed fish behaviour -->
             </fishMotionPattern>
             <pid>
-                <kp>2.0</kp>
+                <kp>2.5</kp>
                 <ki>0.05</ki>
-                <kd>0.00</kd>
+                <kd>0.05</kd>
                 <kpDist>70.0</kpDist>
                 <kiDist>1.00</kiDist>
                 <kdDist>2.00</kdDist>
@@ -144,9 +144,6 @@
                 value in the calibration file.
             -->
             <imageSize>
-<!--                 <width>500</width>
-                <height>500</height>                
- -->
                 <width>512</width>
                 <height>512</height>
             </imageSize>
@@ -189,12 +186,11 @@
     </setups>
     <interSpecies>
         <!-- where we send data -->
-        <publisherAddress>tcp://143.50.158.98:5556</publisherAddress>
+        <!-- <publisherAddress>tcp://143.50.158.98:5556</publisherAddress> -->
         <!-- from where we get data -->
-        <subscriberAddresses>tcp://143.50.158.98:5555</subscriberAddresses>
-        <!-- local addresses
-            <publisherAddress>tcp://127.0.0.1:5555</publisherAddress>
-            <subscriberAddresses>tcp://127.0.0.1:5556</subscriberAddresses>
-        -->
+        <!-- <subscriberAddresses>tcp://143.50.158.98:5555</subscriberAddresses> -->
+        <!-- local addresses -->
+<!--             <publisherAddress>tcp://127.0.0.1:5555</publisherAddress>
+            <subscriberAddresses>tcp://127.0.0.1:5556</subscriberAddresses> -->
     </interSpecies>
 </opencv_storage>

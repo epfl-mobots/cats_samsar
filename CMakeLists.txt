@@ -41,7 +41,7 @@ include_directories(SYSTEM ${GLIB2_MAIN_INCLUDE_DIR})
 find_package(Protobuf REQUIRED)
 include_directories(SYSTEM ${PROTOBUF_INCLUDE_DIRS})
 
-find_package(Boost COMPONENTS program_options REQUIRED )
+find_package(Boost COMPONENTS program_options system serialization REQUIRED )
 include_directories(SYSTEM ${Boost_INCLUDE_DIR} )
 
 find_package(dashel REQUIRED)

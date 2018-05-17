@@ -27,6 +27,8 @@ makeLink(dependencies/fish-model/bmWithWalls.cpp model/bmWithWalls.cpp)
 makeLink(dependencies/social-fish-model/socialFishModel.hpp model/socialFishModel.hpp)
 makeLink(dependencies/social-fish-model/socialFishModel.cpp model/socialFishModel.cpp)
 makeLink(dependencies/social-fish-model/utils model/utils)
+makeLink(dependencies/social-fish-model/densestPointModel.cpp model/densestPointModel.cpp)
+makeLink(dependencies/social-fish-model/densestPointModel.hpp model/densestPointModel.hpp)
 
 set(srcs
     settings/RobotControlSettings.cpp
@@ -84,9 +86,11 @@ set(srcs
     statistics/StatisticsPublisher.cpp
 
     model/socialFishModel.cpp
+    model/densestPointModel.cpp
     control-modes/SocialFishControlMode.cpp
     model/utils/heading.cpp
     model/utils/random/random_generator.cpp
+    control-modes/DensestPoint.cpp
 )
 
 set(hdrs
@@ -101,7 +105,9 @@ set(hdrs
     experiment-controllers/ExperimentControllerFactory.hpp
 
     model/socialFishModel.hpp
+    model/densestPointModel.hpp
     control-modes/SocialFishControlMode.hpp
+    control-modes/DensestPoint.hpp
     model/utils/heading.hpp
     model/utils/random/random_generator.hpp
 )

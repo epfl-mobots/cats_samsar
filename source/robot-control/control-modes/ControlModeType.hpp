@@ -19,6 +19,7 @@ public:
         TRAJECTORY,
         FOLLOW_GROUP,
         SOCIAL_FISH_MODEL,
+        DENSEST_POINT,
         UNDEFINED
     };
 
@@ -45,6 +46,8 @@ public:
             return FOLLOW_GROUP;
         else if (modeName.toLower() == "socialfishmodel")
             return SOCIAL_FISH_MODEL;
+        else if (modeName.toLower() == "densestpoint")
+            return DENSEST_POINT;
         else
             return UNDEFINED;
     }
@@ -81,6 +84,9 @@ public:
             break;
         case SOCIAL_FISH_MODEL:
             string = "Social Fish Model";
+            break;
+        case DENSEST_POINT:
+            string = "Densest Point";
             break;
         case IDLE:
         default:

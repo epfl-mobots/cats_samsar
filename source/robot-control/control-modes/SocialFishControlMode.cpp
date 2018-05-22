@@ -52,6 +52,8 @@ void SocialFishControlMode::updateModelParameters()
         sfm->_target_reset_threshold
             = fishModelSettings.socialFishModelSettings.targetResetThreshold;
         sfm->_history_reset = fishModelSettings.socialFishModelSettings.historyReset;
+
+        sfm->reinit();
     }
 }
 

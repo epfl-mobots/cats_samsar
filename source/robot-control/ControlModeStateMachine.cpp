@@ -3,6 +3,7 @@
 #include "FishBot.hpp"
 #include "control-modes/ControlMode.hpp"
 #include "control-modes/ControlModeType.hpp"
+#include "control-modes/DensestPoint.hpp"
 #include "control-modes/FishModelWithWalls.hpp"
 #include "control-modes/FollowGroup.hpp"
 #include "control-modes/GenericFishModel.hpp"
@@ -38,6 +39,8 @@ ControlModeStateMachine::ControlModeStateMachine(FishBot* robot, QObject* parent
     m_controlModes.insert(ControlModeType::FOLLOW_GROUP, ControlModePtr(new FollowGroup(m_robot)));
     m_controlModes.insert(
         ControlModeType::SOCIAL_FISH_MODEL, ControlModePtr(new SocialFishControlMode(m_robot)));
+    m_controlModes.insert(
+        ControlModeType::DENSEST_POINT, ControlModePtr(new DensestPoint(m_robot)));
 
     // make necessary connections
     foreach (ControlModePtr controlMode, m_controlModes.values()) {

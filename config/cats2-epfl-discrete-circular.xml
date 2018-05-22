@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <opencv_storage>
     <experiment>
-        <type>Circular</type>
+        <type>Interspecies</type>
         <name>Discrete-circular</name>
         <agents>
             <numberOfAnimals>1</numberOfAnimals>
@@ -57,7 +57,7 @@
             </simulation>
         </fishModel>
         <pathPlanning>
-            <gridSizeM>0.01</gridSizeM>
+            <gridSizeM>0.2</gridSizeM>
         </pathPlanning>
         <obstacleAvoidance>
             <potentialField>
@@ -74,10 +74,10 @@
         </obstacleAvoidance>
         <controlModes>
             <trajectory>
-                <points>trajectories/fish-two-rooms-small.xml</points>
+                <!-- <points>trajectories/fish-two-rooms-small.xml</points>
                 <loopTrajectory>1</loopTrajectory>
                 <providePointsOnTimer>1</providePointsOnTimer>
-                <updateRateHz>15</updateRateHz>
+                <updateRateHz>15</updateRateHz> -->
             </trajectory>
         </controlModes>
         <!-- Navigation settings. -->
@@ -88,9 +88,9 @@
                 <speedCmSec>14</speedCmSec> <!--Speed fish behaviour -->
             </fishMotionPattern>
             <pid>
-                <kp>2.5</kp>
+                <kp>2.0</kp>
                 <ki>0.05</ki>
-                <kd>0.05</kd>
+                <kd>0.00</kd>
                 <kpDist>70.0</kpDist>
                 <kiDist>1.00</kiDist>
                 <kdDist>2.00</kdDist>
@@ -144,8 +144,11 @@
                 value in the calibration file.
             -->
             <imageSize>
-                <width>512</width>
-                <height>512</height>
+                <width>500</width>
+                <height>500</height>                
+
+<!--                 <width>512</width>
+                <height>512</height> -->
             </imageSize>
             <cameraCalibrationFile>camera-calibration/epfl-setup-180/cats2-epfl-main-camera-basler.xml</cameraCalibrationFile>
             <tracking>

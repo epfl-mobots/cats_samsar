@@ -29,6 +29,8 @@ makeLink(dependencies/social-fish-model/socialFishModel.cpp model/socialFishMode
 makeLink(dependencies/social-fish-model/utils model/utils)
 makeLink(dependencies/social-fish-model/densestPointModel.cpp model/densestPointModel.cpp)
 makeLink(dependencies/social-fish-model/densestPointModel.hpp model/densestPointModel.hpp)
+makeLink(dependencies/social-fish-model/epfl_factory.hpp model/epfl_factory.hpp)
+makeLink(dependencies/social-fish-model/epfl_factory.cpp model/epfl_factory.cpp)
 
 set(srcs
     settings/RobotControlSettings.cpp
@@ -91,6 +93,7 @@ set(srcs
     model/utils/heading.cpp
     model/utils/random/random_generator.cpp
     control-modes/DensestPoint.cpp
+    model/epfl_factory.cpp
 )
 
 set(hdrs
@@ -110,6 +113,7 @@ set(hdrs
     control-modes/DensestPoint.hpp
     model/utils/heading.hpp
     model/utils/random/random_generator.hpp
+    model/epfl_factory.hpp
 )
 
 qt5_wrap_ui(uis_hdrs gui/RobotControlWidget.ui gui/RobotsWidget.ui gui/PotentialFieldWidget.ui)

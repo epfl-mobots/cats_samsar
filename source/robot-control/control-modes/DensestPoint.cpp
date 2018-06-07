@@ -2,7 +2,7 @@
 
 #include "FishBot.hpp"
 #include "model/densestPointModel.hpp"
-#include "model/factory.hpp"
+#include "model/epfl_factory.hpp"
 #include "model/model.hpp"
 #include "settings/RobotControlSettings.hpp"
 
@@ -39,7 +39,7 @@ void DensestPoint::resetModel()
             = {m_currentGrid.cols * m_gridSizeMeters, m_currentGrid.rows * m_gridSizeMeters};
         // create the arena
         m_arena.reset(new Fishmodel::Arena(m_currentGrid, size));
-        Fishmodel::SimulationFactory factory(*m_arena);
+        Fishmodel::EpflSimulationFactory factory(*m_arena);
         factory.nbFishes = static_cast<size_t>(RobotControlSettings::get().numberOfAnimals());
         factory.nbRobots = static_cast<size_t>(
             RobotControlSettings::get()

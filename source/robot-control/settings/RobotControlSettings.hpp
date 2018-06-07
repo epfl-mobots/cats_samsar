@@ -42,15 +42,15 @@ public:
     int numCells = 40;
     int groupThreshold = 3;
     int cellsForward = 5;
-    int cellsBackward = 5;
+    int cellsBackward = 8;
     int minSpeed = 1;
     int maxSpeed = 1;
-    float probObey = 1.0f;
+    float probObey = 0.94f;
     float probMove = 0.901f;
     float probChangeSpeed = 0.1f;
     int headingChangeDuration = 3;
     std::vector<float> sumWeight = {0.3f, -2.0f};
-    int influence_alpha = 4;
+    int influence_alpha = 10;
     int heading_bias = 0;
 
     int targetResetThreshold = 3;

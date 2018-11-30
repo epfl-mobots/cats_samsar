@@ -4,12 +4,12 @@
         <type>Interspecies</type>
         <name>Discrete-circular</name>
         <agents>
-            <numberOfAnimals>6</numberOfAnimals>
+            <numberOfAnimals>0</numberOfAnimals>
         </agents>
         <setupMapPath>setup/epfl-circular.xml</setupMapPath>
     </experiment>
     <robots>
-        <numberOfRobots>0</numberOfRobots>
+        <numberOfRobots>1</numberOfRobots>
         <controlFrequencyHz>20</controlFrequencyHz>
         <fishModel>
             <agent>
@@ -31,7 +31,7 @@
                 <probMove>0.901</probMove>
                 <probChangeSpeed>0.1</probChangeSpeed>
                 <headingChangeDuration>10</headingChangeDuration>
-                <sumWeight>0.3 -2.0</sumWeight>
+                <sumWeight>0.3 -0.2</sumWeight>
                 <influenceAlpha>10</influenceAlpha>
                 <!-- <headingBias>-1</headingBias> -->
                 <headingBias>0</headingBias>

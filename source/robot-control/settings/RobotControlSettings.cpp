@@ -287,16 +287,12 @@ bool RobotControlSettings::init(QString configurationFileName)
             "robots/controlModes/wheelVelocities/velocities", relativeWheelPath, relativeWheelPath);
         QString velocityPath
             = configurationFolder + QDir::separator() + QString::fromStdString(relativeWheelPath);
-        qDebug() << ">>> " << velocityPath;
-        qDebug() << ">>> " << configurationFolder;
-        qDebug() << ">>> " << trajectoryPath;
 
         QFileInfo velocityFile(velocityPath);
         if (velocityFile.exists() && velocityFile.isFile()) {
             ReadSettingsHelper trajectorySettings(velocityPath);
             std::vector<cv::Point2f> polygon;
             trajectorySettings.readVariable(QString("polygon"), polygon);
-            qDebug() << ">>> polygon size " << polygon.size();
             if (polygon.size() > 0) {
                 for (auto& point : polygon) {
                     qDebug() << ">>> " << point.x << " " << point.y;

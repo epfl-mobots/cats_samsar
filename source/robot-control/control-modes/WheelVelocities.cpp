@@ -81,10 +81,10 @@ QList<ControlTargetType> WheelVelocities::supportedTargets()
  */
 void WheelVelocities::start()
 {
-    // if (m_providePointsOnTimer) {
-    //     double intervalMs = 1000. / RobotControlSettings::get().controlFrequencyHz();
-    //     m_updateTimer.start(intervalMs);
-    // }
+    if (m_providePointsOnTimer) {
+        double intervalMs = 1000. / RobotControlSettings::get().controlFrequencyHz();
+        m_updateTimer.start(intervalMs);
+    }
 }
 
 /*!
@@ -92,8 +92,8 @@ void WheelVelocities::start()
  */
 void WheelVelocities::finish()
 {
-    // if (m_providePointsOnTimer)
-    //     m_updateTimer.stop();
+    if (m_providePointsOnTimer)
+        m_updateTimer.stop();
 
-    // m_currentIndex = 0;
+    m_currentIndex = 0;
 }

@@ -17,6 +17,7 @@ public:
         FISH_MODEL_WITH_WALLS,
         ZONE_BASED_FISH_MODEL,
         TRAJECTORY,
+        WHEEL_VELOCITIES,
         FOLLOW_GROUP,
         SOCIAL_FISH_MODEL,
         DENSEST_POINT,
@@ -42,6 +43,8 @@ public:
             return ZONE_BASED_FISH_MODEL;
         else if (modeName.toLower() == "trajectory")
             return TRAJECTORY;
+        else if (modeName.toLower() == "wheelvelocities")
+            return WHEEL_VELOCITIES;
         else if (modeName.toLower() == "followgroup")
             return FOLLOW_GROUP;
         else if (modeName.toLower() == "socialfishmodel")
@@ -78,6 +81,9 @@ public:
             break;
         case TRAJECTORY:
             string = "Trajectory";
+            break;
+        case WHEEL_VELOCITIES:
+            string = "Wheel Velocities";
             break;
         case FOLLOW_GROUP:
             string = "Follow group";

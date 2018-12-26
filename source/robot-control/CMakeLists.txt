@@ -52,6 +52,7 @@ set(srcs
     control-modes/Manual.cpp
     control-modes/ControlMode.cpp
     control-modes/Trajectory.cpp
+    control-modes/WheelVelocities.cpp
     control-modes/FollowGroup.cpp
     ControlModeStateMachine.cpp
     interfaces/DBusInterface.cpp

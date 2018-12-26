@@ -4,7 +4,7 @@
         <type>Interspecies</type>
         <name>Discrete-circular</name>
         <agents>
-            <numberOfAnimals>0</numberOfAnimals>
+            <numberOfAnimals>6</numberOfAnimals>
         </agents>
         <setupMapPath>setup/epfl-circular.xml</setupMapPath>
     </experiment>
@@ -74,11 +74,17 @@
         </obstacleAvoidance>
         <controlModes>
             <trajectory>
-                <!-- <points>trajectories/fish-two-rooms-small.xml</points>
+                <points>trajectories/fish-two-rooms-small.xml</points>
                 <loopTrajectory>1</loopTrajectory>
                 <providePointsOnTimer>1</providePointsOnTimer>
-                <updateRateHz>15</updateRateHz> -->
+                <updateRateHz>15</updateRateHz>
             </trajectory>
+            <wheelVelocities>
+                <velocities>trajectories/circle-velocities.xml</velocities>
+                <loopWheelVelocities>1</loopWheelVelocities>
+                <provideWheelPointsOnTimer>1</provideWheelPointsOnTimer>
+                <updateWheelRateHz>15</updateWheelRateHz>
+            </wheelVelocities>
         </controlModes>
         <!-- Navigation settings. -->
         <navigation>
@@ -144,11 +150,11 @@
                 value in the calibration file.
             -->
             <imageSize>
-<!--                 <width>500</width>
-                <height>500</height>       -->          
+                <width>500</width>
+                <height>500</height>                
 
-                <width>512</width>
-                <height>512</height>
+<!--                 <width>512</width>
+                <height>512</height> -->
             </imageSize>
             <cameraCalibrationFile>camera-calibration/epfl-setup-180/cats2-epfl-main-camera-basler.xml</cameraCalibrationFile>
             <tracking>

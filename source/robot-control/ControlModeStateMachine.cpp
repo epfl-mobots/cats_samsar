@@ -14,6 +14,7 @@
 #include "control-modes/ModelBased.hpp"
 #include "control-modes/SocialFishControlMode.hpp"
 #include "control-modes/Trajectory.hpp"
+#include "control-modes/WheelVelocities.hpp"
 #include "control-modes/ZoneBasedFishModel.hpp"
 
 #include <QtCore/QDebug>
@@ -35,7 +36,8 @@ ControlModeStateMachine::ControlModeStateMachine(FishBot* robot, QObject* parent
         ControlModeType::FISH_MODEL_WITH_WALLS, ControlModePtr(new FishModelWithWalls(m_robot)));
     m_controlModes.insert(
         ControlModeType::ZONE_BASED_FISH_MODEL, ControlModePtr(new ZoneBasedFishModel(m_robot)));
-    m_controlModes.insert(ControlModeType::TRAJECTORY, ControlModePtr(new Trajectory(m_robot)));
+    m_controlModes.insert(ControlModeType::WHEEL_VELOCITIES, ControlModePtr(new WheelVelocities(m_robot)));
+    m_controlModes.insert(ControlModeType::TRAJECTORY, ControlModePtr(new WheelVelocities(m_robot)));
     m_controlModes.insert(ControlModeType::FOLLOW_GROUP, ControlModePtr(new FollowGroup(m_robot)));
     m_controlModes.insert(
         ControlModeType::SOCIAL_FISH_MODEL, ControlModePtr(new SocialFishControlMode(m_robot)));

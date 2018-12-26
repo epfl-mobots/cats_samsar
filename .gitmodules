@@ -9,5 +9,5 @@
 	url = https://github.com/leo-cazenille/FishModel.git
 [submodule "dependencies/social-fish-model"]
 	path = dependencies/social-fish-model
-	url = https://bitbucket.org:bpapaspyros/social-fish-model.git
+	url = git@github.com:bpapaspyros/social-fish-model.git
 

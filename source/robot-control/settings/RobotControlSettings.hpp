@@ -57,6 +57,14 @@ public:
     int historyReset = 5;
 };
 
+struct ReplayVelocities {
+public:
+    //! Constructor.
+    explicit ReplayVelocities() {}
+
+    std::string filename;
+};
+
 /*!
  * Stores settings of the basic fish model.
  */
@@ -427,6 +435,19 @@ public:
     //! on a timeout.
     int trajectoryUpdateRateHz() const { return m_trajectoryUpdateRateHz; }
 
+    //! returns the wheel velocities
+    QList<PositionMeters> wheelVelocities() const { return m_wheelVelocities; }
+    //! Returns the flag defining if the wheelVelocities should be restarted once the
+    //! last point is reached.
+    bool loopWheelVelocities() { return m_loopWheelVelocities; }
+
+    //! Returns the flag specifing if the next point of the trajectory is to be
+    //! provided on timer or once the previous is reached.
+    bool provideWheelPointsOnTimer() const { return m_provideWheelPointsOnTimer; }
+    //! Returns the update rate for the trajectory points when they are provided
+    //! on a timeout.
+    int wheelUpdateRateHz() const { return m_wheelUpdateRateHz; }
+
     //! Provides the settings value by its path in the configuration file.
     //! Only numerical values are supported.
     std::vector<double> valueByPath(std::string path);
@@ -493,6 +514,13 @@ private:
     //! The update rate for the trajectory points when they are provided on a
     //! timeout.
     int m_trajectoryUpdateRateHz;
+
+    //! The predefined trajectory for the Wheel velocities control mode.
+    //! similarly to the trajctory member vars
+    QList<PositionMeters> m_wheelVelocities;
+    bool m_loopWheelVelocities;
+    bool m_provideWheelPointsOnTimer;
+    int m_wheelUpdateRateHz;
 
     //! Map that stores the paramers getters.
     std::map<std::string, std::function<std::vector<double>(std::string)>> m_parametersGetters;

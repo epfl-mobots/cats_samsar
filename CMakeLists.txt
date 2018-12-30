@@ -15,7 +15,7 @@ else()
     set (CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/bin)
 endif()
 
-find_package(Qt5 REQUIRED Core Widgets DBus Xml Test)
+find_package(Qt5 REQUIRED Core Widgets DBus Xml Test Network)
 # SYSTEM is used to suppress GCC warnings in libraries headers
 include_directories(SYSTEM ${QT_INCLUDE_DIR})
 

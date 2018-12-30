@@ -53,6 +53,7 @@ set(srcs
     control-modes/ControlMode.cpp
     control-modes/Trajectory.cpp
     control-modes/WheelVelocities.cpp
+    control-modes/PositionSubscriber.cpp
     control-modes/FollowGroup.cpp
     ControlModeStateMachine.cpp
     interfaces/DBusInterface.cpp
@@ -124,7 +125,7 @@ include_directories(${CMAKE_SOURCE_DIR}/source/common)
 include_directories(${CMAKE_SOURCE_DIR}/source/inter-species)
 add_library(robot-control SHARED ${srcs} ${hdrs} ${uis_hdrs}) #${resources})
 target_link_libraries(robot-control common inter-species Qt5::Core Qt5::Widgets Qt5::DBus
-                      Qt5::Xml ${Boost_LIBRARIES}
+                      Qt5::Xml Qt5::Network ${Boost_LIBRARIES}
                       ${dashel_LIBRARIES} ${Aseba_LIBRARIES} -fsanitize=address)
 
 #install(TARGETS robot-control DESTINATION .)

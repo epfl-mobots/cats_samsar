@@ -18,7 +18,7 @@ public:
         ZONE_BASED_FISH_MODEL,
         TRAJECTORY,
         WHEEL_VELOCITIES,
-        POSITION_SUBSCRIBER,
+        POSITION_LISTENER,
         FOLLOW_GROUP,
         SOCIAL_FISH_MODEL,
         DENSEST_POINT,
@@ -46,8 +46,8 @@ public:
             return TRAJECTORY;
         else if (modeName.toLower() == "wheelvelocities")
             return WHEEL_VELOCITIES;
-        else if (modeName.toLower() == "postionssubscriber")
-            return POSITION_SUBSCRIBER;
+        else if (modeName.toLower() == "postionslistener")
+            return POSITION_LISTENER;
         else if (modeName.toLower() == "followgroup")
             return FOLLOW_GROUP;
         else if (modeName.toLower() == "socialfishmodel")
@@ -88,8 +88,8 @@ public:
         case WHEEL_VELOCITIES:
             string = "Wheel Velocities";
             break;
-        case POSITION_SUBSCRIBER:
-            string = "Position Subsriber";
+        case POSITION_LISTENER:
+            string = "Position Listener";
             break;
         case FOLLOW_GROUP:
             string = "Follow group";

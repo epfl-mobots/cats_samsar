@@ -85,11 +85,12 @@
                 <provideWheelPointsOnTimer>1</provideWheelPointsOnTimer>
                 <updateWheelRateHz>15</updateWheelRateHz>
             </wheelVelocities>
-            <positionSubscriber>
+            <positionListener>
                 <!-- only tcp is supported for now -->
-                <publisherIp>127.0.0.1</publisherIp>
+                <publisherIp>"127.0.0.1"</publisherIp>
                 <publisherPort>5623</publisherPort>
-            </positionSubscriber>
+                <!-- <dataSize>8</dataSize> -->
+            </positionListener>
         </controlModes>
         <!-- Navigation settings. -->
         <navigation>

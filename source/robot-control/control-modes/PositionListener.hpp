@@ -1,23 +1,24 @@
-﻿#ifndef CATS2_POSITION_SUBSCRIBER_HPP
-#define CATS2_POSITION_SUBSCRIBER_HPP
+﻿#ifndef CATS2_POSITION_LISTENER_HPP
+#define CATS2_POSITION_LISTENER_HPP
 
 #include "ControlMode.hpp"
 
 #include <QtCore/QTimer>
-#include <QTcpSocket>
+#include <QtNetwork>
+#include <mutex>
 
 /*!
  * Makes the robots to follow the predefined trajectory. When it arrives to the
  * last point it restarts it from the first point.
  */
 // TODO : to show the trajectory on the viewer
-class PositionSubscriber : public ControlMode {
+class PositionListener : public ControlMode {
     Q_OBJECT
 public:
     //! Constructor.
-    explicit PositionSubscriber(FishBot* robot);
+    explicit PositionListener(FishBot* robot);
     //! Destructor.
-    virtual ~PositionSubscriber() override;
+    virtual ~PositionListener() override;
 
     //! Called when the control mode is activated.
     virtual void start() override;
@@ -28,8 +29,22 @@ public:
 
     virtual QList<ControlTargetType> supportedTargets() override;
 
+    float ArrayToFloat(QByteArray source);
+
+signals:
+    void dataReceived(QByteArray);
+
+private slots:
+    void newConnection();
+    void disconnected();
+    void readyRead();
+
 private:
-    QTcpSocket _sub;
+    QTcpServer* server_;
+    QHash<QTcpSocket*, QByteArray*> buffers_;
+    QHash<QTcpSocket*, float*> sizes_;
+    std::vector<float> target_values_;
+    std::mutex lock_;
 };
 
-#endif // CATS2_POSITION_SUBSCRIBER_HPP
+#endif // CATS2_POSITION_LISTENER_HPP

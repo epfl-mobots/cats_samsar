@@ -7,30 +7,31 @@
 /*!
  * Constructor.
  */
-PositionListener::PositionListener(FishBot* robot) : ControlMode(robot, ControlModeType::POSITION_LISTENER)
+PositionListener::PositionListener(FishBot* robot) : ControlMode(robot, ControlModeType::POSITION_LISTENER),
+                                                     m_port(RobotControlSettings::get().port())
 {
-    server_ = new QTcpServer(this);
-    connect(server_, SIGNAL(newConnection()), SLOT(newConnection()));
+    m_server = new QTcpServer(this);
+    connect(m_server, SIGNAL(newConnection()), SLOT(newConnection()));
 }
 
 void PositionListener::newConnection()
 {
-    while (server_->hasPendingConnections()) {
-        QTcpSocket* socket = server_->nextPendingConnection();
+    while (m_server->hasPendingConnections()) {
+        QTcpSocket* socket = m_server->nextPendingConnection();
         connect(socket, SIGNAL(readyRead()), SLOT(readyRead()));
         connect(socket, SIGNAL(disconnected()), SLOT(disconnected()));
         QByteArray* buffer = new QByteArray();
         float* s = new float(0);
-        buffers_.insert(socket, buffer);
-        sizes_.insert(socket, s);
+        m_buffers.insert(socket, buffer);
+        m_sizes.insert(socket, s);
     }
 }
 
 void PositionListener::disconnected()
 {
     QTcpSocket* socket = static_cast<QTcpSocket*>(sender());
-    QByteArray* buffer = buffers_.value(socket);
-    float* s = sizes_.value(socket);
+    QByteArray* buffer = m_buffers.value(socket);
+    float* s = m_sizes.value(socket);
     socket->deleteLater();
     delete buffer;
     delete s;
@@ -39,10 +40,10 @@ void PositionListener::disconnected()
 void PositionListener::readyRead()
 {
     QTcpSocket* socket = static_cast<QTcpSocket*>(sender());
-    QByteArray* buffer = buffers_.value(socket);
+    QByteArray* buffer = m_buffers.value(socket);
 
-    uint pack_size = 16;
-    uint bytes = 4;
+    uint pack_size = 16; // strictly four numbers for now
+    uint bytes = 4; // strictly 4 bytes for now
     uint num_numbers = pack_size / bytes;
 
     std::vector<float> values;
@@ -56,8 +57,8 @@ void PositionListener::readyRead()
         }
     }
 
-    std::lock_guard<std::mutex> lg(lock_);
-    target_values_ = values;
+    std::lock_guard<std::mutex> lg(m_lock);
+    m_target_values = values;
 }
 
 float PositionListener::ArrayToFloat(QByteArray source)
@@ -89,10 +90,10 @@ ControlTargetPtr PositionListener::step()
 {
     // if port is open and subscriber is active
     {
-        std::lock_guard<std::mutex> lg(lock_);
-        if (target_values_.size() > 0) {
-            qDebug() << "Setting target position to: " << target_values_[0] << " " << target_values_[1];
-            return ControlTargetPtr(new TargetPosition(PositionMeters(target_values_[0], target_values_[1])));
+        std::lock_guard<std::mutex> lg(m_lock);
+        if (m_target_values.size() > 0) {
+            qDebug() << "Setting target position to: " << m_target_values[0] << " " << m_target_values[1];
+            return ControlTargetPtr(new TargetPosition(PositionMeters(m_target_values[0], m_target_values[1])));
         }
         else {
             qDebug() << "Velocities set to zero";
@@ -115,7 +116,7 @@ QList<ControlTargetType> PositionListener::supportedTargets()
  */
 void PositionListener::start()
 {
-    qDebug() << "Listening: " << server_->listen(QHostAddress::Any, 5623);
+    qDebug() << "Listening: " << m_server->listen(QHostAddress::Any, m_port) << " in port " << m_port;
 }
 
 /*!
@@ -123,6 +124,6 @@ void PositionListener::start()
  */
 void PositionListener::finish()
 {
-    server_->close();
+    m_server->close();
     qDebug() << "Disconnecting listener";
 }

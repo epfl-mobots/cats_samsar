@@ -40,11 +40,12 @@ private slots:
     void readyRead();
 
 private:
-    QTcpServer* server_;
-    QHash<QTcpSocket*, QByteArray*> buffers_;
-    QHash<QTcpSocket*, float*> sizes_;
-    std::vector<float> target_values_;
-    std::mutex lock_;
+    QTcpServer* m_server;
+    QHash<QTcpSocket*, QByteArray*> m_buffers;
+    QHash<QTcpSocket*, float*> m_sizes;
+    std::vector<float> m_target_values;
+    std::mutex m_lock;
+    int m_port;
 };
 
 #endif // CATS2_POSITION_LISTENER_HPP

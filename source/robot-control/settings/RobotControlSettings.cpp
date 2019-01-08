@@ -324,6 +324,13 @@ bool RobotControlSettings::init(QString configurationFileName)
         }
     }
 
+    // load port information for the position listener control mode
+    {
+        m_port = 5623;
+        settings.readVariable("robots/controlModes/positionListener/port",
+            m_port, m_port);
+    }
+
     settings.close();
 
     // read the settings for all available controllers

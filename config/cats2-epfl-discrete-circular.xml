@@ -87,9 +87,7 @@
             </wheelVelocities>
             <positionListener>
                 <!-- only tcp is supported for now -->
-                <publisherIp>"127.0.0.1"</publisherIp>
-                <publisherPort>5623</publisherPort>
-                <!-- <dataSize>8</dataSize> -->
+                <port>5623</port>
             </positionListener>
         </controlModes>
         <!-- Navigation settings. -->

@@ -448,6 +448,9 @@ public:
     //! on a timeout.
     int wheelUpdateRateHz() const { return m_wheelUpdateRateHz; }
 
+    //! Returns the port number for the position listener control mode
+    int port() const { return m_port; }
+
     //! Provides the settings value by its path in the configuration file.
     //! Only numerical values are supported.
     std::vector<double> valueByPath(std::string path);
@@ -521,6 +524,9 @@ private:
     bool m_loopWheelVelocities;
     bool m_provideWheelPointsOnTimer;
     int m_wheelUpdateRateHz;
+
+    // parameters for the position control mode
+    int m_port;
 
     //! Map that stores the paramers getters.
     std::map<std::string, std::function<std::vector<double>(std::string)>> m_parametersGetters;

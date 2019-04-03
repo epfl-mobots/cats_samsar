@@ -19,6 +19,7 @@ public:
         TRAJECTORY,
         WHEEL_VELOCITIES,
         POSITION_LISTENER,
+        TOULOUSE_MODE,
         FOLLOW_GROUP,
         SOCIAL_FISH_MODEL,
         DENSEST_POINT,
@@ -52,6 +53,8 @@ public:
             return FOLLOW_GROUP;
         else if (modeName.toLower() == "socialfishmodel")
             return SOCIAL_FISH_MODEL;
+        else if (modeName.toLower() == "toulousemodel")
+            return TOULOUSE_MODE;
         else if (modeName.toLower() == "densestpoint")
             return DENSEST_POINT;
         else
@@ -96,6 +99,9 @@ public:
             break;
         case SOCIAL_FISH_MODEL:
             string = "Social Fish Model";
+            break;
+        case TOULOUSE_MODE:
+            string = "Toulouse Model";
             break;
         case DENSEST_POINT:
             string = "Densest Point";

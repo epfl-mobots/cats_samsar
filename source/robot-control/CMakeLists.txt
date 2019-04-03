@@ -24,13 +24,15 @@ makeLink(dependencies/fish-model/zones.cpp model/zones.cpp)
 makeLink(dependencies/fish-model/bmWithWalls.hpp model/bmWithWalls.hpp)
 makeLink(dependencies/fish-model/bmWithWalls.cpp model/bmWithWalls.cpp)
 
-makeLink(dependencies/social-fish-model/socialFishModel.hpp model/socialFishModel.hpp)
-makeLink(dependencies/social-fish-model/socialFishModel.cpp model/socialFishModel.cpp)
-makeLink(dependencies/social-fish-model/utils model/utils)
-makeLink(dependencies/social-fish-model/densestPointModel.cpp model/densestPointModel.cpp)
-makeLink(dependencies/social-fish-model/densestPointModel.hpp model/densestPointModel.hpp)
-makeLink(dependencies/social-fish-model/epfl_factory.hpp model/epfl_factory.hpp)
-makeLink(dependencies/social-fish-model/epfl_factory.cpp model/epfl_factory.cpp)
+makeLink(dependencies/epfl_models/socialFishModel.hpp model/socialFishModel.hpp)
+makeLink(dependencies/epfl_models/socialFishModel.cpp model/socialFishModel.cpp)
+makeLink(dependencies/epfl_models/toulouseModel.hpp model/toulouseModel.hpp)
+makeLink(dependencies/epfl_models/toulouseModel.cpp model/toulouseModel.cpp)
+makeLink(dependencies/epfl_models/utils model/utils)
+makeLink(dependencies/epfl_models/densestPointModel.cpp model/densestPointModel.cpp)
+makeLink(dependencies/epfl_models/densestPointModel.hpp model/densestPointModel.hpp)
+makeLink(dependencies/epfl_models/epfl_factory.hpp model/epfl_factory.hpp)
+makeLink(dependencies/epfl_models/epfl_factory.cpp model/epfl_factory.cpp)
 
 set(srcs
     settings/RobotControlSettings.cpp
@@ -90,8 +92,10 @@ set(srcs
     statistics/StatisticsPublisher.cpp
 
     model/socialFishModel.cpp
+    model/toulouseModel.cpp
     model/densestPointModel.cpp
     control-modes/SocialFishControlMode.cpp
+    control-modes/ToulouseControlMode.cpp
     model/utils/heading.cpp
     model/utils/random/random_generator.cpp
     control-modes/DensestPoint.cpp
@@ -110,8 +114,10 @@ set(hdrs
     experiment-controllers/ExperimentControllerFactory.hpp
 
     model/socialFishModel.hpp
+    model/toulouseModel.hpp
     model/densestPointModel.hpp
     control-modes/SocialFishControlMode.hpp
+    control-modes/ToulouseControlMode.hpp
     control-modes/DensestPoint.hpp
     model/utils/heading.hpp
     model/utils/random/random_generator.hpp

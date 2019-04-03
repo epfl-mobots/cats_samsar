@@ -17,6 +17,7 @@
 #include "control-modes/WheelVelocities.hpp"
 #include "control-modes/PositionListener.hpp"
 #include "control-modes/ZoneBasedFishModel.hpp"
+#include "control-modes/ToulouseControlMode.hpp"
 
 #include <QtCore/QDebug>
 
@@ -43,6 +44,8 @@ ControlModeStateMachine::ControlModeStateMachine(FishBot* robot, QObject* parent
     m_controlModes.insert(ControlModeType::FOLLOW_GROUP, ControlModePtr(new FollowGroup(m_robot)));
     m_controlModes.insert(
         ControlModeType::SOCIAL_FISH_MODEL, ControlModePtr(new SocialFishControlMode(m_robot)));
+    m_controlModes.insert(
+        ControlModeType::TOULOUSE_MODE, ControlModePtr(new ToulouseControlMode(m_robot)));
     m_controlModes.insert(
         ControlModeType::DENSEST_POINT, ControlModePtr(new DensestPoint(m_robot)));
 

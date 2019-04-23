@@ -57,6 +57,23 @@ public:
     int historyReset = 5;
 };
 
+struct RummyFishSettings {
+public:
+    double radius = 0.29f;
+
+    int perceived_agents = 4;
+    double gamma_rand = 0.5f; // 5 fish
+    double gamma_wall = 0.15f; // > 5 fish
+    double wall_interaction_range = 0.06f;
+    double body_length = 0.03f;
+
+    double alpha = 2. / 3.;
+    double tau0 = 0.8f;
+    double velocity_coef = 0.14f;
+    double length_coef = 0.07f;
+    double time_coef = 0.5f;
+};
+
 struct ReplayVelocities {
 public:
     //! Constructor.
@@ -148,6 +165,7 @@ public:
     BasicFishModelSettings basicFishModelSettings;
     FishModelWithWallsSettings fishModelWithWallsSettings;
     SocialFishModelSettings socialFishModelSettings;
+    RummyFishSettings rummyFishModelSettings;
 
     QList<ZonedFishModelSettings> zonedFishModelSettings;
     //! Gets a path in the configuration file and tells to which zone it belongs

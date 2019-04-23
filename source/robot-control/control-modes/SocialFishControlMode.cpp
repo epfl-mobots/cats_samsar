@@ -46,7 +46,7 @@ void SocialFishControlMode::updateModelParameters()
         sfm->_sum_weight = fishModelSettings.socialFishModelSettings.sumWeight;
         sfm->_influence_alpha = fishModelSettings.socialFishModelSettings.influence_alpha;
         sfm->_heading_bias
-            = samsar::types::to_heading(fishModelSettings.socialFishModelSettings.heading_bias);
+            = simu::types::to_heading(fishModelSettings.socialFishModelSettings.heading_bias);
         qDebug() << "Heading bias: " << sfm->_heading_bias;
 
         sfm->_target_reset_threshold

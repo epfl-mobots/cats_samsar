@@ -19,40 +19,36 @@ void ToulouseControlMode::updateModelParameters()
     const FishModelSettings& fishModelSettings = RobotControlSettings::get().fishModelSettings();
     m_sim->dt = fishModelSettings.agentParameters.dt;
 
+    int id_count = 0;
     for (auto& a : m_sim->agents) {
-        // a.first->length = fishModelSettings.agentParameters.length;
-        // a.first->width = fishModelSettings.agentParameters.width;
-        // a.first->height = fishModelSettings.agentParameters.height;
-        // a.first->fov = fishModelSettings.agentParameters.fov;
-        // a.first->meanSpeed = fishModelSettings.agentParameters.meanSpeed;
-        // a.first->varSpeed = fishModelSettings.agentParameters.varSpeed;
-        // a.first->maxTurningRate = M_PI_2;
+        a.first->length = fishModelSettings.agentParameters.length;
+        a.first->width = fishModelSettings.agentParameters.width;
+        a.first->height = fishModelSettings.agentParameters.height;
+        a.first->fov = fishModelSettings.agentParameters.fov;
+        a.first->meanSpeed = fishModelSettings.agentParameters.meanSpeed;
+        a.first->varSpeed = fishModelSettings.agentParameters.varSpeed;
+        a.first->maxTurningRate = M_PI_2;
 
-        // Fishmodel::SocialFishModel* sfm
-        //     = reinterpret_cast<Fishmodel::SocialFishModel*>(a.second.get());
+        Fishmodel::ToulouseModel* tm
+            = reinterpret_cast<Fishmodel::ToulouseModel*>(a.second.get());
 
-        // sfm->_num_cells = fishModelSettings.socialFishModelSettings.numCells;
-        // sfm->_group_threshold = fishModelSettings.socialFishModelSettings.groupThreshold;
-        // sfm->_cells_forward = fishModelSettings.socialFishModelSettings.cellsForward;
-        // sfm->_cells_backward = fishModelSettings.socialFishModelSettings.cellsBackward;
-        // sfm->_min_speed = fishModelSettings.socialFishModelSettings.minSpeed;
-        // sfm->_max_speed = fishModelSettings.socialFishModelSettings.maxSpeed;
-        // sfm->_prob_obey = fishModelSettings.socialFishModelSettings.probObey;
-        // sfm->_prob_move = fishModelSettings.socialFishModelSettings.probMove;
-        // sfm->_prob_change_speed = fishModelSettings.socialFishModelSettings.probChangeSpeed;
-        // sfm->_heading_change_duration
-        //     = fishModelSettings.socialFishModelSettings.headingChangeDuration;
-        // sfm->_sum_weight = fishModelSettings.socialFishModelSettings.sumWeight;
-        // sfm->_influence_alpha = fishModelSettings.socialFishModelSettings.influence_alpha;
-        // sfm->_heading_bias
-        //     = samsar::types::to_heading(fishModelSettings.socialFishModelSettings.heading_bias);
-        // qDebug() << "Heading bias: " << sfm->_heading_bias;
+        tm->radius = fishModelSettings.rummyFishModelSettings.radius;
 
-        // sfm->_target_reset_threshold
-        //     = fishModelSettings.socialFishModelSettings.targetResetThreshold;
-        // sfm->_history_reset = fishModelSettings.socialFishModelSettings.historyReset;
+        tm->perceived_agents = fishModelSettings.rummyFishModelSettings.perceived_agents;
+        tm->gamma_rand = fishModelSettings.rummyFishModelSettings.gamma_rand;
+        tm->gamma_wall = fishModelSettings.rummyFishModelSettings.gamma_wall;
+        tm->wall_interaction_range = fishModelSettings.rummyFishModelSettings.wall_interaction_range;
+        tm->body_length = fishModelSettings.rummyFishModelSettings.body_length;
 
-        // sfm->reinit();
+        tm->alpha = fishModelSettings.rummyFishModelSettings.alpha;
+        tm->tau0 = fishModelSettings.rummyFishModelSettings.tau0;
+        tm->velocity_coef = fishModelSettings.rummyFishModelSettings.velocity_coef;
+        tm->length_coef = fishModelSettings.rummyFishModelSettings.length_coef;
+        tm->time_coef = fishModelSettings.rummyFishModelSettings.time_coef;
+
+        tm->id() = id_count++;
+
+        tm->reinit();
     }
 }
 
@@ -60,21 +56,21 @@ void ToulouseControlMode::resetModel()
 {
     if (!m_currentGrid.empty()) {
         // size of the area covered by the matrix
-        //         Fishmodel::Coord_t size
-        //             = {m_currentGrid.cols * m_gridSizeMeters, m_currentGrid.rows * m_gridSizeMeters};
-        //         // create the arena
-        //         m_arena.reset(new Fishmodel::Arena(m_currentGrid, size));
-        //         Fishmodel::EpflSimulationFactory factory(*m_arena);
-        //         factory.nbFishes = static_cast<size_t>(RobotControlSettings::get().numberOfAnimals());
-        //         factory.nbRobots = static_cast<size_t>(
-        //             RobotControlSettings::get()
-        //                 .numberOfRobots()); // we generate one simulator for every robot
-        //         factory.nbVirtuals = 0;
-        //         factory.behaviorFishes = "SFM";
-        //         factory.behaviorRobots = "SFM";
-        //         factory.behaviorVirtuals = "SFM";
-        //         m_sim = factory.create();
-        //         updateModelParameters();
-        //         //        cv::imshow( "ModelGrid", m_currentGrid);
+        Fishmodel::Coord_t size
+            = {m_currentGrid.cols * m_gridSizeMeters, m_currentGrid.rows * m_gridSizeMeters};
+        // create the arena
+        m_arena.reset(new Fishmodel::Arena(m_currentGrid, size));
+        Fishmodel::EpflSimulationFactory factory(*m_arena);
+        factory.nbFishes = static_cast<size_t>(RobotControlSettings::get().numberOfAnimals());
+        factory.nbRobots = static_cast<size_t>(
+            RobotControlSettings::get()
+                .numberOfRobots()); // we generate one simulator for every robot
+        factory.nbVirtuals = 0;
+        factory.behaviorFishes = "TM";
+        factory.behaviorRobots = "TM";
+        factory.behaviorVirtuals = "TM";
+        m_sim = factory.create();
+        updateModelParameters();
+        //        cv::imshow( "ModelGrid", m_currentGrid);
     }
 }

@@ -29,6 +29,8 @@ makeLink(dependencies/epfl_models/socialFishModel.cpp model/socialFishModel.cpp)
 makeLink(dependencies/epfl_models/toulouseModel.hpp model/toulouseModel.hpp)
 makeLink(dependencies/epfl_models/toulouseModel.cpp model/toulouseModel.cpp)
 makeLink(dependencies/epfl_models/utils model/utils)
+makeLink(dependencies/epfl_models/types model/types)
+
 makeLink(dependencies/epfl_models/densestPointModel.cpp model/densestPointModel.cpp)
 makeLink(dependencies/epfl_models/densestPointModel.hpp model/densestPointModel.hpp)
 makeLink(dependencies/epfl_models/epfl_factory.hpp model/epfl_factory.hpp)

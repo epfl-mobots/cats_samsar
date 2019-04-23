@@ -10,4 +10,4 @@
 
 [submodule "dependencies/epfl_models"]
 	path = dependencies/epfl_models
-	url = git@github.com:bpapaspyros/epfl_models.git
+	url = git@github.com:epfl-mobots/epfl_models.git

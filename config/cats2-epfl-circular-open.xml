@@ -10,7 +10,7 @@
     </experiment>
     <robots>
         <numberOfRobots>1</numberOfRobots>
-        <controlFrequencyHz>1</controlFrequencyHz>
+        <controlFrequencyHz>4</controlFrequencyHz>
         <fishModel>
             <agent>
                 <length>0.02</length>
@@ -21,14 +21,14 @@
                 <varSpeed>0.51</varSpeed>
             </agent>
             <simulation>
-                <dt>0.8</dt>
+                <dt>0.25</dt>
             </simulation>
     
             <Toulouse>
-                <radius>0.29</radius>
+                <radius>0.28</radius>
                 
-                <perceived_agents>4</perceived_agents>
-                <gamma_rand>0.5</gamma_rand>
+                <perceived_agents>1</perceived_agents>
+                <gamma_rand>0.45</gamma_rand>
                 <gamma_wall>0.15</gamma_wall>
                 <wall_interaction_range>0.06</wall_interaction_range>
                 <body_length>0.03</body_length>
@@ -88,6 +88,13 @@
                 <kpDist>70.0</kpDist>
                 <kiDist>1.00</kiDist>
                 <kdDist>2.00</kdDist>
+
+<!--                 <kp>5.0</kp>
+                <ki>0.05</ki>
+                <kd>0.00</kd>
+                <kpDist>150.0</kpDist>
+                <kiDist>1.00</kiDist>
+                <kdDist>2.00</kdDist> -->
             </pid>
             <defaultLinearSpeedCmSec>23</defaultLinearSpeedCmSec>
             <needOrientationToNavigate>0</needOrientationToNavigate>
@@ -138,11 +145,11 @@
                 value in the calibration file.
             -->
             <imageSize>
-                <width>1024</width>
-                <height>1024</height>                
+<!--                 <width>1024</width>
+                <height>1024</height>    -->             
 
-<!--                 <width>512</width>
-                <height>512</height> -->
+                <width>512</width>
+                <height>512</height>
             </imageSize>
             <cameraCalibrationFile>camera-calibration/epfl-setup-180/cats2-epfl-main-camera-basler.xml</cameraCalibrationFile>
             <tracking>

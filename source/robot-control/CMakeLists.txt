@@ -50,6 +50,7 @@ set(srcs
     control-modes/GoStraight.cpp
     control-modes/GoToPosition.cpp
     control-modes/GenericFishModel.cpp
+    control-modes/FishModelBase.cpp
     control-modes/ModelBased.cpp
     control-modes/FishModelWithWalls.cpp
     control-modes/ZoneBasedFishModel.cpp
@@ -114,6 +115,7 @@ set(hdrs
     control-modes/ModelParameters.hpp
     experiment-controllers/ExperimentControllerType.hpp
     experiment-controllers/ExperimentControllerFactory.hpp
+    control-modes/FishModelBase.hpp
 
     model/socialFishModel.hpp
     model/toulouseModel.hpp

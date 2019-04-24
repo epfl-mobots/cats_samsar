@@ -9,7 +9,7 @@
 #include <QtCore/QtMath>
 
 ToulouseControlMode::ToulouseControlMode(FishBot* robot)
-    : GenericFishModel(robot, ControlModeType::TOULOUSE_MODE)
+    : FishModelBase(robot, ControlModeType::TOULOUSE_MODE)
 {
     resetModel();
 }

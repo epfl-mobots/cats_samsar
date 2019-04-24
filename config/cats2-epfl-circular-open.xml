@@ -27,7 +27,7 @@
             <Toulouse>
                 <radius>0.28</radius>
                 
-                <perceived_agents>1</perceived_agents>
+                <perceived_agents>0</perceived_agents>
                 <gamma_rand>0.45</gamma_rand>
                 <gamma_wall>0.15</gamma_wall>
                 <wall_interaction_range>0.06</wall_interaction_range>
@@ -145,11 +145,11 @@
                 value in the calibration file.
             -->
             <imageSize>
-<!--                 <width>1024</width>
-                <height>1024</height>    -->             
+                <width>1024</width>
+                <height>1024</height>                
 
-                <width>512</width>
-                <height>512</height>
+                <!-- <width>512</width>
+                <height>512</height> -->
             </imageSize>
             <cameraCalibrationFile>camera-calibration/epfl-setup-180/cats2-epfl-main-camera-basler.xml</cameraCalibrationFile>
             <tracking>

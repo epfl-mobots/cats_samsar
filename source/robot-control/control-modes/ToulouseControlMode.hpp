@@ -1,9 +1,9 @@
 #ifndef TOULOUSECONTROLMODE_HPP
 #define TOULOUSECONTROLMODE_HPP
 
-#include "GenericFishModel.hpp"
+#include "FishModelBase.hpp"
 
-class ToulouseControlMode : public GenericFishModel {
+class ToulouseControlMode : public FishModelBase  {
     Q_OBJECT
 public:
     //! Constructor.

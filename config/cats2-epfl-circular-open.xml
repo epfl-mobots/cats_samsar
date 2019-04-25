@@ -4,10 +4,10 @@
         <type>Interspecies</type>
         <name>Circular-open</name>
         <agents>
-            <numberOfAnimals>1</numberOfAnimals>
+            <numberOfAnimals>0</numberOfAnimals>
         </agents>
-        <setupMapPath>setup/epfl-circular-open.xml</setupMapPath>
-        <!-- <setupMapPath>setup/epfl-circular-open-small.xml</setupMapPath> -->
+        <!-- <setupMapPath>setup/epfl-circular-open.xml</setupMapPath> -->
+        <setupMapPath>setup/epfl-circular-open-small.xml</setupMapPath>
     </experiment>
     <robots>
         <numberOfRobots>1</numberOfRobots>
@@ -22,11 +22,11 @@
                 <varSpeed>0.51</varSpeed>
             </agent>
             <simulation>
-                <dt>0.8</dt>
+                <dt>0.5</dt>
             </simulation>
     
             <Toulouse>
-                <radius>0.24</radius>
+                <radius>0.23</radius>
                 
                 <perceived_agents>0</perceived_agents>
                 <gamma_rand>0.35</gamma_rand>

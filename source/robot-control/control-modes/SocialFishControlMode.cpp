@@ -1,7 +1,7 @@
 #include "SocialFishControlMode.hpp"
 
 #include "FishBot.hpp"
-#include "model/factory.hpp"
+#include "model/epfl_factory.hpp"
 #include "model/model.hpp"
 #include "model/socialFishModel.hpp"
 #include "settings/RobotControlSettings.hpp"
@@ -46,12 +46,14 @@ void SocialFishControlMode::updateModelParameters()
         sfm->_sum_weight = fishModelSettings.socialFishModelSettings.sumWeight;
         sfm->_influence_alpha = fishModelSettings.socialFishModelSettings.influence_alpha;
         sfm->_heading_bias
-            = samsar::types::to_heading(fishModelSettings.socialFishModelSettings.heading_bias);
+            = simu::types::to_heading(fishModelSettings.socialFishModelSettings.heading_bias);
         qDebug() << "Heading bias: " << sfm->_heading_bias;
 
         sfm->_target_reset_threshold
             = fishModelSettings.socialFishModelSettings.targetResetThreshold;
         sfm->_history_reset = fishModelSettings.socialFishModelSettings.historyReset;
+
+        sfm->reinit();
     }
 }
 
@@ -63,7 +65,7 @@ void SocialFishControlMode::resetModel()
             = {m_currentGrid.cols * m_gridSizeMeters, m_currentGrid.rows * m_gridSizeMeters};
         // create the arena
         m_arena.reset(new Fishmodel::Arena(m_currentGrid, size));
-        Fishmodel::SimulationFactory factory(*m_arena);
+        Fishmodel::EpflSimulationFactory factory(*m_arena);
         factory.nbFishes = static_cast<size_t>(RobotControlSettings::get().numberOfAnimals());
         factory.nbRobots = static_cast<size_t>(
             RobotControlSettings::get()

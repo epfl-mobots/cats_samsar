@@ -24,9 +24,17 @@ makeLink(dependencies/fish-model/zones.cpp model/zones.cpp)
 makeLink(dependencies/fish-model/bmWithWalls.hpp model/bmWithWalls.hpp)
 makeLink(dependencies/fish-model/bmWithWalls.cpp model/bmWithWalls.cpp)
 
-makeLink(dependencies/social-fish-model/socialFishModel.hpp model/socialFishModel.hpp)
-makeLink(dependencies/social-fish-model/socialFishModel.cpp model/socialFishModel.cpp)
-makeLink(dependencies/social-fish-model/utils model/utils)
+makeLink(dependencies/epfl_models/socialFishModel.hpp model/socialFishModel.hpp)
+makeLink(dependencies/epfl_models/socialFishModel.cpp model/socialFishModel.cpp)
+makeLink(dependencies/epfl_models/toulouseModel.hpp model/toulouseModel.hpp)
+makeLink(dependencies/epfl_models/toulouseModel.cpp model/toulouseModel.cpp)
+makeLink(dependencies/epfl_models/utils model/utils)
+makeLink(dependencies/epfl_models/types model/types)
+
+makeLink(dependencies/epfl_models/densestPointModel.cpp model/densestPointModel.cpp)
+makeLink(dependencies/epfl_models/densestPointModel.hpp model/densestPointModel.hpp)
+makeLink(dependencies/epfl_models/epfl_factory.hpp model/epfl_factory.hpp)
+makeLink(dependencies/epfl_models/epfl_factory.cpp model/epfl_factory.cpp)
 
 set(srcs
     settings/RobotControlSettings.cpp
@@ -42,12 +50,15 @@ set(srcs
     control-modes/GoStraight.cpp
     control-modes/GoToPosition.cpp
     control-modes/GenericFishModel.cpp
+    control-modes/FishModelBase.cpp
     control-modes/ModelBased.cpp
     control-modes/FishModelWithWalls.cpp
     control-modes/ZoneBasedFishModel.cpp
     control-modes/Manual.cpp
     control-modes/ControlMode.cpp
     control-modes/Trajectory.cpp
+    control-modes/WheelVelocities.cpp
+    control-modes/PositionListener.cpp
     control-modes/FollowGroup.cpp
     ControlModeStateMachine.cpp
     interfaces/DBusInterface.cpp
@@ -84,9 +95,14 @@ set(srcs
     statistics/StatisticsPublisher.cpp
 
     model/socialFishModel.cpp
+    model/toulouseModel.cpp
+    model/densestPointModel.cpp
     control-modes/SocialFishControlMode.cpp
+    control-modes/ToulouseControlMode.cpp
     model/utils/heading.cpp
     model/utils/random/random_generator.cpp
+    control-modes/DensestPoint.cpp
+    model/epfl_factory.cpp
 )
 
 set(hdrs
@@ -99,11 +115,17 @@ set(hdrs
     control-modes/ModelParameters.hpp
     experiment-controllers/ExperimentControllerType.hpp
     experiment-controllers/ExperimentControllerFactory.hpp
+    control-modes/FishModelBase.hpp
 
     model/socialFishModel.hpp
+    model/toulouseModel.hpp
+    model/densestPointModel.hpp
     control-modes/SocialFishControlMode.hpp
+    control-modes/ToulouseControlMode.hpp
+    control-modes/DensestPoint.hpp
     model/utils/heading.hpp
     model/utils/random/random_generator.hpp
+    model/epfl_factory.hpp
 )
 
 qt5_wrap_ui(uis_hdrs gui/RobotControlWidget.ui gui/RobotsWidget.ui gui/PotentialFieldWidget.ui)
@@ -113,7 +135,7 @@ include_directories(${CMAKE_SOURCE_DIR}/source/common)
 include_directories(${CMAKE_SOURCE_DIR}/source/inter-species)
 add_library(robot-control SHARED ${srcs} ${hdrs} ${uis_hdrs}) #${resources})
 target_link_libraries(robot-control common inter-species Qt5::Core Qt5::Widgets Qt5::DBus
-                      Qt5::Xml ${Boost_LIBRARIES}
+                      Qt5::Xml Qt5::Network ${Boost_LIBRARIES}
                       ${dashel_LIBRARIES} ${Aseba_LIBRARIES} -fsanitize=address)
 
 #install(TARGETS robot-control DESTINATION .)

@@ -15,7 +15,7 @@ else()
     set (CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/bin)
 endif()
 
-find_package(Qt5 REQUIRED Core Widgets DBus Xml Test)
+find_package(Qt5 REQUIRED Core Widgets DBus Xml Test Network OpenGL)
 # SYSTEM is used to suppress GCC warnings in libraries headers
 include_directories(SYSTEM ${QT_INCLUDE_DIR})
 
@@ -41,7 +41,7 @@ include_directories(SYSTEM ${GLIB2_MAIN_INCLUDE_DIR})
 find_package(Protobuf REQUIRED)
 include_directories(SYSTEM ${PROTOBUF_INCLUDE_DIRS})
 
-find_package(Boost COMPONENTS program_options REQUIRED )
+find_package(Boost COMPONENTS program_options system serialization REQUIRED )
 include_directories(SYSTEM ${Boost_INCLUDE_DIR} )
 
 find_package(dashel REQUIRED)

@@ -42,19 +42,44 @@ public:
     int numCells = 40;
     int groupThreshold = 3;
     int cellsForward = 5;
-    int cellsBackward = 5;
+    int cellsBackward = 8;
     int minSpeed = 1;
     int maxSpeed = 1;
-    float probObey = 1.0f;
+    float probObey = 0.94f;
     float probMove = 0.901f;
     float probChangeSpeed = 0.1f;
     int headingChangeDuration = 3;
     std::vector<float> sumWeight = {0.3f, -2.0f};
-    int influence_alpha = 4;
+    int influence_alpha = 10;
     int heading_bias = 0;
 
     int targetResetThreshold = 3;
     int historyReset = 5;
+};
+
+struct RummyFishSettings {
+public:
+    double radius = 0.29f;
+
+    int perceived_agents = 4;
+    double gamma_rand = 0.5f; // 5 fish
+    double gamma_wall = 0.15f; // > 5 fish
+    double wall_interaction_range = 0.06f;
+    double body_length = 0.03f;
+
+    double alpha = 2. / 3.;
+    double tau0 = 0.8f;
+    double velocity_coef = 0.14f;
+    double length_coef = 0.07f;
+    double time_coef = 0.5f;
+};
+
+struct ReplayVelocities {
+public:
+    //! Constructor.
+    explicit ReplayVelocities() {}
+
+    std::string filename;
 };
 
 /*!
@@ -140,6 +165,7 @@ public:
     BasicFishModelSettings basicFishModelSettings;
     FishModelWithWallsSettings fishModelWithWallsSettings;
     SocialFishModelSettings socialFishModelSettings;
+    RummyFishSettings rummyFishModelSettings;
 
     QList<ZonedFishModelSettings> zonedFishModelSettings;
     //! Gets a path in the configuration file and tells to which zone it belongs
@@ -427,6 +453,22 @@ public:
     //! on a timeout.
     int trajectoryUpdateRateHz() const { return m_trajectoryUpdateRateHz; }
 
+    //! returns the wheel velocities
+    QList<PositionMeters> wheelVelocities() const { return m_wheelVelocities; }
+    //! Returns the flag defining if the wheelVelocities should be restarted once the
+    //! last point is reached.
+    bool loopWheelVelocities() { return m_loopWheelVelocities; }
+
+    //! Returns the flag specifing if the next point of the trajectory is to be
+    //! provided on timer or once the previous is reached.
+    bool provideWheelPointsOnTimer() const { return m_provideWheelPointsOnTimer; }
+    //! Returns the update rate for the trajectory points when they are provided
+    //! on a timeout.
+    int wheelUpdateRateHz() const { return m_wheelUpdateRateHz; }
+
+    //! Returns the port number for the position listener control mode
+    int port() const { return m_port; }
+
     //! Provides the settings value by its path in the configuration file.
     //! Only numerical values are supported.
     std::vector<double> valueByPath(std::string path);
@@ -493,6 +535,16 @@ private:
     //! The update rate for the trajectory points when they are provided on a
     //! timeout.
     int m_trajectoryUpdateRateHz;
+
+    //! The predefined trajectory for the Wheel velocities control mode.
+    //! similarly to the trajctory member vars
+    QList<PositionMeters> m_wheelVelocities;
+    bool m_loopWheelVelocities;
+    bool m_provideWheelPointsOnTimer;
+    int m_wheelUpdateRateHz;
+
+    // parameters for the position control mode
+    int m_port;
 
     //! Map that stores the paramers getters.
     std::map<std::string, std::function<std::vector<double>(std::string)>> m_parametersGetters;

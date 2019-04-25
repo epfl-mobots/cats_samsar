@@ -6,6 +6,8 @@ build/
 source/messages/msg/
 source/robot-control/model/
 
+CMakeCache.txt
+
 # skip simulation output folders
 *_*-*-*_*_*_*
 

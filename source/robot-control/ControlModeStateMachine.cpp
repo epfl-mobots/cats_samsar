@@ -3,6 +3,7 @@
 #include "FishBot.hpp"
 #include "control-modes/ControlMode.hpp"
 #include "control-modes/ControlModeType.hpp"
+#include "control-modes/DensestPoint.hpp"
 #include "control-modes/FishModelWithWalls.hpp"
 #include "control-modes/FollowGroup.hpp"
 #include "control-modes/GenericFishModel.hpp"
@@ -13,7 +14,10 @@
 #include "control-modes/ModelBased.hpp"
 #include "control-modes/SocialFishControlMode.hpp"
 #include "control-modes/Trajectory.hpp"
+#include "control-modes/WheelVelocities.hpp"
+#include "control-modes/PositionListener.hpp"
 #include "control-modes/ZoneBasedFishModel.hpp"
+#include "control-modes/ToulouseControlMode.hpp"
 
 #include <QtCore/QDebug>
 
@@ -34,10 +38,16 @@ ControlModeStateMachine::ControlModeStateMachine(FishBot* robot, QObject* parent
         ControlModeType::FISH_MODEL_WITH_WALLS, ControlModePtr(new FishModelWithWalls(m_robot)));
     m_controlModes.insert(
         ControlModeType::ZONE_BASED_FISH_MODEL, ControlModePtr(new ZoneBasedFishModel(m_robot)));
-    m_controlModes.insert(ControlModeType::TRAJECTORY, ControlModePtr(new Trajectory(m_robot)));
+    m_controlModes.insert(ControlModeType::WHEEL_VELOCITIES, ControlModePtr(new WheelVelocities(m_robot)));
+    m_controlModes.insert(ControlModeType::TRAJECTORY, ControlModePtr(new WheelVelocities(m_robot)));
+    m_controlModes.insert(ControlModeType::POSITION_LISTENER, ControlModePtr(new PositionListener(m_robot)));
     m_controlModes.insert(ControlModeType::FOLLOW_GROUP, ControlModePtr(new FollowGroup(m_robot)));
     m_controlModes.insert(
         ControlModeType::SOCIAL_FISH_MODEL, ControlModePtr(new SocialFishControlMode(m_robot)));
+    m_controlModes.insert(
+        ControlModeType::TOULOUSE_MODE, ControlModePtr(new ToulouseControlMode(m_robot)));
+    m_controlModes.insert(
+        ControlModeType::DENSEST_POINT, ControlModePtr(new DensestPoint(m_robot)));
 
     // make necessary connections
     foreach (ControlModePtr controlMode, m_controlModes.values()) {

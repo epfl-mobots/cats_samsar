@@ -17,8 +17,12 @@ public:
         FISH_MODEL_WITH_WALLS,
         ZONE_BASED_FISH_MODEL,
         TRAJECTORY,
+        WHEEL_VELOCITIES,
+        POSITION_LISTENER,
+        TOULOUSE_MODE,
         FOLLOW_GROUP,
         SOCIAL_FISH_MODEL,
+        DENSEST_POINT,
         UNDEFINED
     };
 
@@ -41,10 +45,18 @@ public:
             return ZONE_BASED_FISH_MODEL;
         else if (modeName.toLower() == "trajectory")
             return TRAJECTORY;
+        else if (modeName.toLower() == "wheelvelocities")
+            return WHEEL_VELOCITIES;
+        else if (modeName.toLower() == "postionslistener")
+            return POSITION_LISTENER;
         else if (modeName.toLower() == "followgroup")
             return FOLLOW_GROUP;
         else if (modeName.toLower() == "socialfishmodel")
             return SOCIAL_FISH_MODEL;
+        else if (modeName.toLower() == "toulousemodel")
+            return TOULOUSE_MODE;
+        else if (modeName.toLower() == "densestpoint")
+            return DENSEST_POINT;
         else
             return UNDEFINED;
     }
@@ -76,11 +88,23 @@ public:
         case TRAJECTORY:
             string = "Trajectory";
             break;
+        case WHEEL_VELOCITIES:
+            string = "Wheel Velocities";
+            break;
+        case POSITION_LISTENER:
+            string = "Position Listener";
+            break;
         case FOLLOW_GROUP:
             string = "Follow group";
             break;
         case SOCIAL_FISH_MODEL:
             string = "Social Fish Model";
+            break;
+        case TOULOUSE_MODE:
+            string = "Toulouse Model";
+            break;
+        case DENSEST_POINT:
+            string = "Densest Point";
             break;
         case IDLE:
         default:

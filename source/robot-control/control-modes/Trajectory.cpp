@@ -6,12 +6,11 @@
 /*!
  * Constructor.
  */
-Trajectory::Trajectory(FishBot* robot) :
-    ControlMode(robot, ControlModeType::TRAJECTORY),
-    m_trajectory(RobotControlSettings::get().trajectory()),
-    m_currentIndex(0),
-    m_loopTrajectory(RobotControlSettings::get().loopTrajectory()),
-    m_providePointsOnTimer(RobotControlSettings::get().providePointsOnTimer())
+Trajectory::Trajectory(FishBot* robot) : ControlMode(robot, ControlModeType::TRAJECTORY),
+                                         m_trajectory(RobotControlSettings::get().trajectory()),
+                                         m_currentIndex(0),
+                                         m_loopTrajectory(RobotControlSettings::get().loopTrajectory()),
+                                         m_providePointsOnTimer(RobotControlSettings::get().providePointsOnTimer())
 {
     connect(&m_updateTimer, &QTimer::timeout, this, &Trajectory::updateCurrentIndex);
 }
@@ -32,9 +31,7 @@ ControlTargetPtr Trajectory::step()
 {
     if (!m_trajectory.isEmpty()) {
         // if the points are updated upon arrival
-        if (!m_providePointsOnTimer && m_robot->state().position().isValid() &&
-            m_robot->state().position().closeTo(m_trajectory.at(m_currentIndex)))
-        {
+        if (!m_providePointsOnTimer && m_robot->state().position().isValid() && m_robot->state().position().closeTo(m_trajectory.at(m_currentIndex))) {
             // the robot approaches the current waypoint, hence it needs to be
             // updated
             updateCurrentIndex();
@@ -56,7 +53,8 @@ void Trajectory::updateCurrentIndex()
     if (m_trajectory.size() > 0) {
         if ((m_currentIndex != m_trajectory.size()) || m_loopTrajectory)
             m_currentIndex = (m_currentIndex + 1) % m_trajectory.size();
-    } else {
+    }
+    else {
         m_currentIndex = 0;
     }
 }
@@ -67,7 +65,7 @@ void Trajectory::updateCurrentIndex()
 QList<ControlTargetType> Trajectory::supportedTargets()
 {
     return QList<ControlTargetType>({ControlTargetType::SPEED,
-                                     ControlTargetType::POSITION});
+        ControlTargetType::POSITION});
 }
 
 /*!
@@ -91,4 +89,3 @@ void Trajectory::finish()
 
     m_currentIndex = 0;
 }
-

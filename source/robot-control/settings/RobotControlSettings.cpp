@@ -82,8 +82,7 @@ bool RobotControlSettings::init(QString configurationFileName)
                     .arg(ExperimentControllerType::toSettingsString(controllerType)),
                 controlAreaFile);
             if (!controlAreaFile.empty())
-                robotSettings.setControlAreasFile(controllerType, configurationFolder
-                        + QDir::separator() + QString::fromStdString(controlAreaFile));
+                robotSettings.setControlAreasFile(controllerType, configurationFolder + QDir::separator() + QString::fromStdString(controlAreaFile));
         }
 
         // add settings
@@ -257,7 +256,8 @@ bool RobotControlSettings::init(QString configurationFileName)
                 m_trajectory << PositionMeters(point);
             qDebug() << QString(
                 "Loaded trajectory of %1 points, shared by all "
-                "robots").arg(m_trajectory.size());
+                "robots")
+                            .arg(m_trajectory.size());
         }
         else {
             qDebug() << "The trajectory is empty";
@@ -277,6 +277,58 @@ bool RobotControlSettings::init(QString configurationFileName)
         m_trajectoryUpdateRateHz = 0;
         settings.readVariable("robots/controlModes/trajectory/updateRateHz",
             m_trajectoryUpdateRateHz, m_trajectoryUpdateRateHz);
+    }
+
+    // reading the wheel velocity settings
+    // read a trajectory for the Trajectory control mode
+    {
+        std::string relativeWheelPath = "";
+        settings.readVariable(
+            "robots/controlModes/wheelVelocities/velocities", relativeWheelPath, relativeWheelPath);
+        QString velocityPath
+            = configurationFolder + QDir::separator() + QString::fromStdString(relativeWheelPath);
+
+        QFileInfo velocityFile(velocityPath);
+        if (velocityFile.exists() && velocityFile.isFile()) {
+            ReadSettingsHelper trajectorySettings(velocityPath);
+            std::vector<cv::Point2f> polygon;
+            trajectorySettings.readVariable(QString("polygon"), polygon);
+            if (polygon.size() > 0) {
+                for (auto& point : polygon) {
+                    qDebug() << ">>> " << point.x << " " << point.y;
+                    m_wheelVelocities << PositionMeters(point);
+                }
+                qDebug() << QString(
+                    "Loaded trajectory of %1 points, shared by all "
+                    "robots")
+                                .arg(m_wheelVelocities.size());
+            }
+            else {
+                qDebug() << "The wheel velocities file is empty";
+            }
+        }
+        else {
+            qDebug() << "Could not find the wheel velocities file";
+        }
+        // read the corresponding flags
+        m_loopWheelVelocities = true;
+        settings.readVariable(
+            "robots/controlModes/wheelVelocities/loopTrajectory", m_loopWheelVelocities, m_loopWheelVelocities);
+        m_provideWheelPointsOnTimer = false;
+        settings.readVariable("robots/controlModes/wheelVelocities/provideWheelPointsOnTimer",
+            m_provideWheelPointsOnTimer, m_provideWheelPointsOnTimer);
+        if (m_provideWheelPointsOnTimer) {
+            m_wheelUpdateRateHz = 0;
+            settings.readVariable("robots/controlModes/wheelVelocities/updateWheelRateHz",
+                m_wheelUpdateRateHz, m_wheelUpdateRateHz);
+        }
+    }
+
+    // load port information for the position listener control mode
+    {
+        m_port = 5623;
+        settings.readVariable("robots/controlModes/positionListener/port",
+            m_port, m_port);
     }
 
     settings.close();
@@ -422,7 +474,7 @@ void RobotControlSettings::readFishModelSettings(ReadSettingsHelper& reader)
         reader.readVariable(settingsPath, m_fishModelSettings.agentParameters.fov,
             m_fishModelSettings.agentParameters.fov);
         m_parametersGetters[settingsPath.toStdString()] = [this](
-            std::string) { return std::vector<double>({m_fishModelSettings.agentParameters.fov}); };
+                                                              std::string) { return std::vector<double>({m_fishModelSettings.agentParameters.fov}); };
         m_parametersSetters[settingsPath.toStdString()]
             = [this](std::vector<double> values, std::string) {
                   if (values.size() > 0) {
@@ -463,7 +515,7 @@ void RobotControlSettings::readFishModelSettings(ReadSettingsHelper& reader)
         reader.readVariable(settingsPath, m_fishModelSettings.agentParameters.dt,
             m_fishModelSettings.agentParameters.dt);
         m_parametersGetters[settingsPath.toStdString()] = [this](
-            std::string) { return std::vector<double>({m_fishModelSettings.agentParameters.dt}); };
+                                                              std::string) { return std::vector<double>({m_fishModelSettings.agentParameters.dt}); };
         m_parametersSetters[settingsPath.toStdString()]
             = [this](std::vector<double> values, std::string) {
                   if (values.size() > 0) {
@@ -705,7 +757,7 @@ void RobotControlSettings::readFishModelSettings(ReadSettingsHelper& reader)
             = [this](std::vector<double> values, std::string) {
                   if (values.size() > 0) {
                       m_fishModelSettings.socialFishModelSettings.heading_bias
-                          = samsar::types::to_heading(values[0]);
+                          = simu::types::to_heading(values[0]);
                       emit notifyFishModelSettingsChanged();
                   }
               };
@@ -766,7 +818,7 @@ void RobotControlSettings::readFishModelSettings(ReadSettingsHelper& reader)
                 {m_fishModelSettings.basicFishModelSettings.repulsionFromAgentsAtDist});
         };
         m_parametersSetters[settingsPath.toStdString()] = [this](
-            std::vector<double> values, std::string) {
+                                                              std::vector<double> values, std::string) {
             if (values.size() > 0) {
                 m_fishModelSettings.basicFishModelSettings.repulsionFromAgentsAtDist = values[0];
                 emit notifyFishModelSettingsChanged();
@@ -848,7 +900,7 @@ void RobotControlSettings::readFishModelSettings(ReadSettingsHelper& reader)
                 {m_fishModelSettings.fishModelWithWallsSettings.wallDistanceThreshold});
         };
         m_parametersSetters[settingsPath.toStdString()] = [this](
-            std::vector<double> values, std::string) {
+                                                              std::vector<double> values, std::string) {
             if (values.size() > 0) {
                 m_fishModelSettings.fishModelWithWallsSettings.wallDistanceThreshold = values[0];
                 emit notifyFishModelSettingsChanged();
@@ -976,7 +1028,7 @@ void RobotControlSettings::readFishModelSettings(ReadSettingsHelper& reader)
                         return std::vector<double>();
                 };
                 m_parametersSetters[settingsPath.toStdString()] = [this](
-                    std::vector<double> values, std::string path) {
+                                                                      std::vector<double> values, std::string path) {
                     int index = FishModelSettings::indexByPath(path);
                     if ((index < m_fishModelSettings.zonedFishModelSettings.size())
                         && (index >= 0)) {
@@ -998,7 +1050,7 @@ void RobotControlSettings::readFishModelSettings(ReadSettingsHelper& reader)
                         return std::vector<double>();
                 };
                 m_parametersSetters[settingsPath.toStdString()] = [this](
-                    std::vector<double> values, std::string path) {
+                                                                      std::vector<double> values, std::string path) {
                     int index = FishModelSettings::indexByPath(path);
                     if ((index < m_fishModelSettings.zonedFishModelSettings.size())
                         && (index >= 0)) {
@@ -1044,7 +1096,7 @@ void RobotControlSettings::readFishModelSettings(ReadSettingsHelper& reader)
                         return std::vector<double>();
                 };
                 m_parametersSetters[settingsPath.toStdString()] = [this](
-                    std::vector<double> values, std::string path) {
+                                                                      std::vector<double> values, std::string path) {
                     int index = FishModelSettings::indexByPath(path);
                     if ((index < m_fishModelSettings.zonedFishModelSettings.size())
                         && (index >= 0)) {
@@ -1066,7 +1118,7 @@ void RobotControlSettings::readFishModelSettings(ReadSettingsHelper& reader)
                         return std::vector<double>();
                 };
                 m_parametersSetters[settingsPath.toStdString()] = [this](
-                    std::vector<double> values, std::string path) {
+                                                                      std::vector<double> values, std::string path) {
                     int index = FishModelSettings::indexByPath(path);
                     if ((index < m_fishModelSettings.zonedFishModelSettings.size())
                         && (index >= 0)) {
@@ -1132,7 +1184,7 @@ void RobotControlSettings::readFishModelSettings(ReadSettingsHelper& reader)
                         return std::vector<double>();
                 };
                 m_parametersSetters[settingsPath.toStdString()] = [this](
-                    std::vector<double> values, std::string path) {
+                                                                      std::vector<double> values, std::string path) {
                     int index = FishModelSettings::indexByPath(path);
                     if ((index < m_fishModelSettings.zonedFishModelSettings.size())
                         && (index >= 0)) {
@@ -1155,7 +1207,7 @@ void RobotControlSettings::readFishModelSettings(ReadSettingsHelper& reader)
                         return std::vector<double>();
                 };
                 m_parametersSetters[settingsPath.toStdString()] = [this](
-                    std::vector<double> values, std::string path) {
+                                                                      std::vector<double> values, std::string path) {
                     int index = FishModelSettings::indexByPath(path);
                     if ((index < m_fishModelSettings.zonedFishModelSettings.size())
                         && (index >= 0)) {
@@ -1166,6 +1218,163 @@ void RobotControlSettings::readFishModelSettings(ReadSettingsHelper& reader)
 
                 m_fishModelSettings.zonedFishModelSettings.append(settings);
             }
+        }
+
+        // read the toulouse model settings
+        {
+            settingsPath = "robots/fishModel/Toulouse/radius";
+            reader.readVariable(settingsPath, m_fishModelSettings.rummyFishModelSettings.radius,
+                m_fishModelSettings.rummyFishModelSettings.radius);
+            m_parametersGetters[settingsPath.toStdString()] = [this](std::string) {
+                return std::vector<double>({m_fishModelSettings.rummyFishModelSettings.radius});
+            };
+            m_parametersSetters[settingsPath.toStdString()]
+                = [this](std::vector<double> values, std::string) {
+                      if (values.size() > 0) {
+                          m_fishModelSettings.rummyFishModelSettings.radius = values[0];
+                          emit notifyFishModelSettingsChanged();
+                      }
+                  };
+
+            settingsPath = "robots/fishModel/Toulouse/perceived_agents";
+            reader.readVariable(settingsPath, m_fishModelSettings.rummyFishModelSettings.perceived_agents,
+                m_fishModelSettings.rummyFishModelSettings.perceived_agents);
+            m_parametersGetters[settingsPath.toStdString()] = [this](std::string) {
+                return std::vector<double>({m_fishModelSettings.rummyFishModelSettings.perceived_agents});
+            };
+            m_parametersSetters[settingsPath.toStdString()]
+                = [this](std::vector<double> values, std::string) {
+                      if (values.size() > 0) {
+                          m_fishModelSettings.rummyFishModelSettings.perceived_agents = values[0];
+                          emit notifyFishModelSettingsChanged();
+                      }
+                  };
+
+            settingsPath = "robots/fishModel/Toulouse/gamma_rand";
+            reader.readVariable(settingsPath, m_fishModelSettings.rummyFishModelSettings.gamma_rand,
+                m_fishModelSettings.rummyFishModelSettings.gamma_rand);
+            m_parametersGetters[settingsPath.toStdString()] = [this](std::string) {
+                return std::vector<double>({m_fishModelSettings.rummyFishModelSettings.gamma_rand});
+            };
+            m_parametersSetters[settingsPath.toStdString()]
+                = [this](std::vector<double> values, std::string) {
+                      if (values.size() > 0) {
+                          m_fishModelSettings.rummyFishModelSettings.gamma_rand = values[0];
+                          emit notifyFishModelSettingsChanged();
+                      }
+                  };
+
+            settingsPath = "robots/fishModel/Toulouse/gamma_wall";
+            reader.readVariable(settingsPath, m_fishModelSettings.rummyFishModelSettings.gamma_wall,
+                m_fishModelSettings.rummyFishModelSettings.gamma_wall);
+            m_parametersGetters[settingsPath.toStdString()] = [this](std::string) {
+                return std::vector<double>({m_fishModelSettings.rummyFishModelSettings.gamma_wall});
+            };
+            m_parametersSetters[settingsPath.toStdString()]
+                = [this](std::vector<double> values, std::string) {
+                      if (values.size() > 0) {
+                          m_fishModelSettings.rummyFishModelSettings.gamma_wall = values[0];
+                          emit notifyFishModelSettingsChanged();
+                      }
+                  };
+
+            settingsPath = "robots/fishModel/Toulouse/wall_interaction_range";
+            reader.readVariable(settingsPath, m_fishModelSettings.rummyFishModelSettings.wall_interaction_range,
+                m_fishModelSettings.rummyFishModelSettings.wall_interaction_range);
+            m_parametersGetters[settingsPath.toStdString()] = [this](std::string) {
+                return std::vector<double>({m_fishModelSettings.rummyFishModelSettings.wall_interaction_range});
+            };
+            m_parametersSetters[settingsPath.toStdString()]
+                = [this](std::vector<double> values, std::string) {
+                      if (values.size() > 0) {
+                          m_fishModelSettings.rummyFishModelSettings.wall_interaction_range = values[0];
+                          emit notifyFishModelSettingsChanged();
+                      }
+                  };
+
+            settingsPath = "robots/fishModel/Toulouse/body_length";
+            reader.readVariable(settingsPath, m_fishModelSettings.rummyFishModelSettings.body_length,
+                m_fishModelSettings.rummyFishModelSettings.body_length);
+            m_parametersGetters[settingsPath.toStdString()] = [this](std::string) {
+                return std::vector<double>({m_fishModelSettings.rummyFishModelSettings.body_length});
+            };
+            m_parametersSetters[settingsPath.toStdString()]
+                = [this](std::vector<double> values, std::string) {
+                      if (values.size() > 0) {
+                          m_fishModelSettings.rummyFishModelSettings.body_length = values[0];
+                          emit notifyFishModelSettingsChanged();
+                      }
+                  };
+
+            settingsPath = "robots/fishModel/Toulouse/alpha";
+            reader.readVariable(settingsPath, m_fishModelSettings.rummyFishModelSettings.alpha,
+                m_fishModelSettings.rummyFishModelSettings.alpha);
+            m_parametersGetters[settingsPath.toStdString()] = [this](std::string) {
+                return std::vector<double>({m_fishModelSettings.rummyFishModelSettings.alpha});
+            };
+            m_parametersSetters[settingsPath.toStdString()]
+                = [this](std::vector<double> values, std::string) {
+                      if (values.size() > 0) {
+                          m_fishModelSettings.rummyFishModelSettings.alpha = values[0];
+                          emit notifyFishModelSettingsChanged();
+                      }
+                  };
+
+            settingsPath = "robots/fishModel/Toulouse/tau0";
+            reader.readVariable(settingsPath, m_fishModelSettings.rummyFishModelSettings.tau0,
+                m_fishModelSettings.rummyFishModelSettings.tau0);
+            m_parametersGetters[settingsPath.toStdString()] = [this](std::string) {
+                return std::vector<double>({m_fishModelSettings.rummyFishModelSettings.tau0});
+            };
+            m_parametersSetters[settingsPath.toStdString()]
+                = [this](std::vector<double> values, std::string) {
+                      if (values.size() > 0) {
+                          m_fishModelSettings.rummyFishModelSettings.tau0 = values[0];
+                          emit notifyFishModelSettingsChanged();
+                      }
+                  };
+
+            settingsPath = "robots/fishModel/Toulouse/velocity_coef";
+            reader.readVariable(settingsPath, m_fishModelSettings.rummyFishModelSettings.velocity_coef,
+                m_fishModelSettings.rummyFishModelSettings.velocity_coef);
+            m_parametersGetters[settingsPath.toStdString()] = [this](std::string) {
+                return std::vector<double>({m_fishModelSettings.rummyFishModelSettings.velocity_coef});
+            };
+            m_parametersSetters[settingsPath.toStdString()]
+                = [this](std::vector<double> values, std::string) {
+                      if (values.size() > 0) {
+                          m_fishModelSettings.rummyFishModelSettings.velocity_coef = values[0];
+                          emit notifyFishModelSettingsChanged();
+                      }
+                  };
+
+            settingsPath = "robots/fishModel/Toulouse/length_coef";
+            reader.readVariable(settingsPath, m_fishModelSettings.rummyFishModelSettings.length_coef,
+                m_fishModelSettings.rummyFishModelSettings.length_coef);
+            m_parametersGetters[settingsPath.toStdString()] = [this](std::string) {
+                return std::vector<double>({m_fishModelSettings.rummyFishModelSettings.length_coef});
+            };
+            m_parametersSetters[settingsPath.toStdString()]
+                = [this](std::vector<double> values, std::string) {
+                      if (values.size() > 0) {
+                          m_fishModelSettings.rummyFishModelSettings.length_coef = values[0];
+                          emit notifyFishModelSettingsChanged();
+                      }
+                  };
+
+            settingsPath = "robots/fishModel/Toulouse/time_coef";
+            reader.readVariable(settingsPath, m_fishModelSettings.rummyFishModelSettings.time_coef,
+                m_fishModelSettings.rummyFishModelSettings.time_coef);
+            m_parametersGetters[settingsPath.toStdString()] = [this](std::string) {
+                return std::vector<double>({m_fishModelSettings.rummyFishModelSettings.time_coef});
+            };
+            m_parametersSetters[settingsPath.toStdString()]
+                = [this](std::vector<double> values, std::string) {
+                      if (values.size() > 0) {
+                          m_fishModelSettings.rummyFishModelSettings.time_coef = values[0];
+                          emit notifyFishModelSettingsChanged();
+                      }
+                  };
         }
     }
 }

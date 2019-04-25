@@ -4,13 +4,14 @@
         <type>Interspecies</type>
         <name>Circular-open</name>
         <agents>
-            <numberOfAnimals>0</numberOfAnimals>
+            <numberOfAnimals>1</numberOfAnimals>
         </agents>
         <setupMapPath>setup/epfl-circular-open.xml</setupMapPath>
+        <!-- <setupMapPath>setup/epfl-circular-open-small.xml</setupMapPath> -->
     </experiment>
     <robots>
         <numberOfRobots>1</numberOfRobots>
-        <controlFrequencyHz>4</controlFrequencyHz>
+        <controlFrequencyHz>15</controlFrequencyHz>
         <fishModel>
             <agent>
                 <length>0.02</length>
@@ -21,15 +22,15 @@
                 <varSpeed>0.51</varSpeed>
             </agent>
             <simulation>
-                <dt>0.25</dt>
+                <dt>0.8</dt>
             </simulation>
     
             <Toulouse>
-                <radius>0.28</radius>
+                <radius>0.24</radius>
                 
                 <perceived_agents>0</perceived_agents>
-                <gamma_rand>0.45</gamma_rand>
-                <gamma_wall>0.15</gamma_wall>
+                <gamma_rand>0.35</gamma_rand>
+                <gamma_wall>0.12</gamma_wall>
                 <wall_interaction_range>0.06</wall_interaction_range>
                 <body_length>0.03</body_length>
 
@@ -145,11 +146,11 @@
                 value in the calibration file.
             -->
             <imageSize>
-                <width>1024</width>
+<!--                 <width>1024</width>
                 <height>1024</height>                
-
-                <!-- <width>512</width>
-                <height>512</height> -->
+ -->
+                <width>512</width>
+                <height>512</height>
             </imageSize>
             <cameraCalibrationFile>camera-calibration/epfl-setup-180/cats2-epfl-main-camera-basler.xml</cameraCalibrationFile>
             <tracking>

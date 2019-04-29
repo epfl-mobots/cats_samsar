@@ -135,8 +135,8 @@ PositionMeters FishModelBase::computeTargetPosition()
     if (!m_parameters.ignoreRobot) {
         PositionMeters robotPosition = m_robot->state().position();
         OrientationRad robotOrientation = m_robot->state().orientation();
-        if (robotPosition.isValid() && containsPoint(robotPosition)
-            && (m_sim->robots.size() == 1)) {
+
+        if (robotPosition.isValid() && containsPoint(robotPosition)) {
             m_sim->robots[0].first->headPos.first = robotPosition.x() - minX();
             m_sim->robots[0].first->headPos.second = robotPosition.y() - minY();
 

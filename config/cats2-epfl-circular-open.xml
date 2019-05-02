@@ -10,7 +10,7 @@
         <setupMapPath>setup/epfl-circular-open-small.xml</setupMapPath>
     </experiment>
     <robots>
-        <numberOfRobots>1</numberOfRobots>
+        <numberOfRobots>2</numberOfRobots>
         <controlFrequencyHz>15</controlFrequencyHz>
         <fishModel>
             <agent>
@@ -28,9 +28,9 @@
             <Toulouse>
                 <radius>0.24</radius>
                 
-                <perceived_agents>0</perceived_agents>
-                <gamma_rand>0.35</gamma_rand>
-                <gamma_wall>0.12</gamma_wall>
+                <perceived_agents>1</perceived_agents>
+                <gamma_rand>0.45</gamma_rand>
+                <gamma_wall>0.15</gamma_wall>
                 <wall_interaction_range>0.06</wall_interaction_range>
                 <body_length>0.03</body_length>
 
@@ -146,9 +146,9 @@
                 value in the calibration file.
             -->
             <imageSize>
-<!--                 <width>1024</width>
-                <height>1024</height>                
- -->
+               <!-- <width>1024</width>
+                <height>1024</height> -->               
+
                 <width>512</width>
                 <height>512</height>
             </imageSize>

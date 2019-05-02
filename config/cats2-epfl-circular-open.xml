@@ -26,7 +26,7 @@
             </simulation>
     
             <Toulouse>
-                <radius>0.23</radius>
+                <radius>0.24</radius>
                 
                 <perceived_agents>0</perceived_agents>
                 <gamma_rand>0.35</gamma_rand>
@@ -79,7 +79,7 @@
         <navigation>
             <fishMotionPatternFrequencyDivider>10</fishMotionPatternFrequencyDivider>
             <fishMotionPattern>
-                <distanceCm>25</distanceCm>
+                <distanceCm>5</distanceCm>
                 <speedCmSec>14</speedCmSec> <!--Speed fish behaviour -->
             </fishMotionPattern>
             <pid>
@@ -97,7 +97,7 @@
                 <kiDist>1.00</kiDist>
                 <kdDist>2.00</kdDist> -->
             </pid>
-            <defaultLinearSpeedCmSec>23</defaultLinearSpeedCmSec>
+            <defaultLinearSpeedCmSec>15</defaultLinearSpeedCmSec>
             <needOrientationToNavigate>0</needOrientationToNavigate>
         </navigation>
         <!-- Controllers settings. Controller is available only if its settings are provided -->

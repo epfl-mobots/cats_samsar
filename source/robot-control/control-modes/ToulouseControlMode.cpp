@@ -29,15 +29,15 @@ void ToulouseControlMode::updateModelParameters()
         a.first->varSpeed = fishModelSettings.agentParameters.varSpeed;
         a.first->maxTurningRate = M_PI_2;
 
-        Fishmodel::ToulouseModel* tm
-            = reinterpret_cast<Fishmodel::ToulouseModel*>(a.second.get());
+        Fishmodel::ToulouseModel* tm = reinterpret_cast<Fishmodel::ToulouseModel*>(a.second.get());
 
         tm->radius = fishModelSettings.rummyFishModelSettings.radius;
 
         tm->perceived_agents = fishModelSettings.rummyFishModelSettings.perceived_agents;
         tm->gamma_rand = fishModelSettings.rummyFishModelSettings.gamma_rand;
         tm->gamma_wall = fishModelSettings.rummyFishModelSettings.gamma_wall;
-        tm->wall_interaction_range = fishModelSettings.rummyFishModelSettings.wall_interaction_range;
+        tm->wall_interaction_range
+            = fishModelSettings.rummyFishModelSettings.wall_interaction_range;
         tm->body_length = fishModelSettings.rummyFishModelSettings.body_length;
 
         tm->alpha = fishModelSettings.rummyFishModelSettings.alpha;
@@ -72,5 +72,10 @@ void ToulouseControlMode::resetModel()
         m_sim = factory.create();
         updateModelParameters();
         //        cv::imshow( "ModelGrid", m_currentGrid);
+    }
+
+    for (auto& a : m_sim->agents) {
+        Fishmodel::ToulouseModel* tm = reinterpret_cast<Fishmodel::ToulouseModel*>(a.second.get());
+        tm->reinit();
     }
 }

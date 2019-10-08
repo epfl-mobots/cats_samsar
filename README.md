@@ -41,6 +41,9 @@ http://zeromq.org/intro:get-the-software and here
 https://gist.github.com/cdjhlee/b8e3c927a01b0948b42d
 for more details
 
+### Additional dependencies for Ubuntu 16.04
+    sudo apt-get install libboost-all-dev libprotoc-dev libzmqpp-dev libeigen3-dev
+
 ### Install gcc4.9 or newer 
 
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
@@ -68,6 +71,8 @@ Use this link https://gstreamer.freedesktop.org/src/qt-gstreamer/ to download th
 When running cmake add -DQT_VERSION=5 flag
 
 ### Compile OpenCV with dependecies
+
+Please use OpenCV 3.x to compile CATS without problems. Version 3.2.0 is suggested for both the opencv and opencv_contrib packages.
 
     git clone https://github.com/opencv/opencv_contrib.git
     git clone https://github.com/opencv/opencv.git

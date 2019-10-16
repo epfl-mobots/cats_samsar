@@ -9,6 +9,7 @@ endfunction()
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/model)
     execute_process(COMMAND mkdir model WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
+
 makeLink(dependencies/fish-model/bm.cpp model/bm.cpp)
 makeLink(dependencies/fish-model/bm.hpp model/bm.hpp)
 makeLink(dependencies/fish-model/factory.cpp model/factory.cpp)
@@ -37,15 +38,6 @@ makeLink(dependencies/epfl_models/epfl_factory.hpp model/epfl_factory.hpp)
 makeLink(dependencies/epfl_models/epfl_factory.cpp model/epfl_factory.cpp)
 
 set(srcs
-    settings/RobotControlSettings.cpp
-    settings/ExperimentControllerSettings.cpp
-    settings/MapControllerSettings.cpp
-    settings/InitiationLeaderControllerSettings.cpp
-    settings/InitiationLureControllerSettings.cpp
-    settings/DominatingSetControllerSettings.cpp
-    settings/CircularSetupControllerSettings.cpp
-    FishBot.cpp
-    ControlLoop.cpp
     control-modes/Idle.cpp
     control-modes/GoStraight.cpp
     control-modes/GoToPosition.cpp
@@ -60,13 +52,8 @@ set(srcs
     control-modes/WheelVelocities.cpp
     control-modes/PositionListener.cpp
     control-modes/FollowGroup.cpp
+    ControlLoop.cpp
     ControlModeStateMachine.cpp
-    interfaces/DBusInterface.cpp
-    interfaces/DashelInterface.cpp
-    gui/RobotControlWidget.cpp
-    gui/RobotsWidget.cpp
-    gui/PotentialFieldWidget.cpp
-    RobotsHandler.cpp
     experiment-controllers/ControlArea.cpp
     experiment-controllers/MapController.cpp
     experiment-controllers/ExperimentController.cpp
@@ -77,6 +64,12 @@ set(srcs
     experiment-controllers/CircularSetupController.cpp
     experiment-controllers/CircularSetupFollowerController.cpp
     experiment-controllers/CircularSetupLeaderController.cpp
+    FishBot.cpp
+    gui/RobotControlWidget.cpp
+    gui/RobotsWidget.cpp
+    gui/PotentialFieldWidget.cpp
+    interfaces/DBusInterface.cpp
+    interfaces/DashelInterface.cpp
     model/model.cpp
     model/zones.cpp
     model/factory.cpp
@@ -90,42 +83,50 @@ set(srcs
     navigation/ObstacleAvoidance.cpp
     navigation/PotentialField.cpp
     navigation/GridBasedMethod.cpp
+    RobotsHandler.cpp
+    settings/RobotControlSettings.cpp
+    settings/ExperimentControllerSettings.cpp
+    settings/MapControllerSettings.cpp
+    settings/InitiationLeaderControllerSettings.cpp
+    settings/InitiationLureControllerSettings.cpp
+    settings/DominatingSetControllerSettings.cpp
+    settings/CircularSetupControllerSettings.cpp
     SetupMap.cpp
     statistics/StatisticsSubscriber.cpp
     statistics/StatisticsPublisher.cpp
 
+    model/utils/random/random_generator.cpp
+    model/utils/heading.cpp
+    model/epfl_factory.cpp
     model/socialFishModel.cpp
     model/toulouseModel.cpp
     model/densestPointModel.cpp
     control-modes/SocialFishControlMode.cpp
     control-modes/ToulouseControlMode.cpp
-    model/utils/heading.cpp
-    model/utils/random/random_generator.cpp
     control-modes/DensestPoint.cpp
-    model/epfl_factory.cpp
 )
 
 set(hdrs
-    control-modes/ControlTarget.hpp
-    RobotControlPointerTypes.hpp
-    MotionPatternType.hpp
     ConnectionStatusType.hpp
-    interfaces/Values.hpp
     control-modes/ControlModeType.hpp
+    control-modes/ControlTarget.hpp
+    control-modes/FishModelBase.hpp
     control-modes/ModelParameters.hpp
     experiment-controllers/ExperimentControllerType.hpp
     experiment-controllers/ExperimentControllerFactory.hpp
-    control-modes/FishModelBase.hpp
+    interfaces/Values.hpp
+    MotionPatternType.hpp
+    RobotControlPointerTypes.hpp
 
+    model/utils/random/random_generator.hpp
+    model/utils/heading.hpp
+    model/epfl_factory.hpp
     model/socialFishModel.hpp
     model/toulouseModel.hpp
     model/densestPointModel.hpp
     control-modes/SocialFishControlMode.hpp
     control-modes/ToulouseControlMode.hpp
     control-modes/DensestPoint.hpp
-    model/utils/heading.hpp
-    model/utils/random/random_generator.hpp
-    model/epfl_factory.hpp
 )
 
 qt5_wrap_ui(uis_hdrs gui/RobotControlWidget.ui gui/RobotsWidget.ui gui/PotentialFieldWidget.ui)
@@ -133,11 +134,15 @@ qt5_add_resources(resources icons.qrc)
 
 include_directories(${CMAKE_SOURCE_DIR}/source/common)
 include_directories(${CMAKE_SOURCE_DIR}/source/inter-species)
+include_directories(${CMAKE_SOURCE_DIR}/source/robot-control/navigation)
 add_library(robot-control SHARED ${srcs} ${hdrs} ${uis_hdrs}) #${resources})
-target_link_libraries(robot-control common inter-species Qt5::Core Qt5::Widgets Qt5::DBus
-                      Qt5::Xml Qt5::Network ${Boost_LIBRARIES}
-                      ${dashel_LIBRARIES} ${Aseba_LIBRARIES} -fsanitize=address)
+target_link_libraries(robot-control common inter-species elastic-band
+                      Qt5::Core Qt5::Widgets Qt5::DBus Qt5::Xml Qt5::Network
+                      ${Boost_LIBRARIES} ${dashel_LIBRARIES} ${Aseba_LIBRARIES}
+                      -fsanitize=address)
 
 #install(TARGETS robot-control DESTINATION .)
 #install(FILES
-#         DESTINATION include/robot-control)
+#        DESTINATION include/robot-control)
+
+add_subdirectory(navigation/elastic-band)

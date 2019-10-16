@@ -41,11 +41,17 @@ include_directories(SYSTEM ${GLIB2_MAIN_INCLUDE_DIR})
 find_package(Protobuf REQUIRED)
 include_directories(SYSTEM ${PROTOBUF_INCLUDE_DIRS})
 
-find_package(Boost COMPONENTS program_options system serialization REQUIRED )
-include_directories(SYSTEM ${Boost_INCLUDE_DIR} )
+find_package(Boost COMPONENTS program_options system serialization thread graph REQUIRED)
+include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 
 find_package(dashel REQUIRED)
 include_directories(SYSTEM ${dashel_INCLUDE_DIRS})
+
+find_package(SUITESPARSE REQUIRED)
+include_directories(SYSTEM ${SUITESPARSE_INCLUDE_DIRS})
+
+find_package(G2O REQUIRED)
+include_directories(SYSTEM ${G2O_INCLUDE_DIR})
 
 find_package(Aseba REQUIRED)
 include_directories(SYSTEM ${Aseba_INCLUDE_DIRS})

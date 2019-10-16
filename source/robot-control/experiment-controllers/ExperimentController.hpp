@@ -29,6 +29,8 @@ public:
     //! controller.
     explicit ExperimentController(FishBot* robot,
                                   ExperimentControllerType::Enum type);
+    //! Destructor.
+    virtual ~ExperimentController() = default;
 
     //! The data from the control map returned on request for given position.
     struct ControlData {

@@ -44,6 +44,8 @@ class ControlArea
 public:
     //! Constructor.
     explicit ControlArea(QString id, ControlAreaType::Enum type);
+    //! Destructor.
+    virtual ~ControlArea() = default;
 
 public:
     //! Returns the id.

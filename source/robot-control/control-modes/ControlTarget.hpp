@@ -21,6 +21,8 @@ class ControlTarget
 public:
     //! Constructor.
     explicit ControlTarget(ControlTargetType type) : m_type(type) {}
+    //! Destructor.
+    virtual ~ControlTarget() = default;
 
 public:
     //! Return the control target type.

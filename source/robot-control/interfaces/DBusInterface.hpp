@@ -18,6 +18,8 @@ class DBusInterface : public QObject
 public:
     //! Constructor.
     explicit DBusInterface();
+    //! Destructor.
+    virtual ~DBusInterface() = default;
 
     //! Convert  QList<qint16> Values to QVariant.
     static QVariant valuetoVariant(const Values& value);

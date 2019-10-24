@@ -4,13 +4,13 @@
         <type>Interspecies</type>
         <name>Circular-open</name>
         <agents>
-            <numberOfAnimals>0</numberOfAnimals>
+            <numberOfAnimals>1</numberOfAnimals>
         </agents>
         <!-- <setupMapPath>setup/epfl-circular-open.xml</setupMapPath> -->
         <setupMapPath>setup/epfl-circular-open-small.xml</setupMapPath>
     </experiment>
     <robots>
-        <numberOfRobots>2</numberOfRobots>
+        <numberOfRobots>1</numberOfRobots>
         <controlFrequencyHz>15</controlFrequencyHz>
         <fishModel>
             <agent>
@@ -22,7 +22,7 @@
                 <varSpeed>0.51</varSpeed>
             </agent>
             <simulation>
-                <dt>0.5</dt>
+                <dt>0.1</dt>
             </simulation>
     
             <Toulouse>

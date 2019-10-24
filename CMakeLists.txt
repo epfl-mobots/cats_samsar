@@ -47,12 +47,6 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 find_package(dashel REQUIRED)
 include_directories(SYSTEM ${dashel_INCLUDE_DIRS})
 
-find_package(SUITESPARSE REQUIRED)
-include_directories(SYSTEM ${SUITESPARSE_INCLUDE_DIRS})
-
-find_package(G2O REQUIRED)
-include_directories(SYSTEM ${G2O_INCLUDE_DIR})
-
 find_package(Aseba REQUIRED)
 include_directories(SYSTEM ${Aseba_INCLUDE_DIRS})
 

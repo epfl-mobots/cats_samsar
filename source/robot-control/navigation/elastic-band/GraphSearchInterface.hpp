@@ -62,8 +62,8 @@
 
 #include <geometry_msgs/Twist.h>
 
+#include <elastic-band/kinematics/PoseSE2.hpp>
 #include <elastic-band/EquivalenceClass.hpp>
-#include <elastic-band/PoseSE2.hpp>
 #include <elastic-band/TebConfig.hpp>
 
 namespace elastic_band

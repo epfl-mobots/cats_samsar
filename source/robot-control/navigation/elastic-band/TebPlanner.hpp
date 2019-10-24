@@ -153,6 +153,25 @@ public:
    * @brief Plan a trajectory based on an initial reference plan.
    * 
    * Call this method to create and optimize a trajectory that is initialized
+   * according to an initial reference plan (given as a container of points,
+   * each point possessing a pose, a velocity, an acceleration and a timestamp). \n
+   * The method supports hot-starting from previous solutions, if avaiable: \n
+   * 	- If no trajectory exists yet, a new trajectory is initialized based on the initial plan,
+   *	  see TimedElasticBand::initTrajectoryToGoal
+   * 	- If a previous solution is available, update the trajectory based on the initial plan,
+   * 	  see TimedElasticBand::updateAndPruneTEB
+   * 	- Afterwards optimize the recently initialized or updated trajectory by calling optimizeTEB() and invoking g2o
+   * @param initial_plan instance of Trajectory
+   * @param start_vel current start velocity (e.g. the velocity of the robot, only translational (nonholonomic) and rotational components are used)
+   * @param free_goal_vel if \c true, a nonzero final velocity at the goal pose is allowed, otherwise the final velocity will be zero (default: false)
+   * @return \c true if planning was successful, \c false otherwise
+   */
+  virtual bool plan(const Trajectory& initial_plan, const Velocity* start_vel = NULL, bool free_goal_vel = false);
+  
+  /**
+   * @brief Plan a trajectory based on an initial reference plan.
+   * 
+   * Call this method to create and optimize a trajectory that is initialized
    * according to an initial reference plan (given as a container of poses). \n
    * The method supports hot-starting from previous solutions, if avaiable: \n
    * 	- If no trajectory exist yet, a new trajectory is initialized based on the initial plan,
@@ -254,12 +273,27 @@ public:
   
   
   /**
+   * @brief Set the initial velocity at the trajectory's start pose (e.g. the robot's velocity).
+   * @remarks Calling this function is not neccessary if the initial velocity is passed via the plan() method
+   * @param vel_start Current start velocity (e.g. the velocity of the robot, both translational and rotational components are used,
+   *                  for nonholonomic robots only)
+   */
+  void setVelocityStart(const Velocity& vel_start);
+  
+  /**
    * @brief Set the initial velocity at the trajectory's start pose (e.g. the robot's velocity) [twist overload].
    * @remarks Calling this function is not neccessary if the initial velocity is passed via the plan() method
    * @param vel_start Current start velocity (e.g. the velocity of the robot, only linear.x and angular.z are used,
    *                  for holonomic robots also linear.y)
    */
   void setVelocityStart(const geometry_msgs::Twist& vel_start);
+  
+  /**
+   * @brief Set the desired final velocity at the trajectory's goal pose.
+   * @remarks Call this function only if a non-zero velocity is desired and if \c free_goal_vel is set to \c false in plan()
+   * @param vel_goal Velocity instance containing the translational and rotational final velocity 
+   */
+  void setVelocityGoal(const Velocity& vel_goal);
   
   /**
    * @brief Set the desired final velocity at the trajectory's goal pose.
@@ -714,12 +748,12 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW    
 };
 
-//! Abbrev. for shared instances of the TebPlanner
+//! Abbrev. for shared instances of TebPlanner
 typedef boost::shared_ptr<TebPlanner> TebPlannerPtr;
 //! Abbrev. for shared const TebPlanner pointers
 typedef boost::shared_ptr<const TebPlanner> TebPlannerConstPtr;
-//! Abbrev. for containers storing multiple TEB planners
-typedef std::vector< TebPlannerPtr > TebPlannerContainer;
+//! Abbrev. for containers storing multiple TebPlanner pointers
+typedef std::vector<TebPlannerPtr> TebPlannerContainer;
 
 } // namespace elastic_band
 

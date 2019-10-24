@@ -55,7 +55,7 @@
 #include <geometry_msgs/TwistStamped.h>
 
 // this package
-#include <elastic-band/PoseSE2.hpp>
+#include <elastic-band/kinematics/PoseSE2.hpp>
 
 namespace elastic_band
 {

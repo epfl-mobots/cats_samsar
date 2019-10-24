@@ -77,7 +77,7 @@ public:
     * @param position 2D position vector
     * @param theta angle given in rad
     */ 
-  PoseSE2(const Eigen::Ref<const Eigen::Vector2d>& position, double theta)
+  PoseSE2(const Eigen::Ref<const Eigen::Vector2d>& position, const double theta)
   {
       _position = position;
       _theta = theta;
@@ -89,7 +89,7 @@ public:
     * @param y y-coordinate
     * @param theta yaw angle in rad
     */ 
-  PoseSE2(double x, double y, double theta)
+  PoseSE2(const double x, const double y, const double theta)
   {
       _position.coeffRef(0) = x;
       _position.coeffRef(1) = y;
@@ -227,7 +227,7 @@ public:
     * @brief Scale all SE2 components (x,y,theta) and normalize theta afterwards to [-pi, pi]
     * @param factor scale factor
     */ 
-  void scale(double factor)
+  void scale(const double factor)
   {
     _position *= factor;
     _theta = g2o::normalize_theta( _theta*factor );
@@ -279,7 +279,7 @@ public:
     * @param angle the angle defining the 2d rotation
     * @param adjust_theta if \c true, the orientation theta is also rotated
     */ 
-  void rotateGlobal(double angle, bool adjust_theta=true)
+  void rotateGlobal(const double angle, const bool adjust_theta=true)
   {
     double new_x = std::cos(angle)*_position.x() - std::sin(angle)*_position.y();
     double new_y = std::sin(angle)*_position.x() + std::cos(angle)*_position.y();
@@ -359,7 +359,7 @@ public:
     * @param scalar factor to multiply with
     * @warning theta is not normalized after multiplying
     */ 
-  friend PoseSE2 operator*(PoseSE2 pose, double scalar) 
+  friend PoseSE2 operator*(PoseSE2 pose, const double scalar) 
   {
     pose._position *= scalar;
     pose._theta *= scalar;
@@ -373,13 +373,41 @@ public:
     * @param pose pose to scale
     * @warning theta is not normalized after multiplying
     */ 
-  friend PoseSE2 operator*(double scalar, PoseSE2 pose) 
+  friend PoseSE2 operator*(const double scalar, PoseSE2 pose) 
   {
     pose._position *= scalar;
     pose._theta *= scalar;
     return pose;
   }
-  
+
+  /**
+  * @brief Divide pose with scalar and return copy without normalizing theta
+  * This operator is useful for calculating velocities ...
+  * @param pose pose to scale
+  * @param scalar factor to divide with
+  * @warning scalar is not checked to be non-zero before dividing
+  */
+  friend PoseSE2 operator/(PoseSE2 pose, const double scalar) 
+  {
+    pose._position /= scalar;
+    pose._theta /= scalar;
+    return pose;
+  }
+
+  /**
+  * @brief Divide pose with scalar and return copy without normalizing theta
+  * This operator is useful for calculating velocities ...
+  * @param scalar factor to divide with
+  * @param pose pose to scale
+  * @warning scalar is not checked to be non-zero before dividing
+  */
+  friend PoseSE2 operator/(const double scalar, PoseSE2 pose) 
+  {
+    pose._position /= scalar;
+    pose._theta /= scalar;
+    return pose;
+  }
+
   /**
 	 * @brief Output stream operator
 	 * @param stream output stream
@@ -387,7 +415,7 @@ public:
 	 */
 	friend std::ostream& operator<< (std::ostream& stream, const PoseSE2& pose)
 	{
-		stream << "x: " << pose._position[0] << " y: " << pose._position[1] << " theta: " << pose._theta;
+		stream << "PoseSE2 = x: " << pose._position[0] << ", y: " << pose._position[1] << ", theta: " << pose._theta;
     return stream;
 	}
   
@@ -402,6 +430,13 @@ private:
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW  
 };
+
+//! Abbrev. for shared instances of PoseSE2
+typedef boost::shared_ptr<PoseSE2> PoseSE2Ptr;
+//! Abbrev. for shared const PoseSE2 pointers
+typedef boost::shared_ptr<const PoseSE2> PoseSE2ConstPtr;
+//! Abbrev. for containers storing multiple PoseSE2 pointers
+typedef std::vector<PoseSE2Ptr> PoseSE2Container;
 
 } // namespace elastic_band
 

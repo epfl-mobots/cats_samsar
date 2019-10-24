@@ -546,6 +546,89 @@ bool TimedElasticBand::initTrajectoryToGoal(const std::vector<geometry_msgs::Pos
   return true;
 }
 
+bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, double max_vel_x, bool estimate_orient, int min_samples, bool guess_backwards_motion)
+{
+  if (!isInit())
+  {
+    const TimestepContainer timestep_profile = plan.getProfileTimestep();
+    const PoseSE2Container  pose_profile     = plan.getProfilePose();
+    const PoseSE2 start(*pose_profile.front());
+    const PoseSE2 goal (*pose_profile.back());
+
+    double dt = 0.1;
+
+    addPose(start); // add starting point with given orientation
+    setPoseVertexFixed(0, true); // StartConf is a fixed constraint during optimization
+
+    bool backwards = false;
+    if (guess_backwards_motion && (goal.position() - start.position()).dot(start.orientationUnitVec()) < 0) // check if the goal is behind the start pose (w.r.t. start orientation)
+        backwards = true;
+    // TODO: dt ~ max_vel_x_backwards for backwards motions
+
+    for (unsigned int i = 1; i < (unsigned int)pose_profile.size() - 1; ++i)
+    {
+        double yaw;
+        if (estimate_orient)
+        {
+            // get yaw from the orientation of the distance vector between pose{i+1} and pose{i}
+            double dx = pose_profile.at(i+1)->position().x() - pose_profile.at(i)->position().x();
+            double dy = pose_profile.at(i+1)->position().y() - pose_profile.at(i)->position().y();
+            yaw = std::atan2(dy, dx);
+            if (backwards)
+                yaw = g2o::normalize_theta(yaw + M_PI);
+        }
+        else
+        {
+            yaw = pose_profile.at(i)->theta();
+        }
+        PoseSE2 intermediate_pose(pose_profile.at(i)->position().x(), pose_profile.at(i)->position().y(), yaw);
+        if (timestep_profile.at(i)->count() > 0)
+          dt = timestep_profile.at(i)->count();
+        else if (max_vel_x > 0)
+          dt = (intermediate_pose.position() - BackPose().position()).norm() / max_vel_x;
+        else
+          dt = 0.1;
+        addPoseAndTimeDiff(intermediate_pose, dt);
+    }
+
+    // if number of samples is not larger than min_samples, insert manually
+    double sum_dt_manual = 0;
+    if (sizePoses() < min_samples - 1)
+    {
+      ROS_DEBUG("initTEBtoGoal(): number of generated samples is less than specified by min_samples. Forcing the insertion of more samples...");
+      while (sizePoses() < min_samples - 1) // subtract goal point that will be added later
+      {
+        // simple strategy: interpolate between the current pose and the goal
+        PoseSE2 intermediate_pose = PoseSE2::average(BackPose(), goal);
+        if (max_vel_x > 0)
+          dt = (intermediate_pose.position() - BackPose().position()).norm() / max_vel_x;
+        else
+          dt = 0.1;
+        addPoseAndTimeDiff(intermediate_pose, dt); // let the optimizer correct the timestep (TODO: better initialization)
+        sum_dt_manual += dt;
+      }
+    }
+
+    // Now add final state with given orientation
+    if (timestep_profile.back()->count() > 0)
+      dt = std::max(timestep_profile.back()->count() - sum_dt_manual, sum_dt_manual > 0 ? 0.1 : 0);
+    else if (max_vel_x > 0)
+      dt = (goal.position() - BackPose().position()).norm() / max_vel_x;
+    else
+      dt = 0.1;
+    addPoseAndTimeDiff(goal, dt);
+    setPoseVertexFixed(sizePoses() - 1, true); // GoalConf is a fixed constraint during optimization
+  }
+  else // size!=0
+  {
+    ROS_WARN("Cannot init TEB between given configuration and goal, because TEB vectors are not empty or TEB is already initialized (call this function before adding states yourself)!");
+    ROS_WARN("Number of TEB configurations: %d, Number of TEB timediffs: %d", sizePoses(), sizeTimeDiffs());
+    return false;
+  }
+
+  return true;
+}
+
 
 int TimedElasticBand::findClosestTrajectoryPose(const Eigen::Ref<const Eigen::Vector2d>& ref_point, double* distance, int begin_idx) const
 {

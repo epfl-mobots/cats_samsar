@@ -52,7 +52,7 @@
 #include <g2o/core/hyper_graph_action.h>
 #include <g2o/stuff/misc.h>
 
-#include <elastic-band/PoseSE2.hpp>
+#include <elastic-band/kinematics/PoseSE2.hpp>
 
 namespace elastic_band
 {

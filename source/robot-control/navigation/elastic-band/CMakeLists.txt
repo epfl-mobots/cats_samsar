@@ -25,6 +25,11 @@ set(hdrs
     g2o_types/Penalties.hpp
     g2o_types/VertexPose.hpp
     g2o_types/VertexTimeDiff.hpp
+    kinematics/Acceleration.hpp
+    kinematics/PoseSE2.hpp
+    kinematics/Timestamp.hpp
+    kinematics/Trajectory.hpp
+    kinematics/Velocity.hpp
     Distances.hpp
     EquivalenceClass.hpp
     GraphSearchInterface.hpp
@@ -33,7 +38,6 @@ set(hdrs
     Misc.hpp
     Obstacles.hpp
     PlannerInterface.hpp
-    PoseSE2.hpp
     RecoveryBehaviors.hpp
     RobotFootprintModel.hpp
     TebConfig.hpp

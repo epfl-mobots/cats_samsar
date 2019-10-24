@@ -54,6 +54,11 @@
 
 #include <elastic-band/g2o_types/VertexPose.hpp>
 #include <elastic-band/g2o_types/VertexTimeDiff.hpp>
+#include <elastic-band/kinematics/PoseSE2.hpp>
+#include <elastic-band/kinematics/Velocity.hpp>
+#include <elastic-band/kinematics/Acceleration.hpp>
+#include <elastic-band/kinematics/Timestamp.hpp>
+#include <elastic-band/kinematics/Trajectory.hpp>
 #include <elastic-band/Obstacles.hpp>
 
 #include <complex>
@@ -426,6 +431,23 @@ public:
    * @return true if everything was fine, false otherwise
    */
   bool initTrajectoryToGoal(const std::vector<geometry_msgs::PoseStamped>& plan, double max_vel_x, bool estimate_orient=false, int min_samples = 3, bool guess_backwards_motion = false);
+
+  /**
+   * @brief Initialize a trajectory from a reference pose sequence (positions and orientations).
+   *
+   * This method initializes the timed elastic band using a pose container
+   * (e.g. as local plan from the ros navigation stack). \n
+   * The initial time difference between two consecutive poses can be uniformly set
+   * via the argument \c dt.
+   * @param plan instance of Trajectory
+   * @param max_vel_x maximum translational velocity used for determining time differences if not already provided by \c plan
+   * @param estimate_orient if \c true, calculate orientation using the straight line distance vector between consecutive poses
+   *                        (only copy start and goal orientation; recommended if no orientation data is available).
+   * @param min_samples Minimum number of samples that should be initialized at least
+   * @param guess_backwards_motion Allow the initialization of backwards oriented trajectories if the goal heading is pointing behind the robot (this parameter is used only if \c estimate_orient is enabled.
+   * @return true if everything was fine, false otherwise
+   */
+  bool initTrajectoryToGoal(const Trajectory& plan, double max_vel_x, bool estimate_orient = false, int min_samples = 3, bool guess_backwards_motion = false);
 
 
   __attribute_deprecated__ bool initTEBtoGoal(const PoseSE2& start, const PoseSE2& goal, double diststep=0, double timestep=1, int min_samples = 3, bool guess_backwards_motion = false)

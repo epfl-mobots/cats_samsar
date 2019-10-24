@@ -42,7 +42,7 @@
 #ifndef _ROBOT_FOOTPRINT_MODEL_HPP_
 #define _ROBOT_FOOTPRINT_MODEL_HPP_
 
-#include <elastic-band/PoseSE2.hpp>
+#include <elastic-band/kinematics/PoseSE2.hpp>
 #include <elastic-band/Obstacles.hpp>
 #include <visualization_msgs/Marker.h>
 

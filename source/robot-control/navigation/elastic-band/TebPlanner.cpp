@@ -223,6 +223,14 @@ bool TebPlanner::optimizeTEB(int iterations_innerloop, int iterations_outerloop,
   return true;
 }
 
+void TebPlanner::setVelocityStart(const Velocity& vel_start)
+{
+  vel_start_.first = true;
+  vel_start_.second.linear.x = vel_start.translation();
+  vel_start_.second.linear.y = 0;
+  vel_start_.second.angular.z = vel_start.rotation();
+}
+
 void TebPlanner::setVelocityStart(const geometry_msgs::Twist& vel_start)
 {
   vel_start_.first = true;
@@ -231,10 +239,50 @@ void TebPlanner::setVelocityStart(const geometry_msgs::Twist& vel_start)
   vel_start_.second.angular.z = vel_start.angular.z;
 }
 
+void TebPlanner::setVelocityGoal(const Velocity& vel_goal)
+{
+  vel_goal_.first = true;
+  vel_goal_.second.linear.x = vel_goal.translation();
+  vel_goal_.second.linear.y = 0;
+  vel_goal_.second.angular.z = vel_goal.rotation();
+}
+
 void TebPlanner::setVelocityGoal(const geometry_msgs::Twist& vel_goal)
 {
   vel_goal_.first = true;
   vel_goal_.second = vel_goal;
+}
+
+bool TebPlanner::plan(const Trajectory& initial_plan, const Velocity* start_vel, bool free_goal_vel)
+{
+  ROS_ASSERT_MSG(initialized_, "Call initialize() first.");
+  if (!teb_.isInit())
+  {
+    // init trajectory
+    teb_.initTrajectoryToGoal(initial_plan, cfg_->robot.max_vel_x, cfg_->trajectory.global_plan_overwrite_orientation, cfg_->trajectory.min_samples, cfg_->trajectory.allow_init_with_backwards_motion);
+  }
+  else // warm start
+  {
+    PoseSE2 start(initial_plan.trajectory().front()->pose());
+    PoseSE2 goal(initial_plan.trajectory().back()->pose());
+    if (teb_.sizePoses() > 0 && (goal.position() - teb_.BackPose().position()).norm() < cfg_->trajectory.force_reinit_new_goal_dist) // actual warm start!
+      teb_.updateAndPruneTEB(start, goal, cfg_->trajectory.min_samples); // update TEB
+    else // goal too far away -> reinit
+    {
+      ROS_DEBUG("New goal: distance to existing goal is higher than the specified threshold. Reinitalizing trajectories.");
+      teb_.clearTimedElasticBand();
+      teb_.initTrajectoryToGoal(initial_plan, cfg_->robot.max_vel_x, true, cfg_->trajectory.min_samples, cfg_->trajectory.allow_init_with_backwards_motion);
+    }
+  }
+  if (start_vel)
+    setVelocityStart(*start_vel);
+  if (free_goal_vel)
+    setVelocityGoalFree();
+  else
+    vel_goal_.first = true; // we just reactivate and use the previously set velocity (should be zero if nothing was modified)
+
+  // now optimize
+  return optimizeTEB(cfg_->optim.no_inner_iterations, cfg_->optim.no_outer_iterations);
 }
 
 bool TebPlanner::plan(const std::vector<geometry_msgs::PoseStamped>& initial_plan, const geometry_msgs::Twist* start_vel, bool free_goal_vel)
@@ -268,7 +316,6 @@ bool TebPlanner::plan(const std::vector<geometry_msgs::PoseStamped>& initial_pla
   // now optimize
   return optimizeTEB(cfg_->optim.no_inner_iterations, cfg_->optim.no_outer_iterations);
 }
-
 
 bool TebPlanner::plan(const tf::Pose& start, const tf::Pose& goal, const geometry_msgs::Twist* start_vel, bool free_goal_vel)
 {

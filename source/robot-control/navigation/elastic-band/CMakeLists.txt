@@ -18,6 +18,7 @@ set(hdrs
     g2o_types/EdgeKinematics.hpp
     g2o_types/EdgeObstacle.hpp
     g2o_types/EdgePreferRotDir.hpp
+    g2o_types/EdgeProfileFidelity.hpp
     g2o_types/EdgeShortestPath.hpp
     g2o_types/EdgeTimeOptimal.hpp
     g2o_types/EdgeVelocity.hpp

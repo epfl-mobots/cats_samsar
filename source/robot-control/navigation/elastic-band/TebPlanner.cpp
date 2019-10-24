@@ -49,8 +49,8 @@ namespace elastic_band
 
 // ============== Implementation ===================
 
-TebPlanner::TebPlanner() : cfg_(NULL), obstacles_(NULL), via_points_(NULL), cost_(HUGE_VAL), prefer_rotdir_(RotType::none),
-                                       robot_model_(new PointRobotFootprint()), initialized_(false), optimized_(false)
+TebPlanner::TebPlanner() : cfg_(NULL), obstacles_(NULL), via_points_(NULL), trajectory_ref_(NULL), cost_(HUGE_VAL),
+                           prefer_rotdir_(RotType::none), robot_model_(new PointRobotFootprint()), initialized_(false), optimized_(false)
 {    
 }
   
@@ -78,6 +78,7 @@ void TebPlanner::initialize(const TebConfig& cfg, ObstacleContainer* obstacles, 
   obstacles_ = obstacles;
   robot_model_ = robot_model;
   via_points_ = via_points;
+  trajectory_ref_ = NULL;
   cost_ = HUGE_VAL;
   prefer_rotdir_ = RotType::none;
   setVisualization(visual);
@@ -127,6 +128,7 @@ void TebPlanner::registerG2OTypes()
 
   factory->registerType("EDGE_TIME_OPTIMAL", new g2o::HyperGraphElementCreator<EdgeTimeOptimal>);
   factory->registerType("EDGE_SHORTEST_PATH", new g2o::HyperGraphElementCreator<EdgeShortestPath>);
+  factory->registerType("EDGE_PROFILE_FIDELITY", new g2o::HyperGraphElementCreator<EdgeProfileFidelity>);
   factory->registerType("EDGE_VELOCITY", new g2o::HyperGraphElementCreator<EdgeVelocity>);
   factory->registerType("EDGE_VELOCITY_HOLONOMIC", new g2o::HyperGraphElementCreator<EdgeVelocityHolonomic>);
   factory->registerType("EDGE_ACCELERATION", new g2o::HyperGraphElementCreator<EdgeAcceleration>);
@@ -253,13 +255,14 @@ void TebPlanner::setVelocityGoal(const geometry_msgs::Twist& vel_goal)
   vel_goal_.second = vel_goal;
 }
 
-bool TebPlanner::plan(const Trajectory& initial_plan, const Velocity* start_vel, bool free_goal_vel)
+bool TebPlanner::plan(const Trajectory& initial_plan, const bool fix_timediff_vertices, const bool fix_pose_vertices, const Velocity* start_vel, const bool free_goal_vel)
 {
   ROS_ASSERT_MSG(initialized_, "Call initialize() first.");
+  trajectory_ref_ = &initial_plan;
   if (!teb_.isInit())
   {
     // init trajectory
-    teb_.initTrajectoryToGoal(initial_plan, cfg_->robot.max_vel_x, cfg_->robot.max_vel_theta, cfg_->trajectory.global_plan_overwrite_orientation, cfg_->trajectory.min_samples, cfg_->trajectory.allow_init_with_backwards_motion);
+    teb_.initTrajectoryToGoal(initial_plan, fix_timediff_vertices, fix_pose_vertices, cfg_->robot.max_vel_x, cfg_->robot.max_vel_theta, cfg_->trajectory.global_plan_overwrite_orientation, cfg_->trajectory.min_samples, cfg_->trajectory.allow_init_with_backwards_motion);
   }
   else // warm start
   {
@@ -271,7 +274,7 @@ bool TebPlanner::plan(const Trajectory& initial_plan, const Velocity* start_vel,
     {
       ROS_DEBUG("New goal: distance to existing goal is higher than the specified threshold. Reinitalizing trajectories.");
       teb_.clearTimedElasticBand();
-      teb_.initTrajectoryToGoal(initial_plan, cfg_->robot.max_vel_x, cfg_->robot.max_vel_theta, cfg_->trajectory.global_plan_overwrite_orientation, cfg_->trajectory.min_samples, cfg_->trajectory.allow_init_with_backwards_motion);
+      teb_.initTrajectoryToGoal(initial_plan, fix_timediff_vertices, fix_pose_vertices, cfg_->robot.max_vel_x, cfg_->robot.max_vel_theta, cfg_->trajectory.global_plan_overwrite_orientation, cfg_->trajectory.min_samples, cfg_->trajectory.allow_init_with_backwards_motion);
     }
   }
   if (start_vel)
@@ -282,7 +285,9 @@ bool TebPlanner::plan(const Trajectory& initial_plan, const Velocity* start_vel,
     vel_goal_.first = true; // we just reactivate and use the previously set velocity (should be zero if nothing was modified)
 
   // now optimize
-  return optimizeTEB(cfg_->optim.no_inner_iterations, cfg_->optim.no_outer_iterations);
+  bool success = optimizeTEB(cfg_->optim.no_inner_iterations, cfg_->optim.no_outer_iterations);
+  trajectory_ref_ = nullptr;
+  return success;
 }
 
 bool TebPlanner::plan(const std::vector<geometry_msgs::PoseStamped>& initial_plan, const geometry_msgs::Twist* start_vel, bool free_goal_vel)
@@ -362,10 +367,10 @@ bool TebPlanner::buildGraph(double weight_multiplier)
     ROS_WARN("Cannot build graph, because it is not empty. Call graphClear()!");
     return false;
   }
-  
+
   // add TEB vertices
   AddTEBVertices();
-  
+
   // add Edges (local cost functions)
   if (cfg_->obstacles.legacy_obstacle_association)
     AddEdgesObstaclesLegacy(weight_multiplier);
@@ -374,26 +379,27 @@ bool TebPlanner::buildGraph(double weight_multiplier)
 
   if (cfg_->obstacles.include_dynamic_obstacles)
     AddEdgesDynamicObstacles();
-  
+
   AddEdgesViaPoints();
-  
+
   AddEdgesVelocity();
-  
+
   AddEdgesAcceleration();
 
-  AddEdgesTimeOptimal();	
+  AddEdgesTimeOptimal();
 
   AddEdgesShortestPath();
-  
+
+  AddEdgesProfileFidelity();
+
   if (cfg_->robot.min_turning_radius == 0 || cfg_->optim.weight_kinematics_turning_radius == 0)
     AddEdgesKinematicsDiffDrive(); // we have a differential drive robot
   else
-    AddEdgesKinematicsCarlike(); // we have a carlike robot since the turning radius is bounded from below.
+    AddEdgesKinematicsCarlike(); // we have a carlike robot since the turning radius is bounded from below
 
-    
   AddEdgesPreferRotDir();
-    
-  return true;  
+ 
+  return true;
 }
 
 bool TebPlanner::optimizeGraph(int no_iterations,bool clear_after)
@@ -960,6 +966,28 @@ void TebPlanner::AddEdgesShortestPath()
   }
 }
 
+void TebPlanner::AddEdgesProfileFidelity()
+{
+  if (cfg_->optim.weight_profile_fidelity==0 || trajectory_ref_==nullptr)
+    return; // if weight equals zero or no reference trajectory skip adding edges!
+
+  Eigen::Matrix<double,2,2> information;
+  information.fill(0);
+  information(0,0) = cfg_->optim.weight_profile_fidelity;
+  information(1,1) = cfg_->optim.weight_profile_fidelity;
+
+  for (int i=0; i < teb_.sizePoses()-1; ++i)
+  {
+    EdgeProfileFidelity* profile_fidelity_edge = new EdgeProfileFidelity;
+    profile_fidelity_edge->setVertex(0,teb_.PoseVertex(i));
+    profile_fidelity_edge->setVertex(1,teb_.PoseVertex(i+1));
+    profile_fidelity_edge->setVertex(2,teb_.TimeDiffVertex(i));
+    profile_fidelity_edge->setInformation(information);
+    profile_fidelity_edge->setVelocity(&trajectory_ref_->trajectory().at(i)->velocity());
+    profile_fidelity_edge->setTebConfig(*cfg_);
+    optimizer_->addEdge(profile_fidelity_edge);
+  }
+}
 
 
 void TebPlanner::AddEdgesKinematicsDiffDrive()

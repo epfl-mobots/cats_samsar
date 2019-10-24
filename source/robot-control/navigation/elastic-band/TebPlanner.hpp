@@ -56,6 +56,7 @@
 #include <elastic-band/g2o_types/EdgeKinematics.hpp>
 #include <elastic-band/g2o_types/EdgeTimeOptimal.hpp>
 #include <elastic-band/g2o_types/EdgeShortestPath.hpp>
+#include <elastic-band/g2o_types/EdgeProfileFidelity.hpp>
 #include <elastic-band/g2o_types/EdgeObstacle.hpp>
 #include <elastic-band/g2o_types/EdgeDynamicObstacle.hpp>
 #include <elastic-band/g2o_types/EdgeViaPoint.hpp>
@@ -162,11 +163,13 @@ public:
    * 	  see TimedElasticBand::updateAndPruneTEB
    * 	- Afterwards optimize the recently initialized or updated trajectory by calling optimizeTEB() and invoking g2o
    * @param initial_plan instance of Trajectory
+   * @param fix_timediff_vertices if \c true, fix all time difference vertices during optimization
+   * @param fix_pose_vertices if \c true, fix all pose vertices during optimization
    * @param start_vel current start velocity (e.g. the velocity of the robot, only translational (nonholonomic) and rotational components are used)
    * @param free_goal_vel if \c true, a nonzero final velocity at the goal pose is allowed, otherwise the final velocity will be zero (default: false)
    * @return \c true if planning was successful, \c false otherwise
    */
-  virtual bool plan(const Trajectory& initial_plan, const Velocity* start_vel = NULL, bool free_goal_vel = false);
+  virtual bool plan(const Trajectory& initial_plan, const bool fix_timediff_vertices = false, const bool fix_pose_vertices = false, const Velocity* start_vel = NULL, const bool free_goal_vel = false);
   
   /**
    * @brief Plan a trajectory based on an initial reference plan.
@@ -633,7 +636,7 @@ protected:
    * @see optimizeGraph
    */
   void AddEdgesAcceleration();
-  
+
   /**
    * @brief Add all edges (local cost functions) for minimizing the transition time (resp. minimize time differences)
    * @see EdgeTimeOptimal
@@ -649,7 +652,15 @@ protected:
    * @see optimizeGraph
    */
   void AddEdgesShortestPath();
-  
+
+  /**
+   * @brief Add all edges (local cost functions) for minimizing the difference to the reference velocity profile
+   * @see EdgeProfileFidelity
+   * @see buildGraph
+   * @see optimizeGraph
+   */
+  void AddEdgesProfileFidelity();
+
   /**
    * @brief Add all edges (local cost functions) related to keeping a distance from static obstacles
    * @warning do not combine with AddEdgesInflatedObstacles
@@ -729,6 +740,7 @@ protected:
   const TebConfig* cfg_; //!< Config class that stores and manages all related parameters
   ObstacleContainer* obstacles_; //!< Store obstacles that are relevant for planning
   const ViaPointContainer* via_points_; //!< Store via points for planning
+  const Trajectory* trajectory_ref_; //!< Store reference trajectory for planning
   
   double cost_; //!< Store cost value of the current hyper-graph
   RotType prefer_rotdir_; //!< Store whether to prefer a specific initial rotation in optimization (might be activated in case the robot oscillates)

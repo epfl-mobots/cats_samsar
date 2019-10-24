@@ -442,6 +442,8 @@ public:
    * The initial time difference between two consecutive poses can be uniformly set
    * via the argument \c dt.
    * @param plan instance of Trajectory
+   * @param fix_timediff_vertices if \c true, fix all time difference vertices during optimization
+   * @param fix_pose_vertices if \c true, fix all pose vertices during optimization
    * @param max_vel_x maximum translational velocity used for determining time differences if time steps are not already provided by \c plan
    * @param max_vel_theta maximum rotational velocity used for determining time differences if time steps are not already provided by \c plan
    * @param estimate_orient if \c true, calculate orientation using the straight line distance vector between consecutive poses
@@ -450,7 +452,7 @@ public:
    * @param guess_backwards_motion Allow the initialization of backwards oriented trajectories if the goal heading is pointing behind the robot (this parameter is used only if \c estimate_orient is enabled.
    * @return true if everything was fine, false otherwise
    */
-  bool initTrajectoryToGoal(const Trajectory& plan, double max_vel_x, double max_vel_theta, bool estimate_orient = false, int min_samples = 3, bool guess_backwards_motion = false);
+  bool initTrajectoryToGoal(const Trajectory& plan, const bool fix_timediff_vertices = false, const bool fix_pose_vertices = false, const double max_vel_x = 1.0, const double max_vel_theta = 1.0, const bool estimate_orient = false, const int min_samples = 3, const bool guess_backwards_motion = false);
 
 
   __attribute_deprecated__ bool initTEBtoGoal(const PoseSE2& start, const PoseSE2& goal, double diststep=0, double timestep=1, int min_samples = 3, bool guess_backwards_motion = false)

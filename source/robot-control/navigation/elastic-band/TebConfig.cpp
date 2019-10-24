@@ -121,6 +121,7 @@ void TebConfig::loadRosParamFromNodeHandle(const ros::NodeHandle& nh)
   nh.param("weight_kinematics_turning_radius", optim.weight_kinematics_turning_radius, optim.weight_kinematics_turning_radius);
   nh.param("weight_optimaltime", optim.weight_optimaltime, optim.weight_optimaltime);
   nh.param("weight_shortest_path", optim.weight_shortest_path, optim.weight_shortest_path);
+  nh.param("weight_profile_fidelity", optim.weight_profile_fidelity, optim.weight_profile_fidelity);
   nh.param("weight_obstacle", optim.weight_obstacle, optim.weight_obstacle);
   nh.param("weight_inflation", optim.weight_inflation, optim.weight_inflation);
   nh.param("weight_dynamic_obstacle", optim.weight_dynamic_obstacle, optim.weight_dynamic_obstacle);    
@@ -234,6 +235,7 @@ void TebConfig::reconfigure(teb_local_planner::TebLocalPlannerReconfigureConfig&
   optim.weight_kinematics_turning_radius = cfg.weight_kinematics_turning_radius;
   optim.weight_optimaltime = cfg.weight_optimaltime;
   optim.weight_shortest_path = cfg.weight_shortest_path;
+  optim.weight_profile_fidelity = 0; // TODO: add member weight_profile_fidelity in class teb_local_planner::TebLocalPlannerReconfigureConfig
   optim.weight_obstacle = cfg.weight_obstacle;
   optim.weight_inflation = cfg.weight_inflation;
   optim.weight_dynamic_obstacle = cfg.weight_dynamic_obstacle;
@@ -324,8 +326,8 @@ void TebConfig::checkParameters() const
       ROS_WARN("TebLocalPlannerROS() Param Warning: parameter oscillation_filter_duration must be >= 0");
 
   // weights
-  if (optim.weight_optimaltime <= 0)
-      ROS_WARN("TebLocalPlannerROS() Param Warning: parameter weight_optimaltime shoud be > 0 (even if weight_shortest_path is in use)");
+  if (optim.weight_optimaltime <= 0 && optim.weight_profile_fidelity <= 0)
+      ROS_WARN("TebLocalPlannerROS() Param Warning: parameter weight_optimaltime or weight_profile_fidelity shoud be > 0 (even if weight_shortest_path is in use)");
   
 }    
 

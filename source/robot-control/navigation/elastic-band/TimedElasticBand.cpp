@@ -427,7 +427,7 @@ bool TimedElasticBand::initTrajectoryToGoal(const std::vector<geometry_msgs::Pos
   return true;
 }
 
-bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, double max_vel_x, double max_vel_theta, bool estimate_orient, int min_samples, bool guess_backwards_motion)
+bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, const bool fix_timediff_vertices, const bool fix_pose_vertices, const double max_vel_x, const double max_vel_theta, const bool estimate_orient, const int min_samples, const bool guess_backwards_motion)
 {
   if (!isInit())
   {
@@ -441,33 +441,41 @@ bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, double max_v
 
     bool backwards = false;
     if (guess_backwards_motion && (goal.position() - start.position()).dot(start.orientationUnitVec()) < 0) // check if the goal is behind the start pose (w.r.t. start orientation)
-        backwards = true;
+      backwards = true;
     // TODO: dt ~ max_vel_x_backwards for backwards motions
 
     double dt;
 
     for (unsigned int i = 1; i < (unsigned int)pose_profile.size() - 1; ++i)
     {
-        double yaw;
-        if (estimate_orient)
-        {
-            // get yaw from the orientation of the distance vector between pose{i+1} and pose{i}
-            double dx = pose_profile.at(i+1)->position().x() - pose_profile.at(i)->position().x();
-            double dy = pose_profile.at(i+1)->position().y() - pose_profile.at(i)->position().y();
-            yaw = std::atan2(dy, dx);
-            if (backwards)
-                yaw = g2o::normalize_theta(yaw + M_PI);
-        }
-        else
-        {
-            yaw = pose_profile.at(i)->theta();
-        }
-        PoseSE2 intermediate_pose(pose_profile.at(i)->position().x(), pose_profile.at(i)->position().y(), yaw);
-        if (timestep_profile.at(i-1)->count() > 0)
-          dt = timestep_profile.at(i-1)->count();
-        else
-          dt = estimateDeltaT(BackPose(), intermediate_pose, max_vel_x, max_vel_theta);
+      double yaw;
+      if (estimate_orient)
+      {
+        // get yaw from the orientation of the distance vector between pose{i+1} and pose{i}
+        double dx = pose_profile.at(i+1)->position().x() - pose_profile.at(i)->position().x();
+        double dy = pose_profile.at(i+1)->position().y() - pose_profile.at(i)->position().y();
+        yaw = std::atan2(dy, dx);
+        if (backwards)
+          yaw = g2o::normalize_theta(yaw + M_PI);
+      }
+      else
+      {
+        yaw = pose_profile.at(i)->theta();
+      }
+      PoseSE2 intermediate_pose(pose_profile.at(i)->position().x(), pose_profile.at(i)->position().y(), yaw);
+      if (timestep_profile.at(i-1)->count() > 0)
+        dt = timestep_profile.at(i-1)->count();
+      else
+        dt = estimateDeltaT(BackPose(), intermediate_pose, max_vel_x, max_vel_theta);
+      if (fix_timediff_vertices || fix_pose_vertices)
+      {
+        addPose(intermediate_pose, fix_pose_vertices);
+        addTimeDiff(dt, fix_timediff_vertices);
+      }
+      else
+      {
         addPoseAndTimeDiff(intermediate_pose, dt);
+      }
     }
 
     // if number of samples is not larger than min_samples, insert manually
@@ -480,7 +488,15 @@ bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, double max_v
         // simple strategy: interpolate between the current pose and the goal
         PoseSE2 intermediate_pose = PoseSE2::average(BackPose(), goal);
         dt = estimateDeltaT(BackPose(), intermediate_pose, max_vel_x, max_vel_theta);
-        addPoseAndTimeDiff(intermediate_pose, dt); // let the optimizer correct the timestep (TODO: better initialization)
+        if (fix_timediff_vertices || fix_pose_vertices)
+        {
+          addPose(intermediate_pose, fix_pose_vertices);
+          addTimeDiff(dt, fix_timediff_vertices);
+        }
+        else
+        {
+          addPoseAndTimeDiff(intermediate_pose, dt); // let the optimizer correct the timestep (TODO: better initialization)
+        }
         sum_dt_manual += dt;
       }
     }
@@ -490,8 +506,16 @@ bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, double max_v
       dt = timestep_profile.back()->count() - sum_dt_manual;
     else
       dt = estimateDeltaT(BackPose(), goal, max_vel_x, max_vel_theta);
-    addPoseAndTimeDiff(goal, dt);
-    setPoseVertexFixed(sizePoses() - 1, true); // GoalConf is a fixed constraint during optimization
+    if (fix_timediff_vertices)
+    {
+      addPose(goal, true); // GoalConf is a fixed constraint during optimization
+      addTimeDiff(dt, true);
+    }
+    else
+    {
+      addPoseAndTimeDiff(goal, dt);
+      setPoseVertexFixed(sizePoses() - 1, true); // GoalConf is a fixed constraint during optimization
+    }
   }
   else // size!=0
   {

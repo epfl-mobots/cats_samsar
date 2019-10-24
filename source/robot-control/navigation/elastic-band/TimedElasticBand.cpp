@@ -77,6 +77,7 @@ void TimedElasticBand::addPose(const Eigen::Ref<const Eigen::Vector2d>& position
 
 void TimedElasticBand::addTimeDiff(double dt, bool fixed)
 {
+  ROS_ASSERT_MSG(dt > 0., "Adding a timediff requires a positive dt");
   VertexTimeDiff* timediff_vertex = new VertexTimeDiff(dt, fixed);
   timediff_vec_.push_back( timediff_vertex );
   return;
@@ -120,14 +121,14 @@ void TimedElasticBand::addPoseAndTimeDiff(const Eigen::Ref<const Eigen::Vector2d
 
 void TimedElasticBand::deletePose(int index)
 {
-  assert(index < pose_vec_.size());
+  ROS_ASSERT(index < pose_vec_.size());
   delete pose_vec_.at(index);
   pose_vec_.erase(pose_vec_.begin()+index);
 }
 
 void TimedElasticBand::deletePoses(int index, int number)
 {
-  assert(index+number <= (int)pose_vec_.size());
+  ROS_ASSERT(index+number <= (int)pose_vec_.size());
   for (int i = index; i<index+number; ++i)
     delete pose_vec_.at(i);
   pose_vec_.erase(pose_vec_.begin()+index, pose_vec_.begin()+index+number);
@@ -135,14 +136,14 @@ void TimedElasticBand::deletePoses(int index, int number)
 
 void TimedElasticBand::deleteTimeDiff(int index)
 {
-  assert(index < (int)timediff_vec_.size());
+  ROS_ASSERT(index < (int)timediff_vec_.size());
   delete timediff_vec_.at(index);
   timediff_vec_.erase(timediff_vec_.begin()+index);
 }
 
 void TimedElasticBand::deleteTimeDiffs(int index, int number)
 {
-  assert(index+number <= timediff_vec_.size());
+  ROS_ASSERT(index+number <= timediff_vec_.size());
   for (int i = index; i<index+number; ++i)
     delete timediff_vec_.at(i);
   timediff_vec_.erase(timediff_vec_.begin()+index, timediff_vec_.begin()+index+number);
@@ -168,6 +169,7 @@ void TimedElasticBand::insertPose(int index, double x, double y, double theta)
 
 void TimedElasticBand::insertTimeDiff(int index, double dt)
 {
+  ROS_ASSERT_MSG(dt > 0., "Adding a timediff requires a positive dt");
   VertexTimeDiff* timediff_vertex = new VertexTimeDiff(dt);
   timediff_vec_.insert(timediff_vec_.begin()+index, timediff_vertex);
 }
@@ -187,13 +189,13 @@ void TimedElasticBand::clearTimedElasticBand()
 
 void TimedElasticBand::setPoseVertexFixed(int index, bool status)
 {
-  assert(index < sizePoses());
+  ROS_ASSERT(index < sizePoses());
   pose_vec_.at(index)->setFixed(status);   
 }
 
 void TimedElasticBand::setTimeDiffVertexFixed(int index, bool status)
 {
-  assert(index < sizeTimeDiffs());
+  ROS_ASSERT(index < sizeTimeDiffs());
   timediff_vec_.at(index)->setFixed(status);
 }
 
@@ -254,7 +256,7 @@ double TimedElasticBand::getSumOfAllTimeDiffs() const
 
 double TimedElasticBand::getSumOfTimeDiffsUpToIdx(int index) const
 {
-  assert(index <= timediff_vec_.size());
+  ROS_ASSERT(index <= timediff_vec_.size());
 
   double time = 0;
 
@@ -277,15 +279,35 @@ double TimedElasticBand::getAccumulatedDistance() const
   return dist;
 }
 
-bool TimedElasticBand::initTrajectoryToGoal(const PoseSE2& start, const PoseSE2& goal, double diststep, double max_vel_x, int min_samples, bool guess_backwards_motion)
+namespace
+{
+  /**
+   * Estimate the time to move from start to end.
+   * Assumes constant velocity for the motion.
+   */
+  double estimateDeltaT(const PoseSE2& start, const PoseSE2& end,
+                        const double max_vel_x, const double max_vel_theta)
+  {
+    double dt_constant_motion = 0.1;
+    if (max_vel_x > 0) {
+      double trans_dist = (end.position() - start.position()).norm();
+      dt_constant_motion = trans_dist / max_vel_x;
+    }
+    if (max_vel_theta > 0) {
+      double rot_dist = std::abs(g2o::normalize_theta(end.theta() - start.theta()));
+      dt_constant_motion = std::max(dt_constant_motion, rot_dist / max_vel_theta);
+    }
+    return dt_constant_motion;
+  }
+} // namespace
+
+bool TimedElasticBand::initTrajectoryToGoal(const PoseSE2& start, const PoseSE2& goal, double diststep, double max_vel_x, double max_vel_theta, int min_samples, bool guess_backwards_motion)
 {
   if (!isInit())
   {   
     addPose(start); // add starting point
     setPoseVertexFixed(0,true); // StartConf is a fixed constraint during optimization
 
-    double timestep = 0.1;
-        
     if (diststep!=0)
     {
       Eigen::Vector2d point_to_goal = goal.position()-start.position();
@@ -296,19 +318,19 @@ bool TimedElasticBand::initTrajectoryToGoal(const PoseSE2& start, const PoseSE2&
       // check if the goal is behind the start pose (w.r.t. start orientation)
       if (guess_backwards_motion && point_to_goal.dot(start.orientationUnitVec()) < 0) 
         orient_init = g2o::normalize_theta(orient_init+M_PI);
-      // TODO: timestep ~ max_vel_x_backwards for backwards motions
+      // TODO: dt ~ max_vel_x_backwards for backwards motions
       
       double dist_to_goal = point_to_goal.norm();
       double no_steps_d = dist_to_goal/std::abs(diststep); // ignore negative values
       unsigned int no_steps = (unsigned int) std::floor(no_steps_d);
 
-      if (max_vel_x > 0) timestep = diststep / max_vel_x;
+      double dt = estimateDeltaT(PoseSE2(0,0,0), PoseSE2(diststep,0,0), max_vel_x, max_vel_theta);
       
       for (unsigned int i=1; i<=no_steps; i++) // start with 1! starting point had index 0
       {
         if (i==no_steps && no_steps_d==(float) no_steps) 
             break; // if last conf (depending on stepsize) is equal to goal conf -> leave loop
-        addPoseAndTimeDiff(start.x()+i*dx,start.y()+i*dy,orient_init,timestep);
+        addPoseAndTimeDiff(start.x()+i*dx,start.y()+i*dy,orient_init,dt);
       }
 
     }
@@ -321,14 +343,14 @@ bool TimedElasticBand::initTrajectoryToGoal(const PoseSE2& start, const PoseSE2&
       {
         // simple strategy: interpolate between the current pose and the goal
         PoseSE2 intermediate_pose = PoseSE2::average(BackPose(), goal);
-        if (max_vel_x > 0) timestep = (intermediate_pose.position()-BackPose().position()).norm()/max_vel_x;
-        addPoseAndTimeDiff( intermediate_pose, timestep ); // let the optimier correct the timestep (TODO: better initialization)
+        double dt = estimateDeltaT(BackPose(), intermediate_pose, max_vel_x, max_vel_theta);
+        addPoseAndTimeDiff( intermediate_pose, dt ); // let the optimier correct the timestep (TODO: better initialization)
       }
     }
     
     // add goal
-    if (max_vel_x > 0) timestep = (goal.position()-BackPose().position()).norm()/max_vel_x;
-    addPoseAndTimeDiff(goal,timestep); // add goal point
+    double dt = estimateDeltaT(BackPose(), goal, max_vel_x, max_vel_theta);
+    addPoseAndTimeDiff(goal,dt); // add goal point
     setPoseVertexFixed(sizePoses()-1,true); // GoalConf is a fixed constraint during optimization	
   }
   else // size!=0
@@ -340,7 +362,7 @@ bool TimedElasticBand::initTrajectoryToGoal(const PoseSE2& start, const PoseSE2&
   return true;
 }
 
-bool TimedElasticBand::initTrajectoryToGoal(const std::vector<geometry_msgs::PoseStamped>& plan, double max_vel_x, bool estimate_orient, int min_samples, bool guess_backwards_motion)
+bool TimedElasticBand::initTrajectoryToGoal(const std::vector<geometry_msgs::PoseStamped>& plan, double max_vel_x, double max_vel_theta, bool estimate_orient, int min_samples, bool guess_backwards_motion)
 {
   
   if (!isInit())
@@ -348,8 +370,6 @@ bool TimedElasticBand::initTrajectoryToGoal(const std::vector<geometry_msgs::Pos
     PoseSE2 start(plan.front().pose);
     PoseSE2 goal(plan.back().pose);
 
-    double dt = 0.1;
-    
     addPose(start); // add starting point with given orientation
     setPoseVertexFixed(0,true); // StartConf is a fixed constraint during optimization
 
@@ -375,7 +395,7 @@ bool TimedElasticBand::initTrajectoryToGoal(const std::vector<geometry_msgs::Pos
             yaw = tf::getYaw(plan[i].pose.orientation);
         }
         PoseSE2 intermediate_pose(plan[i].pose.position.x, plan[i].pose.position.y, yaw);
-        if (max_vel_x > 0) dt = (intermediate_pose.position()-BackPose().position()).norm()/max_vel_x;
+        double dt = estimateDeltaT(BackPose(), intermediate_pose, max_vel_x, max_vel_theta);
         addPoseAndTimeDiff(intermediate_pose, dt);
     }
     
@@ -387,13 +407,13 @@ bool TimedElasticBand::initTrajectoryToGoal(const std::vector<geometry_msgs::Pos
       {
         // simple strategy: interpolate between the current pose and the goal
         PoseSE2 intermediate_pose = PoseSE2::average(BackPose(), goal);
-        if (max_vel_x > 0) dt = (intermediate_pose.position()-BackPose().position()).norm()/max_vel_x;
+        double dt = estimateDeltaT(BackPose(), intermediate_pose, max_vel_x, max_vel_theta);
         addPoseAndTimeDiff( intermediate_pose, dt ); // let the optimier correct the timestep (TODO: better initialization
       }
     }
     
     // Now add final state with given orientation
-    if (max_vel_x > 0) dt = (goal.position()-BackPose().position()).norm()/max_vel_x;
+    double dt = estimateDeltaT(BackPose(), goal, max_vel_x, max_vel_theta);
     addPoseAndTimeDiff(goal, dt);
     setPoseVertexFixed(sizePoses()-1,true); // GoalConf is a fixed constraint during optimization
   }
@@ -407,7 +427,7 @@ bool TimedElasticBand::initTrajectoryToGoal(const std::vector<geometry_msgs::Pos
   return true;
 }
 
-bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, double max_vel_x, bool estimate_orient, int min_samples, bool guess_backwards_motion)
+bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, double max_vel_x, double max_vel_theta, bool estimate_orient, int min_samples, bool guess_backwards_motion)
 {
   if (!isInit())
   {
@@ -416,8 +436,6 @@ bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, double max_v
     const PoseSE2 start(*pose_profile.front());
     const PoseSE2 goal (*pose_profile.back());
 
-    double dt = 0.1;
-
     addPose(start); // add starting point with given orientation
     setPoseVertexFixed(0, true); // StartConf is a fixed constraint during optimization
 
@@ -425,6 +443,8 @@ bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, double max_v
     if (guess_backwards_motion && (goal.position() - start.position()).dot(start.orientationUnitVec()) < 0) // check if the goal is behind the start pose (w.r.t. start orientation)
         backwards = true;
     // TODO: dt ~ max_vel_x_backwards for backwards motions
+
+    double dt;
 
     for (unsigned int i = 1; i < (unsigned int)pose_profile.size() - 1; ++i)
     {
@@ -443,12 +463,10 @@ bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, double max_v
             yaw = pose_profile.at(i)->theta();
         }
         PoseSE2 intermediate_pose(pose_profile.at(i)->position().x(), pose_profile.at(i)->position().y(), yaw);
-        if (timestep_profile.at(i)->count() > 0)
-          dt = timestep_profile.at(i)->count();
-        else if (max_vel_x > 0)
-          dt = (intermediate_pose.position() - BackPose().position()).norm() / max_vel_x;
+        if (timestep_profile.at(i-1)->count() > 0)
+          dt = timestep_profile.at(i-1)->count();
         else
-          dt = 0.1;
+          dt = estimateDeltaT(BackPose(), intermediate_pose, max_vel_x, max_vel_theta);
         addPoseAndTimeDiff(intermediate_pose, dt);
     }
 
@@ -461,22 +479,17 @@ bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, double max_v
       {
         // simple strategy: interpolate between the current pose and the goal
         PoseSE2 intermediate_pose = PoseSE2::average(BackPose(), goal);
-        if (max_vel_x > 0)
-          dt = (intermediate_pose.position() - BackPose().position()).norm() / max_vel_x;
-        else
-          dt = 0.1;
+        dt = estimateDeltaT(BackPose(), intermediate_pose, max_vel_x, max_vel_theta);
         addPoseAndTimeDiff(intermediate_pose, dt); // let the optimizer correct the timestep (TODO: better initialization)
         sum_dt_manual += dt;
       }
     }
 
     // Now add final state with given orientation
-    if (timestep_profile.back()->count() > 0)
-      dt = std::max(timestep_profile.back()->count() - sum_dt_manual, sum_dt_manual > 0 ? 0.1 : 0);
-    else if (max_vel_x > 0)
-      dt = (goal.position() - BackPose().position()).norm() / max_vel_x;
+    if (timestep_profile.back()->count() > sum_dt_manual)
+      dt = timestep_profile.back()->count() - sum_dt_manual;
     else
-      dt = 0.1;
+      dt = estimateDeltaT(BackPose(), goal, max_vel_x, max_vel_theta);
     addPoseAndTimeDiff(goal, dt);
     setPoseVertexFixed(sizePoses() - 1, true); // GoalConf is a fixed constraint during optimization
   }

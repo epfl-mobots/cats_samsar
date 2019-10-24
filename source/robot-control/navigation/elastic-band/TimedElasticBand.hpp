@@ -369,11 +369,12 @@ public:
    * @param goal PoseSE2 defining the goal of the trajectory (final pose)
    * @param diststep euclidean distance between two consecutive poses (if 0, no intermediate samples are inserted despite min_samples)
    * @param max_vel_x maximum translational velocity used for determining time differences
+   * @param max_vel_theta maximum angular velocity used for determining time differences
    * @param min_samples Minimum number of samples that should be initialized at least
    * @param guess_backwards_motion Allow the initialization of backwards oriented trajectories if the goal heading is pointing behind the robot
    * @return true if everything was fine, false otherwise
    */
-  bool initTrajectoryToGoal(const PoseSE2& start, const PoseSE2& goal, double diststep=0, double max_vel_x=0.5, int min_samples = 3, bool guess_backwards_motion = false);
+  bool initTrajectoryToGoal(const PoseSE2& start, const PoseSE2& goal, double diststep=0, double max_vel_x=0.5, double max_vel_theta=0.5, int min_samples = 3, bool guess_backwards_motion = false);
   
   
   /**
@@ -424,13 +425,14 @@ public:
    * via the argument \c dt.
    * @param plan vector of geometry_msgs::PoseStamped
    * @param max_vel_x maximum translational velocity used for determining time differences
+   * @param max_vel_theta maximum rotational velocity used for determining time differences
    * @param estimate_orient if \c true, calculate orientation using the straight line distance vector between consecutive poses
    *                        (only copy start and goal orientation; recommended if no orientation data is available).
    * @param min_samples Minimum number of samples that should be initialized at least
    * @param guess_backwards_motion Allow the initialization of backwards oriented trajectories if the goal heading is pointing behind the robot (this parameter is used only if \c estimate_orient is enabled.
    * @return true if everything was fine, false otherwise
    */
-  bool initTrajectoryToGoal(const std::vector<geometry_msgs::PoseStamped>& plan, double max_vel_x, bool estimate_orient=false, int min_samples = 3, bool guess_backwards_motion = false);
+  bool initTrajectoryToGoal(const std::vector<geometry_msgs::PoseStamped>& plan, double max_vel_x, double max_vel_theta, bool estimate_orient=false, int min_samples = 3, bool guess_backwards_motion = false);
 
   /**
    * @brief Initialize a trajectory from a reference pose sequence (positions and orientations).
@@ -440,21 +442,22 @@ public:
    * The initial time difference between two consecutive poses can be uniformly set
    * via the argument \c dt.
    * @param plan instance of Trajectory
-   * @param max_vel_x maximum translational velocity used for determining time differences if not already provided by \c plan
+   * @param max_vel_x maximum translational velocity used for determining time differences if time steps are not already provided by \c plan
+   * @param max_vel_theta maximum rotational velocity used for determining time differences if time steps are not already provided by \c plan
    * @param estimate_orient if \c true, calculate orientation using the straight line distance vector between consecutive poses
    *                        (only copy start and goal orientation; recommended if no orientation data is available).
    * @param min_samples Minimum number of samples that should be initialized at least
    * @param guess_backwards_motion Allow the initialization of backwards oriented trajectories if the goal heading is pointing behind the robot (this parameter is used only if \c estimate_orient is enabled.
    * @return true if everything was fine, false otherwise
    */
-  bool initTrajectoryToGoal(const Trajectory& plan, double max_vel_x, bool estimate_orient = false, int min_samples = 3, bool guess_backwards_motion = false);
+  bool initTrajectoryToGoal(const Trajectory& plan, double max_vel_x, double max_vel_theta, bool estimate_orient = false, int min_samples = 3, bool guess_backwards_motion = false);
 
 
   __attribute_deprecated__ bool initTEBtoGoal(const PoseSE2& start, const PoseSE2& goal, double diststep=0, double timestep=1, int min_samples = 3, bool guess_backwards_motion = false)
   {
-    ROS_WARN("initTEBtoGoal is deprecated and has been replaced by initTrajectoryToGoal. The signature has changed: timestep has been replaced by max_vel_x. \
+    ROS_WARN("initTEBtoGoal is deprecated and has been replaced by initTrajectoryToGoal. The signature has changed: timestep has been replaced by max_vel_x and max_vel_theta. \
               this deprecated method sets max_vel_x = 1. Please update your code.");
-    return initTrajectoryToGoal(start, goal, diststep, timestep, min_samples, guess_backwards_motion);
+    return initTrajectoryToGoal(start, goal, diststep, 1.0, 1.0, min_samples, guess_backwards_motion);
   }
 
   template<typename BidirIter, typename Fun>
@@ -470,9 +473,9 @@ public:
 
   __attribute_deprecated__ bool initTEBtoGoal(const std::vector<geometry_msgs::PoseStamped>& plan, double dt, bool estimate_orient=false, int min_samples = 3, bool guess_backwards_motion = false)
   {
-    ROS_WARN("initTEBtoGoal is deprecated and has been replaced by initTrajectoryToGoal. The signature has changed: dt has been replaced by max_vel_x. \
-              this deprecated method sets max_vel = 1. Please update your code.");
-    return initTrajectoryToGoal(plan, dt, estimate_orient, min_samples, guess_backwards_motion);
+    ROS_WARN("initTEBtoGoal is deprecated and has been replaced by initTrajectoryToGoal. The signature has changed: dt has been replaced by max_vel_x and max_vel_theta. \
+              this deprecated method sets max_vel = 1 and max_vel_theta = 1. Please update your code.");
+    return initTrajectoryToGoal(plan, 1.0, 1.0, estimate_orient, min_samples, guess_backwards_motion);
   }
 
   
@@ -741,7 +744,7 @@ bool TimedElasticBand::initTrajectoryToGoal(BidirIter path_start, BidirIter path
             }
             else timestep = timestep_vel;
             
-            if (timestep<0) timestep=0.2; // TODO: this is an assumption
+            if (timestep<=0) timestep=0.2; // TODO: this is an assumption
             
             double yaw = atan2(diff_last[1],diff_last[0]);
             if (backwards)
@@ -764,7 +767,7 @@ bool TimedElasticBand::initTrajectoryToGoal(BidirIter path_start, BidirIter path
             }
             else timestep = timestep_vel;
             
-            if (timestep<0) timestep=0.2; // TODO: this is an assumption
+            if (timestep<=0) timestep=0.2; // TODO: this is an assumption
             
             yaw = atan2(diff_last[1],diff_last[0]); // TODO redundant right now, not yet finished
             if (backwards)

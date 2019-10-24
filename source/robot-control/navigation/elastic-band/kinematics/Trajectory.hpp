@@ -69,6 +69,10 @@ public:
     */
     Point()
     {
+        _pose         = PoseSE2();
+        _velocity     = Velocity();
+        _acceleration = Acceleration();
+        _timestamp    = Timestamp();
         setZero();
     }
 
@@ -322,7 +326,7 @@ public:
     {
         PoseSE2Container profile(_trajectory.size());
         for (unsigned int i = 0; i < profile.size(); i++) {
-            *profile.at(i) = _trajectory.at(i)->pose();
+            profile.at(i) = PoseSE2Ptr(new PoseSE2(_trajectory.at(i)->pose()));
         }
         return profile;
     }
@@ -335,7 +339,7 @@ public:
     {
         VelocityContainer profile(_trajectory.size() - 1);
         for (unsigned int i = 0; i < profile.size(); i++) {
-            *profile.at(i) = _trajectory.at(i)->velocity();
+            profile.at(i) = VelocityPtr(new Velocity(_trajectory.at(i)->velocity()));
         }
         return profile;
     }
@@ -348,7 +352,7 @@ public:
     {
         AccelerationContainer profile(_trajectory.size() - 2);
         for (unsigned int i = 0; i < profile.size(); i++) {
-            *profile.at(i) = _trajectory.at(i)->acceleration();
+            profile.at(i) = AccelerationPtr(new Acceleration(_trajectory.at(i)->acceleration()));
         }
         return profile;
     }
@@ -361,7 +365,7 @@ public:
     {
         TimestampContainer profile(_trajectory.size());
         for (unsigned int i = 0; i < profile.size(); i++) {
-            *profile.at(i) = _trajectory.at(i)->timestamp();
+            profile.at(i) =  TimestampPtr(new Timestamp(_trajectory.at(i)->timestamp()));
         }
         return profile;
     }
@@ -374,7 +378,7 @@ public:
     {
         TimestepContainer profile(_trajectory.size() - 1);
         for (unsigned int i = 0; i < profile.size(); i++) {
-            *profile.at(i) = _trajectory.at(i+1)->timestamp() - _trajectory.at(i)->timestamp();
+            profile.at(i) = TimestepPtr(new Timestep(_trajectory.at(i+1)->timestamp() - _trajectory.at(i)->timestamp()));
         }
         return profile;
     }
@@ -386,7 +390,7 @@ public:
     */
     void setProfilePose(const PoseSE2Container profile, const bool update = true)
     {
-        _trajectory.resize(profile.size());
+        resize(profile.size());
         for (unsigned int i = 0; i < profile.size(); i++) {
             _trajectory.at(i)->pose() = *profile.at(i);
         }
@@ -403,7 +407,7 @@ public:
     */
     void setProfileVelocity(const VelocityContainer profile, const bool update = true, const PoseSE2 initPose = PoseSE2())
     {
-        _trajectory.resize(profile.size() + 1);
+        resize(profile.size() + 1);
         for (unsigned int i = 0; i < profile.size(); i++) {
             _trajectory.at(i)->velocity() = *profile.at(i);
         }
@@ -420,7 +424,7 @@ public:
     */
     void setProfileAcceleration(const AccelerationContainer profile, const bool update = true, const PoseSE2 initPose = PoseSE2(), const Velocity initVelocity = Velocity())
     {
-        _trajectory.resize(profile.size() + 2);
+        resize(profile.size() + 2);
         for (unsigned int i = 0; i < profile.size(); i++) {
             _trajectory.at(i)->acceleration() = *profile.at(i);
         }
@@ -437,7 +441,7 @@ public:
     */
     void setProfileTimestamp(const TimestampContainer profile, const bool update = true)
     {
-        _trajectory.resize(profile.size());
+        resize(profile.size());
         for (unsigned int i = 0; i < profile.size(); i++) {
             _trajectory.at(i)->timestamp() = *profile.at(i);
         }
@@ -454,7 +458,7 @@ public:
     */
     void setProfileTimestep(const TimestepContainer profile, const bool update = true)
     {
-        _trajectory.resize(profile.size() + 1);
+        resize(profile.size() + 1);
         _trajectory.front()->timestamp() = Timestamp::zero();
         for (unsigned int i = 0; i < profile.size(); i++) {
             _trajectory.at(i+1)->timestamp() = *profile.at(i) + _trajectory.at(i)->timestamp();
@@ -462,6 +466,20 @@ public:
         if (update) {
             derivePose();
             deriveVelocity();
+        }
+    }
+
+    /**
+    * @brief Resize the trajectory's Point container
+    * @param size new size of the Point pointers vector
+    */
+    void resize(const size_t size)
+    {
+        _trajectory.resize(size);
+        for (unsigned int i = 0; i < _trajectory.size(); i++) {
+            if (_trajectory.at(i) == nullptr) {
+                _trajectory.at(i) = PointPtr(new Point());
+            }
         }
     }
 
@@ -573,9 +591,9 @@ public:
      */
     friend std::ostream& operator<<(std::ostream& stream, const Trajectory& trajectory)
     {
-        stream << "Trajectory = [";
+        stream << "Trajectory = [" << std::endl;
         for (PointContainer::const_iterator point = trajectory._trajectory.begin(); point != trajectory._trajectory.end(); point++) {
-            stream << *point << std::endl;
+            stream << **point << std::endl;
         }
         stream << "]";
         return stream;

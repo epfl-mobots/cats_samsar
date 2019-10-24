@@ -537,8 +537,8 @@ public:
         TimestepContainer timesteps = getProfileTimestep();
         _trajectory.front()->velocity() = initVelocity;
         for (unsigned int i = 0; i < _trajectory.size() - 2; i++) {
-            r = _trajectory.at(i)->velocity().getRadius();
-            d = _trajectory.at(i)->velocity().getDistance();
+            r = _robot_parameters.wheel_radius;
+            d = _robot_parameters.wheel_distance;
             v = _trajectory.at(i)->acceleration().translation() * (timesteps.at(i+1)->count() + timesteps.at(i)->count()) / 2 + _trajectory.at(i)->velocity().translation();
             w = _trajectory.at(i)->acceleration().rotation()    * (timesteps.at(i+1)->count() + timesteps.at(i)->count()) / 2 + _trajectory.at(i)->velocity().rotation();
             o = g2o::normalize_theta(w                          * (                             timesteps.at(i)->count())     + _trajectory.at(i)->velocity().orientation());

@@ -11,7 +11,7 @@
     </experiment>
     <robots>
         <numberOfRobots>1</numberOfRobots>
-        <controlFrequencyHz>15</controlFrequencyHz>
+        <controlFrequencyHz>200</controlFrequencyHz>
         <fishModel>
             <agent>
                 <length>0.02</length>

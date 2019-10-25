@@ -1195,6 +1195,44 @@ bool TebPlanner::getVelocityCommand(double& vx, double& vy, double& omega, int l
   return true;
 }
 
+void TebPlanner::getVelocityProfile(VelocityContainer& velocity_profile) const
+{
+  const size_t n = teb_.sizePoses();
+  velocity_profile.resize(n + 1);
+
+  double strafing; // useless variable
+
+  // initialize velocities
+  for (size_t i = 0; i < velocity_profile.size(); ++i)
+  {
+    if (velocity_profile.at(i) == nullptr)
+      velocity_profile.at(i) = VelocityPtr(new Velocity());
+  }
+
+  // start velocity
+  velocity_profile.front()->orientation() = teb_.Pose(0).theta();
+  velocity_profile.front()->translation() = vel_start_.second.linear.x;
+  velocity_profile.front()->rotation()    = vel_start_.second.angular.z;
+
+  // intermediate velocities
+  for (size_t i = 1; i < n; ++i)
+  {
+    velocity_profile.at(i)->orientation() = teb_.Pose(i-1).theta();
+    extractVelocity(teb_.Pose(i-1), teb_.Pose(i), teb_.TimeDiff(i-1), velocity_profile.at(i)->translation(), strafing, velocity_profile.at(i)->rotation());
+  }
+
+  // goal velocity
+  velocity_profile.back()->orientation() = teb_.BackPose().theta();
+  velocity_profile.back()->translation() = vel_start_.second.linear.x;
+  velocity_profile.back()->rotation()    = vel_start_.second.angular.z;
+
+  // update velocities
+  for (size_t i = 0; i < velocity_profile.size(); ++i)
+  {
+    velocity_profile.at(i)->update();
+  }
+}
+
 void TebPlanner::getVelocityProfile(std::vector<geometry_msgs::Twist>& velocity_profile) const
 {
   int n = teb_.sizePoses();
@@ -1220,6 +1258,34 @@ void TebPlanner::getVelocityProfile(std::vector<geometry_msgs::Twist>& velocity_
   velocity_profile.back().linear.x = vel_goal_.second.linear.x;
   velocity_profile.back().linear.y = vel_goal_.second.linear.y;
   velocity_profile.back().angular.z = vel_goal_.second.angular.z;
+}
+
+void TebPlanner::getFullTrajectory(Trajectory& trajectory) const
+{
+  const size_t n = teb_.sizePoses();
+
+  trajectory.resize(n);
+
+  if (n == 0)
+    return;
+
+  TimestepContainer timestep_profile(n - 1);
+  PoseSE2Container pose_profile(n);
+
+  // timestep profile
+  for (size_t i = 0; i < n - 1; ++i)
+  {
+    timestep_profile.at(i) = TimestepPtr(new Timestep(timestamp_t(teb_.TimeDiff(i))));
+  }
+  // pose profile
+  for (size_t i = 0; i < n; ++i)
+  {
+    pose_profile.at(i) = PoseSE2Ptr(new PoseSE2(teb_.Pose(i).x(), teb_.Pose(i).y(), teb_.Pose(i).theta()));
+  }
+
+  // insert timestep and pose profiles (velocity and acceleration profiles are computed automatically)
+  trajectory.setProfileTimestep(timestep_profile, false);
+  trajectory.setProfilePose(pose_profile);
 }
 
 void TebPlanner::getFullTrajectory(std::vector<teb_local_planner::TrajectoryPointMsg>& trajectory) const

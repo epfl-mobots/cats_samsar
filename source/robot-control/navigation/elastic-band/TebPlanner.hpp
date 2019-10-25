@@ -506,6 +506,26 @@ public:
    * The first velocity is the one that is provided as initial velocity (fixed).
    * Velocities at index k=2...end-1 are related to the transition from pose_{k-1} to pose_k. 
    * The last velocity is the final velocity (fixed).
+   * The number of Velocity objects is therefore sizePoses()+1.
+   * In summary:
+   *     v[0] = v_start,
+   *     v[1,...end-1] = +-(pose_{k+1}-pose{k})/dt, 
+   *     v(end) = v_goal
+   * It can be used for evaluation and debugging purposes or for open-loop control.
+   * For computing the velocity required for controlling the robot
+   * to the next step refer to getVelocityCommand().
+   * @param[out] velocity_profile velocity profile will be written to this vector (after clearing any existing content) with the size=no_poses+1
+   */
+  void getVelocityProfile(VelocityContainer& velocity_profile) const;
+  
+  /**
+   * @brief Compute the velocity profile of the trajectory
+   * 
+   * This method computes the translational and rotational velocity for the complete
+   * planned trajectory. 
+   * The first velocity is the one that is provided as initial velocity (fixed).
+   * Velocities at index k=2...end-1 are related to the transition from pose_{k-1} to pose_k. 
+   * The last velocity is the final velocity (fixed).
    * The number of Twist objects is therefore sizePoses()+1;
    * In summary:
    *     v[0] = v_start,
@@ -518,7 +538,24 @@ public:
    */
   void getVelocityProfile(std::vector<geometry_msgs::Twist>& velocity_profile) const;
   
-    /**
+  /**
+   * @brief Return the complete trajectory including pose, velocity, acceleration, and timestamp profiles
+   * 
+   * It is useful for evaluation and debugging purposes or for open-loop control.
+   * Since the velocity obtained using difference quotients is the mean velocity between consecutive poses,
+   * the velocity at each pose at time step k is obtained by taking the average between both velocities.
+   * Similarly, the acceleration is computed as the average between two consecutive velocities.
+   * The start and goal velocities are not included because they are only used to contrain the acceleration during optimization.
+   * Usually, either the start and goal velocities are equal to the first and last components of the trajectory,
+   * or the start velocity corresponds to the previously/currently applied velocity and the goal velocity can been treated separately.
+   * Thus the next velocity command is in fact the average between the first two poses, so the start and goal velocities are not relevant.
+   * Therefore the start and goal velocities are not returned, especially since they are already known (as provided) by the user.
+   * Call getVelocityProfile() to get the full list of velocities between consecutive points as well as start and goal velocities.
+   * @param[out] trajectory the resulting trajectory
+   */
+  void getFullTrajectory(Trajectory& trajectory) const;
+  
+  /**
    * @brief Return the complete trajectory including poses, velocity profiles and temporal information
    * 
    * It is useful for evaluation and debugging purposes or for open-loop control.

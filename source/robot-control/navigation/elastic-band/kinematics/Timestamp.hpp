@@ -49,7 +49,7 @@
 namespace elastic_band
 {
 
-typedef std::chrono::duration<double, std::ratio<1>> timestamp_t; //<! Type for a floating-point second
+typedef std::chrono::duration<double, std::ratio<1>> timestamp_t; //!< Type for a floating-point second
 
 /**
   * @class Timestamp

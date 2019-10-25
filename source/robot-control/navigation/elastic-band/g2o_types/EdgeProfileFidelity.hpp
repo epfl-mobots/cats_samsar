@@ -84,8 +84,8 @@ public:
    */
   EdgeProfileFidelity()
   {
-    this->resize(3); // Since we derive from a g2o::BaseMultiEdge, set the desired number of vertices
     _measurement = NULL;
+    this->resize(3); // Since we derive from a g2o::BaseMultiEdge, set the desired number of vertices
   }
 
   /**

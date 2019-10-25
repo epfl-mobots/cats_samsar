@@ -421,6 +421,18 @@ public:
     ///@{
 
     /**
+    * @brief Update robot and wheel velocity components
+    */
+    void update()
+    {
+        _vel_robot.coeffRef(0) = _vel_translation * std::cos(_vel_orientation);
+        _vel_robot.coeffRef(1) = _vel_translation * std::sin(_vel_orientation);
+        _vel_robot.coeffRef(2) = _vel_rotation;
+        _vel_wheel.coeffRef(0) = _vel_translation/_wheel_radius - _vel_rotation*_wheel_distance/(2*_wheel_radius);
+        _vel_wheel.coeffRef(1) = _vel_translation/_wheel_radius + _vel_rotation*_wheel_distance/(2*_wheel_radius);
+    }
+
+    /**
     * @brief Scale all velocity components and normalize orientation afterwards to [-pi, pi]
     * @param factor scale factor
     */

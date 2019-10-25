@@ -49,12 +49,14 @@
 namespace elastic_band
 {
 
+typedef std::chrono::duration<double, std::ratio<1>> timestamp_t; //<! Type for a floating-point second
+
 /**
   * @class Timestamp
   * @brief This class implements a timestamp.
-  * The timestamp consists of a millisecond duration.
+  * The timestamp consists of a duration in unit timestamp_t.
   */
-class Timestamp : public std::chrono::milliseconds
+class Timestamp : public timestamp_t
 {
 public:
 
@@ -64,16 +66,25 @@ public:
     /**
     * @brief Default constructor
     */
-    Timestamp() : std::chrono::milliseconds()
+    Timestamp() : timestamp_t()
     {
         setZero();
+    }
+
+    /**
+    * @brief Generic constructor
+    * @param timestamp Timestamp instance
+    */
+    template<typename Rep, typename Period>
+    Timestamp(const std::chrono::duration<Rep, Period>& timestamp) : timestamp_t(std::chrono::duration_cast<timestamp_t>(timestamp))
+    {
     }
 
     /**
     * @brief Derived constructor
     * @param timestamp Timestamp instance
     */
-    Timestamp(const std::chrono::milliseconds& timestamp) : std::chrono::milliseconds(timestamp)
+    Timestamp(const timestamp_t& timestamp) : timestamp_t(timestamp)
     {
     }
 
@@ -81,7 +92,7 @@ public:
     * @brief Copy constructor
     * @param timestamp Timestamp instance
     */
-    Timestamp(const Timestamp& timestamp) : std::chrono::milliseconds(timestamp)
+    Timestamp(const Timestamp& timestamp) : timestamp_t(timestamp)
     {
     }
 
@@ -102,7 +113,7 @@ public:
     */
     void setZero()
     {
-        *this = std::chrono::milliseconds::zero();
+        *this = timestamp_t::zero();
     }
 
     ///@}

@@ -80,7 +80,7 @@ public:
   PoseSE2(const Eigen::Ref<const Eigen::Vector2d>& position, const double theta)
   {
       _position = position;
-      _theta = theta;
+      _theta = g2o::normalize_theta(theta);
   }
   
   /**
@@ -93,7 +93,7 @@ public:
   {
       _position.coeffRef(0) = x;
       _position.coeffRef(1) = y;
-      _theta = theta;
+      _theta = g2o::normalize_theta(theta);
   }
   
   /**

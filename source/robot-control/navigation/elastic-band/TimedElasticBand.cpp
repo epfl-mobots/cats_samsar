@@ -446,7 +446,7 @@ bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, const bool f
 
     double dt;
 
-    for (unsigned int i = 1; i < (unsigned int)pose_profile.size() - 1; ++i)
+    for (size_t i = 1; i < pose_profile.size() - 1; ++i)
     {
       double yaw;
       if (estimate_orient)

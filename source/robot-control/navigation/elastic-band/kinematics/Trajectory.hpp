@@ -325,7 +325,7 @@ public:
     PoseSE2Container getProfilePose() const
     {
         PoseSE2Container profile(_trajectory.size());
-        for (unsigned int i = 0; i < profile.size(); i++) {
+        for (size_t i = 0; i < profile.size(); i++) {
             profile.at(i) = PoseSE2Ptr(new PoseSE2(_trajectory.at(i)->pose()));
         }
         return profile;
@@ -338,7 +338,7 @@ public:
     VelocityContainer getProfileVelocity() const
     {
         VelocityContainer profile(_trajectory.size() - 1);
-        for (unsigned int i = 0; i < profile.size(); i++) {
+        for (size_t i = 0; i < profile.size(); i++) {
             profile.at(i) = VelocityPtr(new Velocity(_trajectory.at(i)->velocity()));
         }
         return profile;
@@ -351,7 +351,7 @@ public:
     AccelerationContainer getProfileAcceleration() const
     {
         AccelerationContainer profile(_trajectory.size() - 2);
-        for (unsigned int i = 0; i < profile.size(); i++) {
+        for (size_t i = 0; i < profile.size(); i++) {
             profile.at(i) = AccelerationPtr(new Acceleration(_trajectory.at(i)->acceleration()));
         }
         return profile;
@@ -364,7 +364,7 @@ public:
     TimestampContainer getProfileTimestamp() const
     {
         TimestampContainer profile(_trajectory.size());
-        for (unsigned int i = 0; i < profile.size(); i++) {
+        for (size_t i = 0; i < profile.size(); i++) {
             profile.at(i) =  TimestampPtr(new Timestamp(_trajectory.at(i)->timestamp()));
         }
         return profile;
@@ -377,7 +377,7 @@ public:
     TimestepContainer getProfileTimestep() const
     {
         TimestepContainer profile(_trajectory.size() - 1);
-        for (unsigned int i = 0; i < profile.size(); i++) {
+        for (size_t i = 0; i < profile.size(); i++) {
             profile.at(i) = TimestepPtr(new Timestep(_trajectory.at(i+1)->timestamp() - _trajectory.at(i)->timestamp()));
         }
         return profile;
@@ -391,7 +391,7 @@ public:
     void setProfilePose(const PoseSE2Container profile, const bool update = true)
     {
         resize(profile.size());
-        for (unsigned int i = 0; i < profile.size(); i++) {
+        for (size_t i = 0; i < profile.size(); i++) {
             _trajectory.at(i)->pose() = *profile.at(i);
         }
         if (update) {
@@ -408,7 +408,7 @@ public:
     void setProfileVelocity(const VelocityContainer profile, const bool update = true, const PoseSE2 initPose = PoseSE2())
     {
         resize(profile.size() + 1);
-        for (unsigned int i = 0; i < profile.size(); i++) {
+        for (size_t i = 0; i < profile.size(); i++) {
             _trajectory.at(i)->velocity() = *profile.at(i);
         }
         if (update) {
@@ -425,7 +425,7 @@ public:
     void setProfileAcceleration(const AccelerationContainer profile, const bool update = true, const PoseSE2 initPose = PoseSE2(), const Velocity initVelocity = Velocity())
     {
         resize(profile.size() + 2);
-        for (unsigned int i = 0; i < profile.size(); i++) {
+        for (size_t i = 0; i < profile.size(); i++) {
             _trajectory.at(i)->acceleration() = *profile.at(i);
         }
         if (update) {
@@ -442,7 +442,7 @@ public:
     void setProfileTimestamp(const TimestampContainer profile, const bool update = true)
     {
         resize(profile.size());
-        for (unsigned int i = 0; i < profile.size(); i++) {
+        for (size_t i = 0; i < profile.size(); i++) {
             _trajectory.at(i)->timestamp() = *profile.at(i);
         }
         if (update) {
@@ -460,7 +460,7 @@ public:
     {
         resize(profile.size() + 1);
         _trajectory.front()->timestamp() = Timestamp::zero();
-        for (unsigned int i = 0; i < profile.size(); i++) {
+        for (size_t i = 0; i < profile.size(); i++) {
             _trajectory.at(i+1)->timestamp() = *profile.at(i) + _trajectory.at(i)->timestamp();
         }
         if (update) {
@@ -476,7 +476,7 @@ public:
     void resize(const size_t size)
     {
         _trajectory.resize(size);
-        for (unsigned int i = 0; i < _trajectory.size(); i++) {
+        for (size_t i = 0; i < _trajectory.size(); i++) {
             if (_trajectory.at(i) == nullptr) {
                 _trajectory.at(i) = PointPtr(new Point());
             }
@@ -499,7 +499,7 @@ public:
         double a;
         double sx, sy, vx, vy;
         TimestepContainer timesteps = getProfileTimestep();
-        for (unsigned int i = 0; i < _trajectory.size() - 1; i++) {
+        for (size_t i = 0; i < _trajectory.size() - 1; i++) {
             r = _robot_parameters.wheel_radius;
             d = _robot_parameters.wheel_distance;
             p = _trajectory.at(i+1)->pose().position() - _trajectory.at(i)->pose().position();
@@ -522,7 +522,7 @@ public:
     {
         double vdot, wdot;
         TimestepContainer timesteps = getProfileTimestep();
-        for (unsigned int i = 0; i < _trajectory.size() - 2; i++) {
+        for (size_t i = 0; i < _trajectory.size() - 2; i++) {
             vdot = 2 * (_trajectory.at(i+1)->velocity().translation() - _trajectory.at(i)->velocity().translation()) / (timesteps.at(i+1)->count() + timesteps.at(i)->count());
             wdot = 2 * (_trajectory.at(i+1)->velocity().rotation()    - _trajectory.at(i)->velocity().rotation()   ) / (timesteps.at(i+1)->count() + timesteps.at(i)->count());
             _trajectory.at(i)->acceleration() = Acceleration(vdot, wdot);
@@ -537,7 +537,7 @@ public:
         double x, y, t;
         TimestepContainer timesteps = getProfileTimestep();
         _trajectory.front()->pose() = initPose;
-        for (unsigned int i = 0; i < _trajectory.size() - 1; i++) {
+        for (size_t i = 0; i < _trajectory.size() - 1; i++) {
             t = _trajectory.at(i)->velocity().rotation()                  * timesteps.at(i)->count() + _trajectory.at(i)->pose().theta();
             x = _trajectory.at(i)->velocity().translation() * std::cos(t) * timesteps.at(i)->count() + _trajectory.at(i)->pose().x();
             y = _trajectory.at(i)->velocity().translation() * std::sin(t) * timesteps.at(i)->count() + _trajectory.at(i)->pose().y();
@@ -554,7 +554,7 @@ public:
         double r, d, v, w, o;
         TimestepContainer timesteps = getProfileTimestep();
         _trajectory.front()->velocity() = initVelocity;
-        for (unsigned int i = 0; i < _trajectory.size() - 2; i++) {
+        for (size_t i = 0; i < _trajectory.size() - 2; i++) {
             r = _robot_parameters.wheel_radius;
             d = _robot_parameters.wheel_distance;
             v = _trajectory.at(i)->acceleration().translation() * (timesteps.at(i+1)->count() + timesteps.at(i)->count()) / 2 + _trajectory.at(i)->velocity().translation();

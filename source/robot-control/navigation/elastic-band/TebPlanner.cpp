@@ -257,7 +257,7 @@ void TebPlanner::setVelocityGoal(const geometry_msgs::Twist& vel_goal)
   vel_goal_.second = vel_goal;
 }
 
-bool TebPlanner::plan(const Trajectory& initial_plan, const bool fix_timediff_vertices, const bool fix_pose_vertices, const bool fix_goal_pose_vertex, const Velocity* start_vel, const bool free_goal_vel)
+bool TebPlanner::plan(const Trajectory& initial_plan, const bool fix_timediff_vertices, const bool fix_pose_vertices, const bool fix_goal_pose_vertex, const bool free_goal_vel, const Velocity* start_vel)
 {
   ROS_ASSERT_MSG(initialized_, "Call initialize() first.");
   trajectory_ref_ = &initial_plan;

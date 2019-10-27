@@ -70,10 +70,10 @@ TebPlanner::~TebPlanner()
 }
 
 void TebPlanner::initialize(const TebConfig& cfg, ObstacleContainer* obstacles, RobotFootprintModelPtr robot_model, TebVisualizationPtr visual, const ViaPointContainer* via_points)
-{    
+{
   // init optimizer (set solver and block ordering settings)
   optimizer_ = initOptimizer();
-  
+
   cfg_ = &cfg;
   obstacles_ = obstacles;
   robot_model_ = robot_model;
@@ -82,7 +82,7 @@ void TebPlanner::initialize(const TebConfig& cfg, ObstacleContainer* obstacles, 
   cost_ = HUGE_VAL;
   prefer_rotdir_ = RotType::none;
   setVisualization(visual);
-  
+
   vel_start_.first = true;
   vel_start_.second.linear.x = 0;
   vel_start_.second.linear.y = 0;
@@ -92,7 +92,9 @@ void TebPlanner::initialize(const TebConfig& cfg, ObstacleContainer* obstacles, 
   vel_goal_.second.linear.x = 0;
   vel_goal_.second.linear.y = 0;
   vel_goal_.second.angular.z = 0;
+
   initialized_ = true;
+  optimized_ = false;
 }
 
 

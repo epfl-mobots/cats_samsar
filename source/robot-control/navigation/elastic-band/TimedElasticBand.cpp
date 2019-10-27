@@ -427,7 +427,7 @@ bool TimedElasticBand::initTrajectoryToGoal(const std::vector<geometry_msgs::Pos
   return true;
 }
 
-bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, const bool fix_timediff_vertices, const bool fix_pose_vertices, const double max_vel_x, const double max_vel_theta, const bool estimate_orient, const int min_samples, const bool guess_backwards_motion)
+bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, const bool fix_timediff_vertices, const bool fix_pose_vertices, const bool fix_goal_pose_vertex, const double max_vel_x, const double max_vel_theta, const bool estimate_orient, const int min_samples, const bool guess_backwards_motion)
 {
   if (!isInit())
   {
@@ -506,10 +506,10 @@ bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, const bool f
       dt = timestep_profile.back()->count() - sum_dt_manual;
     else
       dt = estimateDeltaT(BackPose(), goal, max_vel_x, max_vel_theta);
-    if (fix_timediff_vertices)
+    if (!fix_timediff_vertices || !fix_goal_pose_vertex)
     {
-      addPose(goal, true); // GoalConf is a fixed constraint during optimization
-      addTimeDiff(dt, true);
+      addPose(goal, fix_goal_pose_vertex);
+      addTimeDiff(dt, fix_timediff_vertices);
     }
     else
     {

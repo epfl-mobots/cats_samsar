@@ -255,14 +255,14 @@ void TebPlanner::setVelocityGoal(const geometry_msgs::Twist& vel_goal)
   vel_goal_.second = vel_goal;
 }
 
-bool TebPlanner::plan(const Trajectory& initial_plan, const bool fix_timediff_vertices, const bool fix_pose_vertices, const Velocity* start_vel, const bool free_goal_vel)
+bool TebPlanner::plan(const Trajectory& initial_plan, const bool fix_timediff_vertices, const bool fix_pose_vertices, const bool fix_goal_pose_vertex, const Velocity* start_vel, const bool free_goal_vel)
 {
   ROS_ASSERT_MSG(initialized_, "Call initialize() first.");
   trajectory_ref_ = &initial_plan;
   if (!teb_.isInit())
   {
     // init trajectory
-    teb_.initTrajectoryToGoal(initial_plan, fix_timediff_vertices, fix_pose_vertices, cfg_->robot.max_vel_x, cfg_->robot.max_vel_theta, cfg_->trajectory.global_plan_overwrite_orientation, cfg_->trajectory.min_samples, cfg_->trajectory.allow_init_with_backwards_motion);
+    teb_.initTrajectoryToGoal(initial_plan, fix_timediff_vertices, fix_pose_vertices, fix_goal_pose_vertex, cfg_->robot.max_vel_x, cfg_->robot.max_vel_theta, cfg_->trajectory.global_plan_overwrite_orientation, cfg_->trajectory.min_samples, cfg_->trajectory.allow_init_with_backwards_motion);
   }
   else // warm start
   {
@@ -274,7 +274,7 @@ bool TebPlanner::plan(const Trajectory& initial_plan, const bool fix_timediff_ve
     {
       ROS_DEBUG("New goal: distance to existing goal is higher than the specified threshold. Reinitalizing trajectories.");
       teb_.clearTimedElasticBand();
-      teb_.initTrajectoryToGoal(initial_plan, fix_timediff_vertices, fix_pose_vertices, cfg_->robot.max_vel_x, cfg_->robot.max_vel_theta, cfg_->trajectory.global_plan_overwrite_orientation, cfg_->trajectory.min_samples, cfg_->trajectory.allow_init_with_backwards_motion);
+      teb_.initTrajectoryToGoal(initial_plan, fix_timediff_vertices, fix_pose_vertices, fix_goal_pose_vertex, cfg_->robot.max_vel_x, cfg_->robot.max_vel_theta, cfg_->trajectory.global_plan_overwrite_orientation, cfg_->trajectory.min_samples, cfg_->trajectory.allow_init_with_backwards_motion);
     }
   }
   if (start_vel)
@@ -971,10 +971,11 @@ void TebPlanner::AddEdgesProfileFidelity()
   if (cfg_->optim.weight_profile_fidelity==0 || trajectory_ref_==nullptr)
     return; // if weight equals zero or no reference trajectory skip adding edges!
 
-  Eigen::Matrix<double,2,2> information;
+  Eigen::Matrix<double,3,3> information;
   information.fill(0);
   information(0,0) = cfg_->optim.weight_profile_fidelity;
   information(1,1) = cfg_->optim.weight_profile_fidelity;
+  information(2,2) = cfg_->optim.weight_profile_fidelity;
 
   for (int i=0; i < teb_.sizePoses()-1; ++i)
   {
@@ -983,7 +984,8 @@ void TebPlanner::AddEdgesProfileFidelity()
     profile_fidelity_edge->setVertex(1,teb_.PoseVertex(i+1));
     profile_fidelity_edge->setVertex(2,teb_.TimeDiffVertex(i));
     profile_fidelity_edge->setInformation(information);
-    profile_fidelity_edge->setVelocity(&trajectory_ref_->trajectory().at(i)->velocity());
+    profile_fidelity_edge->setVelocity(trajectory_ref_->trajectory().at(i)->velocity());
+    profile_fidelity_edge->setTimestep(trajectory_ref_->trajectory().at(i+1)->timestamp() - trajectory_ref_->trajectory().at(i)->timestamp());
     profile_fidelity_edge->setTebConfig(*cfg_);
     optimizer_->addEdge(profile_fidelity_edge);
   }

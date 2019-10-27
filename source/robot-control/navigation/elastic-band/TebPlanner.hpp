@@ -165,11 +165,12 @@ public:
    * @param initial_plan instance of Trajectory
    * @param fix_timediff_vertices if \c true, fix all time difference vertices during optimization
    * @param fix_pose_vertices if \c true, fix all pose vertices during optimization
+   * @param fix_goal_pose_vertex if \c true, fix the goal pose vertex during optimization (overriding \c fix_pose_vertices for this specific pose)
    * @param start_vel current start velocity (e.g. the velocity of the robot, only translational (nonholonomic) and rotational components are used)
    * @param free_goal_vel if \c true, a nonzero final velocity at the goal pose is allowed, otherwise the final velocity will be zero (default: false)
    * @return \c true if planning was successful, \c false otherwise
    */
-  virtual bool plan(const Trajectory& initial_plan, const bool fix_timediff_vertices = false, const bool fix_pose_vertices = false, const Velocity* start_vel = NULL, const bool free_goal_vel = false);
+  virtual bool plan(const Trajectory& initial_plan, const bool fix_timediff_vertices = false, const bool fix_pose_vertices = false, const bool fix_goal_pose_vertex = false, const Velocity* start_vel = NULL, const bool free_goal_vel = false);
   
   /**
    * @brief Plan a trajectory based on an initial reference plan.
@@ -691,7 +692,7 @@ protected:
   void AddEdgesShortestPath();
 
   /**
-   * @brief Add all edges (local cost functions) for minimizing the difference to the reference velocity profile
+   * @brief Add all edges (local cost functions) for minimizing the difference to the reference velocity and timestep profiles
    * @see EdgeProfileFidelity
    * @see buildGraph
    * @see optimizeGraph

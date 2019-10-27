@@ -59,23 +59,28 @@ namespace elastic_band
 
 /**
  * @class EdgeProfileFidelity
- * @brief Edge defining the cost function for minimizing the difference in terms of translational and rotational velocity
- * w.r.t. the reference velocity profile of the trajectory
+ * @brief Edge defining the cost function for minimizing the difference
+ * in terms of translational and rotational velocity as well as timestep
+ * w.r.t. the reference velocity and timestep profiles of the trajectory
  *
  * The edge depends on three vertices \f$ \mathbf{s}_i, \mathbf{s}_{ip1}, \Delta T_i \f$ and minimizes: \n
- * \f$ \min [(v-v_{ref})^2,(omega-omega_{ref})^2]^T \cdot weight \f$. \n
+ * \f$ \min [(v-v_{ref})^2,(omega-omega_{ref})^2,(dt-dt{ref})^2]^T \cdot weight \f$. \n
  * \e v is calculated using the difference quotient and the position parts of both poses. \n
  * \e omega is calculated using the difference quotient of both yaw angles followed by a normalization to [-pi, pi]. \n
+ * \e dt is calculated using the time difference between both poses. \n
  * \e v_{ref} is the reference translational velocity between both poses. \n
  * \e omega_{ref} is the reference rotational velocity between both poses. \n
+ * \e dt_{ref} is the reference time difference between both poses. \n
  * \e weight can be set using setInformation(). \n
  * \e penaltyInterval denotes the penalty function, see penaltyBoundToInterval(). \n
- * The dimension of the error / cost vector is 2: the first component represents the translational velocity and
- * the second one the rotational velocity.
+ * The dimension of the error / cost vector is 3:
+ * the first component represents the translational velocity,
+ * the second one the rotational velocity, and
+ * the third one the time difference.
  * @see TebPlanner::AddEdgesProfileFidelity
  * @remarks Do not forget to call setTebConfig()
  */
-class EdgeProfileFidelity : public BaseTebMultiEdge<2, const Velocity*>
+class EdgeProfileFidelity : public BaseTebMultiEdge<3, std::pair<Velocity*, Timestep>>
 {
 public:
 
@@ -84,7 +89,7 @@ public:
    */
   EdgeProfileFidelity()
   {
-    _measurement = NULL;
+    _measurement = std::pair<Velocity*, Timestep>();
     this->resize(3); // Since we derive from a g2o::BaseMultiEdge, set the desired number of vertices
   }
 
@@ -99,45 +104,57 @@ public:
     const VertexTimeDiff* deltaT = static_cast<const VertexTimeDiff*>(_vertices[2]);
 
     const Eigen::Vector2d deltaS = conf2->estimate().position() - conf1->estimate().position();
+    const double dt = deltaT->estimate();
 
     double dist = deltaS.norm();
     const double angle_diff = g2o::normalize_theta(conf2->theta() - conf1->theta());
     if (cfg_->trajectory.exact_arc_length && angle_diff != 0)
     {
-        double radius =  dist/(2*sin(angle_diff/2));
-        dist = fabs( angle_diff * radius ); // actual arg length!
+        double radius =  dist / (2 * sin(angle_diff / 2));
+        dist = fabs(angle_diff * radius); // actual arg length!
     }
-    double vel = dist / deltaT->estimate();
+    double vel = dist / dt;
 
-    // vel *= g2o::sign(deltaS[0]*cos(conf1->theta()) + deltaS[1]*sin(conf1->theta())); // consider direction
-    vel *= fast_sigmoid( 100 * (deltaS.x()*cos(conf1->theta()) + deltaS.y()*sin(conf1->theta())) ); // consider direction
+    // vel *= g2o::sign(deltaS[0] * std::cos(conf1->theta()) + deltaS[1] * std::sin(conf1->theta())); // consider direction
+    vel *= fast_sigmoid(100 * (deltaS.x() * std::cos(conf1->theta()) + deltaS.y() * std::sin(conf1->theta()))); // consider direction
 
-    const double omega = angle_diff / deltaT->estimate();
+    const double omega = angle_diff / dt;
 
-    _error[0] = std::abs(vel   - _measurement->translation());
-    _error[1] = std::abs(omega - _measurement->rotation());
+    _error[0] = std::abs(vel   - _measurement.first->translation());
+    _error[1] = std::abs(omega - _measurement.first->rotation());
+    _error[2] = std::abs(dt    - _measurement.second.count());
 
-    ROS_ASSERT_MSG(std::isfinite(_error[0]) && std::isfinite(_error[1]), "EdgeProfileFidelity::computeError() _error[0]=%f _error[1]=%f\n",_error[0],_error[1]);
+    ROS_ASSERT_MSG(std::isfinite(_error[0]) && std::isfinite(_error[1]) && std::isfinite(_error[2]), "EdgeProfileFidelity::computeError() _error[0]=%f _error[1]=%f _error[2]=%f\n", _error[0], _error[1], _error[2]);
   }
 
   /**
    * @brief Set pointer to associated reference velocity for the underlying cost function
    * @param velocity Velocity instance containing the reference translational and rotational velocity components
    */
-  void setVelocity(const Velocity* velocity)
+  void setVelocity(Velocity& velocity)
   {
-    _measurement = velocity;
+    _measurement.first = &velocity;
+  }
+
+  /**
+   * @brief Set value of associated reference timestep for the underlying cost function
+   * @param timestep Timestep instance containing the reference time difference between both vertex poses
+   */
+  void setTimestep(Timestep timestep)
+  {
+    _measurement.second = timestep;
   }
 
   /**
    * @brief Set all parameters at once
-   * @param cfg TebConfig class
+   * @param cfg TebConfig instance storing configuration parameters
    * @param velocity Velocity instance containing the reference translational and rotational velocity components
+   * @param timestep Timestep instance containing the reference time difference between both vertex poses
    */
-  void setParameters(const TebConfig& cfg, const Velocity* velocity)
+  void setParameters(const TebConfig& cfg, Velocity& velocity, Timestep timestep)
   {
     cfg_ = &cfg;
-    _measurement = velocity;
+    _measurement = std::pair<Velocity*, Timestep>(&velocity, timestep);
   }
 
 public:

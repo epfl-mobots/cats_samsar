@@ -227,9 +227,9 @@ bool TebPlanner::optimizeTEB(int iterations_innerloop, int iterations_outerloop,
   return true;
 }
 
-void TebPlanner::setVelocityStart(const Velocity& vel_start)
+void TebPlanner::setVelocityStart(const Velocity& vel_start, const bool to_be_considered)
 {
-  vel_start_.first = true;
+  vel_start_.first = to_be_considered;
   vel_start_.second.linear.x = vel_start.translation();
   vel_start_.second.linear.y = 0;
   vel_start_.second.angular.z = vel_start.rotation();
@@ -243,9 +243,9 @@ void TebPlanner::setVelocityStart(const geometry_msgs::Twist& vel_start)
   vel_start_.second.angular.z = vel_start.angular.z;
 }
 
-void TebPlanner::setVelocityGoal(const Velocity& vel_goal)
+void TebPlanner::setVelocityGoal(const Velocity& vel_goal, const bool to_be_considered)
 {
-  vel_goal_.first = true;
+  vel_goal_.first = to_be_considered;
   vel_goal_.second.linear.x = vel_goal.translation();
   vel_goal_.second.linear.y = 0;
   vel_goal_.second.angular.z = vel_goal.rotation();

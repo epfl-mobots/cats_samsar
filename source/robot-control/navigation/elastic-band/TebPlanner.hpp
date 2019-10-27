@@ -281,8 +281,9 @@ public:
    * @remarks Calling this function is not neccessary if the initial velocity is passed via the plan() method
    * @param vel_start Current start velocity (e.g. the velocity of the robot, both translational and rotational components are used,
    *                  for nonholonomic robots only)
+   * @param to_be_considered Whether to take into account the start velocity for an additional start acceleration constraint
    */
-  void setVelocityStart(const Velocity& vel_start);
+  void setVelocityStart(const Velocity& vel_start, const bool to_be_considered = true);
   
   /**
    * @brief Set the initial velocity at the trajectory's start pose (e.g. the robot's velocity) [twist overload].
@@ -295,9 +296,10 @@ public:
   /**
    * @brief Set the desired final velocity at the trajectory's goal pose.
    * @remarks Call this function only if a non-zero velocity is desired and if \c free_goal_vel is set to \c false in plan()
-   * @param vel_goal Velocity instance containing the translational and rotational final velocity 
+   * @param vel_goal Velocity instance containing the translational and rotational final velocity (for nonholonomic robots only)
+   * @param to_be_considered Whether to take into account the goal velocity for an additional goal acceleration constraint
    */
-  void setVelocityGoal(const Velocity& vel_goal);
+  void setVelocityGoal(const Velocity& vel_goal, const bool to_be_considered = true);
   
   /**
    * @brief Set the desired final velocity at the trajectory's goal pose.

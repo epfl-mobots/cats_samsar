@@ -39,8 +39,8 @@
  * Source: https://github.com/rst-tu-dortmund/teb_local_planner/
  *********************************************************************/
 
-#ifndef _VISUALIZATION_HPP_
-#define _VISUALIZATION_HPP_
+#ifndef _TEB_VISUALIZATION_HPP_
+#define _TEB_VISUALIZATION_HPP_
 
 // teb stuff
 #include <elastic-band/TebConfig.hpp>
@@ -453,4 +453,4 @@ void TebVisualization::publishPathContainer(BidirIter first, BidirIter last, con
 
 } // namespace elastic_band
 
-#endif /* _VISUALIZATION_HPP_ */
+#endif /* _TEB_VISUALIZATION_HPP_ */

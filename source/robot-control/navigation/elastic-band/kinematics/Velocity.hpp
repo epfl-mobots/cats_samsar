@@ -46,6 +46,8 @@
 
 #include <Eigen/Core>
 
+#include <cassert>
+
 namespace elastic_band
 {
 

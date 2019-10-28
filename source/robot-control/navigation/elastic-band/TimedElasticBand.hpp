@@ -140,7 +140,7 @@ public:
    */
   double& TimeDiff(int index)
   {
-    assert(index < sizeTimeDiffs()); 
+    ROS_ASSERT(index < sizeTimeDiffs());
     return timediff_vec_.at(index)->dt();
   }
   
@@ -151,7 +151,7 @@ public:
    */
   const double& TimeDiff(int index) const
   {
-    assert(index < sizeTimeDiffs()); 
+    ROS_ASSERT(index < sizeTimeDiffs());
     return timediff_vec_.at(index)->dt();
   }
   
@@ -162,7 +162,7 @@ public:
    */
   PoseSE2& Pose(int index) 
   {
-    assert(index < sizePoses());
+    ROS_ASSERT(index < sizePoses());
     return pose_vec_.at(index)->pose();
   }
   
@@ -173,7 +173,7 @@ public:
    */
   const PoseSE2& Pose(int index) const 
   {
-    assert(index < sizePoses());
+    ROS_ASSERT(index < sizePoses());
     return pose_vec_.at(index)->pose();
   }
   
@@ -204,7 +204,7 @@ public:
    */ 
   VertexPose* PoseVertex(int index) 
   {
-    assert(index < sizePoses());
+    ROS_ASSERT(index < sizePoses());
     return pose_vec_.at(index);
   }
   
@@ -215,7 +215,7 @@ public:
    */  
   VertexTimeDiff* TimeDiffVertex(int index) 
   {
-    assert(index < sizeTimeDiffs()); 
+    ROS_ASSERT(index < sizeTimeDiffs());
     return timediff_vec_.at(index);
   }
   

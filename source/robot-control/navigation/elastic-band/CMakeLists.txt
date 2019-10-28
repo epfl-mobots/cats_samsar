@@ -7,7 +7,6 @@ set(srcs
     TebLocalPlannerROS.cpp
     TebPlanner.cpp
     TebVisualization.cpp
-    TestOptimNode.cpp
     TimedElasticBand.cpp
 )
 

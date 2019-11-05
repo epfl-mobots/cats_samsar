@@ -2,11 +2,12 @@
 #  Aseba_FOUND - System has Aseba
 #  Aseba_INCLUDE_DIRS - The Aseba include directories
 
-set(default_path "usr/local/Aseba")
+set(default_path "/usr/local")
 
-find_path(Aseba_INCLUDE_DIR common/types.h
-          HINTS ${default_path} 
-          PATH_SUFFIXES bin)
+#find_path(Aseba_INCLUDE_DIR common/types.h
+#          HINTS ${default_path}
+#          PATH_SUFFIXES bin)
+set(Aseba_INCLUDE_DIR ${default_path}/include/aseba)
 
 if (UNIX)
     SET(CMAKE_FIND_LIBRARY_PREFIXES "lib")
@@ -14,12 +15,12 @@ if (UNIX)
 endif (UNIX)
 
 find_library(Aseba_COMMON_LIBRARY
-             NAMES libAsebacommon
-             HINTS ${default_path}/Aseba/lib)
+             NAMES asebacommon
+             HINTS ${default_path}/lib)
 set(Aseba_LIBRARIES ${Aseba_COMMON_LIBRARY})
 find_library(Aseba_COMPILER_LIBRARY
-             NAMES libAsebacompiler
-             HINTS ${default_path}/Aseba/lib)
+             NAMES asebacompiler
+             HINTS ${default_path}/lib)
 set(Aseba_LIBRARIES ${Aseba_LIBRARIES} ${Aseba_COMPILER_LIBRARY})
 
 include(FindPackageHandleStandardArgs)

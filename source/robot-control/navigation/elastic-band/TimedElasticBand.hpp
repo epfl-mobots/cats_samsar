@@ -453,7 +453,7 @@ public:
    * @param guess_backwards_motion Allow the initialization of backwards oriented trajectories if the goal heading is pointing behind the robot (this parameter is used only if \c estimate_orient is enabled.
    * @return true if everything was fine, false otherwise
    */
-  bool initTrajectoryToGoal(const Trajectory& plan, const bool fix_timediff_vertices = false, const bool fix_pose_vertices = false, const bool fix_goal_pose_vertex = false, const double max_vel_x = 1.0, const double max_vel_theta = 1.0, const bool estimate_orient = false, const int min_samples = 3, const bool guess_backwards_motion = false);
+  bool initTrajectoryToGoal(const Trajectory& plan, const bool fix_timediff_vertices = false, const bool fix_pose_vertices = false, const bool fix_goal_pose_vertex = true, const double max_vel_x = 1.0, const double max_vel_theta = 1.0, const bool estimate_orient = false, const int min_samples = 3, const bool guess_backwards_motion = false);
 
 
   __attribute_deprecated__ bool initTEBtoGoal(const PoseSE2& start, const PoseSE2& goal, double diststep=0, double timestep=1, int min_samples = 3, bool guess_backwards_motion = false)

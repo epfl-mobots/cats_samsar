@@ -166,11 +166,11 @@ public:
    * @param fix_timediff_vertices if \c true, fix all time difference vertices during optimization
    * @param fix_pose_vertices if \c true, fix all pose vertices during optimization
    * @param fix_goal_pose_vertex if \c true, fix the goal pose vertex during optimization (overriding \c fix_pose_vertices for this specific pose)
-   * @param free_goal_vel if \c true, a nonzero final velocity at the goal pose is allowed, otherwise the final velocity will be zero (/!\ default: true)
+   * @param free_goal_vel if \c true, a nonzero final velocity at the goal pose is allowed, otherwise the final velocity will be \c vel_goal_, which is by default zero (/!\ default: true)
    * @param start_vel current start velocity (e.g. the velocity of the robot, only translational (nonholonomic) and rotational components are used)
    * @return \c true if planning was successful, \c false otherwise
    */
-  virtual bool plan(const Trajectory& initial_plan, const bool fix_timediff_vertices = false, const bool fix_pose_vertices = false, const bool fix_goal_pose_vertex = false, const bool free_goal_vel = true, const Velocity* start_vel = NULL);
+  virtual bool plan(const Trajectory& initial_plan, const bool fix_timediff_vertices = false, const bool fix_pose_vertices = false, const bool fix_goal_pose_vertex = true, const bool free_goal_vel = true, const Velocity* start_vel = NULL);
   
   /**
    * @brief Plan a trajectory based on an initial reference plan.

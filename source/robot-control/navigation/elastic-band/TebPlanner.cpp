@@ -1227,8 +1227,8 @@ void TebPlanner::getVelocityProfile(VelocityContainer& velocity_profile) const
 
   // goal velocity
   velocity_profile.back()->orientation() = teb_.BackPose().theta();
-  velocity_profile.back()->translation() = vel_start_.second.linear.x;
-  velocity_profile.back()->rotation()    = vel_start_.second.angular.z;
+  velocity_profile.back()->translation() = vel_goal_.second.linear.x;
+  velocity_profile.back()->rotation()    = vel_goal_.second.angular.z;
 
   // update velocities
   for (size_t i = 0; i < velocity_profile.size(); ++i)
@@ -1277,12 +1277,12 @@ void TebPlanner::getFullTrajectory(Trajectory& trajectory) const
   PoseSE2Container pose_profile(n);
 
   // timestep profile
-  for (size_t i = 0; i < n - 1; ++i)
+  for (size_t i = 0; i < timestep_profile.size(); ++i)
   {
     timestep_profile.at(i) = TimestepPtr(new Timestep(timestamp_t(teb_.TimeDiff(i))));
   }
   // pose profile
-  for (size_t i = 0; i < n; ++i)
+  for (size_t i = 0; i < pose_profile.size(); ++i)
   {
     pose_profile.at(i) = PoseSE2Ptr(new PoseSE2(teb_.Pose(i).x(), teb_.Pose(i).y(), teb_.Pose(i).theta()));
   }

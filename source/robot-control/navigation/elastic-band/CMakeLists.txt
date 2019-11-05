@@ -6,6 +6,7 @@ set(srcs
     TebConfig.cpp
     TebLocalPlannerROS.cpp
     TebPlanner.cpp
+    TebPlot.cpp
     TebVisualization.cpp
     TimedElasticBand.cpp
 )
@@ -43,11 +44,13 @@ set(hdrs
     TebConfig.hpp
     TebLocalPlannerROS.hpp
     TebPlanner.hpp
+    TebPlot.hpp
     TebVisualization.hpp
     TimedElasticBand.hpp
 )
 
 find_package(catkin      REQUIRED COMPONENTS teb_local_planner)
+find_package(Qt5         REQUIRED COMPONENTS Widgets Charts)
 find_package(SUITESPARSE REQUIRED)
 find_package(G2O         REQUIRED)
 find_package(Eigen3      REQUIRED)
@@ -73,6 +76,7 @@ g2o_replace(   G2O_INCLUDE_DIR     G2O_LIBRARIES)
 
 set(EXTERNAL_INCLUDE_DIRS ${catkin_INCLUDE_DIRS} ${SUITESPARSE_INCLUDE_DIRS} ${G2O_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIRS})
 set(EXTERNAL_LIBS         ${catkin_LIBRARIES}    ${SUITESPARSE_LIBRARIES}    ${G2O_LIBRARIES})
+list(APPEND EXTERNAL_LIBS Qt5::Widgets Qt5::Charts)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 

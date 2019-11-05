@@ -101,7 +101,7 @@ public:
         _wheel_radius    = r;
         _wheel_distance  = d;
         _vel_orientation = atan2(x, y);
-        _vel_translation = (cos(_vel_orientation) != 0) ? x / cos(_vel_orientation) : y / sin(_vel_orientation);
+        _vel_translation = (std::cos(_vel_orientation) != 0) ? x / std::cos(_vel_orientation) : y / std::sin(_vel_orientation);
         _vel_rotation    = z;
         _vel_robot = Eigen::Vector3d(x, y, z);
         _vel_wheel = Eigen::Vector2d(_vel_translation/r - _vel_rotation*d/(2*r), _vel_translation/r + _vel_rotation*d/(2*r));
@@ -175,6 +175,12 @@ public:
     ///@{
 
     /**
+    * @brief Access the 2D velocity (translation and rotation) (read-only)
+    * @return const 2D velocity (translation and rotation)
+    */
+    const Eigen::Vector2d velocity2d() const {return Eigen::Vector2d(_vel_translation, _vel_rotation);}
+
+    /**
     * @brief Access the 3D robot viewpoint of the velocity
     * @return reference to the 3D robot velocity
     */
@@ -197,18 +203,6 @@ public:
     * @return const reference to the 2D wheel velocity
     */
     const Eigen::Vector2d& wheel() const {return _vel_wheel;}
-
-    /**
-    * @brief Access the 2D translation part of the velocity
-    * @return reference to the 2D translational velocity
-    */
-    Eigen::Vector2d& translation2d() {auto v2d = Eigen::Vector2d(_vel_robot.coeffRef(0), _vel_robot.coeffRef(1)); return v2d;}
-
-    /**
-    * @brief Access the 2D translation part of the velocity (read-only)
-    * @return const reference to the 2D translational velocity
-    */
-    const Eigen::Vector2d& translation2d() const {return Eigen::Vector2d(_vel_robot.coeffRef(0), _vel_robot.coeffRef(1));}
 
     /**
     * @brief Access the orientation of the velocity

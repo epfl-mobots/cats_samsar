@@ -101,6 +101,12 @@ public:
     ///@{
 
     /**
+    * @brief Access the 2D acceleration (translation and rotation) (read-only)
+    * @return const 2D acceleration (translation and rotation)
+    */
+    const Eigen::Vector2d acceleration2d() const {return Eigen::Vector2d(_acc_translation, _acc_rotation);}
+
+    /**
     * @brief Access the translation part of the acceleration
     * @return reference to the translational acceleration
     */

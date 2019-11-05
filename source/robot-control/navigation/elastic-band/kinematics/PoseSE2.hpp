@@ -141,6 +141,12 @@ public:
   ///@{ 
   
   /**
+    * @brief Access the 3D pose (position and orientation) (read-only)
+    * @return const 3D pose (position and orientation)
+    */
+  const Eigen::Vector3d pose3d() const {return Eigen::Vector3d(_position[0], _position[1], _theta);}
+
+  /**
     * @brief Access the 2D position part
     * @see estimate
     * @return reference to the 2D position part

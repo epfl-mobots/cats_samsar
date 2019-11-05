@@ -579,7 +579,8 @@ public:
     {
         if (&rhs != this)
         {
-            _trajectory = rhs._trajectory;
+            _trajectory       = rhs._trajectory;
+            _robot_parameters = rhs._robot_parameters;
         }
         return *this;
     }

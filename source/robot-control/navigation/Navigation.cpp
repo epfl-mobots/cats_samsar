@@ -80,7 +80,7 @@ void Navigation::setTargetSpeeds(TargetSpeeds* targetSpeeds)
     const Values::size_type size_left  = static_cast<const Values::size_type>(targetSpeeds->leftSpeeds().size());
     const Values::size_type size_right = static_cast<const Values::size_type>(targetSpeeds->rightSpeeds().size());
     const Values::size_type length     = static_cast<const Values::size_type>(std::max(size_left, size_right));
-    commands.reserve(2*length);
+    commands.reserve(2 * length);
     for (Values::size_type i = 0; i < length; i++) {
         if (size_left > i) {
             commands.append(targetSpeeds->leftSpeeds().at(i));
@@ -205,7 +205,7 @@ void Navigation::sendMotorCommands(Values commands)
     if (commands.size() % 2) {
         commands.append(commands.back());
     }
-    commands.prepend(static_cast<qint16>(commands.size()));
+    commands.prepend(static_cast<qint16>(commands.size() / 2));
     m_robot->sendEvent(eventName, commands);
 }
 

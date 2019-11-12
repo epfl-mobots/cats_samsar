@@ -19,6 +19,16 @@
 <event size="2" name="MotorControlFish_bot_H"/>
 <event size="2" name="MotorControlFish_bot_I"/>
 <event size="2" name="MotorControlFish_bot_J"/>
+<event size="41" name="MotorCommandsFish_bot_A"/>
+<event size="41" name="MotorCommandsFish_bot_B"/>
+<event size="41" name="MotorCommandsFish_bot_C"/>
+<event size="41" name="MotorCommandsFish_bot_D"/>
+<event size="41" name="MotorCommandsFish_bot_E"/>
+<event size="41" name="MotorCommandsFish_bot_F"/>
+<event size="41" name="MotorCommandsFish_bot_G"/>
+<event size="41" name="MotorCommandsFish_bot_H"/>
+<event size="41" name="MotorCommandsFish_bot_I"/>
+<event size="41" name="MotorCommandsFish_bot_J"/>
 <event size="3" name="FishBehaviorFish_bot_A"/>
 <event size="3" name="FishBehaviorFish_bot_B"/>
 <event size="3" name="FishBehaviorFish_bot_C"/>
@@ -72,28 +82,77 @@ var SpeedAvoidBack=3
 var TimeAvoid=6000
 var TimeAvoidBack=2000
 
-# Variables used for braitenberg
+# Variables used for Braitenberg
 var coeffAvoid=100
 var threshback=500 #hack pour reculer
 
-#Variables used for Fish Behavior
+# Variables used for Fish Behavior
 var oldPositionLeft=0
 var oldPositionRight=0
 var desiredAngle=0
 var desiredDistance=0
 var vuobstacle=0
 
+# Variables used for motor commands
+var motorCommandIdx = 0  # currently applied command index
+var motorCommandNew = 0  #     newly fetched command index
+var motorCommandMax = 20 # maximum number of commands fetched per wheel on every event
+var motorCommandsL[20]   #  left wheel motor command
+var motorCommandsR[20]   # right wheel motor command
+var timerInstance = 0 # timer instance
+var timerEnabled  = 0 # timer state
+var timerPeriod   = 5 # timer period = control loop cycle [ms]
+
+sub updateSpeed
+    mot1.pid.enable = 2
+    mot2.pid.enable = 2
+    DesiredSpeedLeft  = motorCommandsL[motorCommandIdx]
+    DesiredSpeedRight = motorCommandsR[motorCommandIdx]
+    call math.min(DesiredSpeedLeft,  DesiredSpeedLeft,   mot1.pid.speed_max)
+    call math.max(DesiredSpeedLeft,  DesiredSpeedLeft,  -mot1.pid.speed_max)
+    call math.min(DesiredSpeedRight, DesiredSpeedRight,  mot2.pid.speed_max)
+    call math.max(DesiredSpeedRight, DesiredSpeedRight, -mot2.pid.speed_max)
+    mot1.pid.target_speed =  DesiredSpeedLeft
+    mot2.pid.target_speed = -DesiredSpeedRight
+    if motorCommandIdx &lt; motorCommandMax-1 then
+        motorCommandIdx++
+    else
+        motorCommandIdx = 0
+    end
+
+sub startTimer
+    if timerEnabled == 0 then
+        #timer.period[timerInstance] = timerPeriod
+        timer = timerPeriod
+        timerEnabled = 1
+    end
+
+sub stopTimer
+    if timerEnabled == 1 then
+        #timer.period[timerInstance] = 0
+        timer = 0
+        timerEnabled = 0
+    end
+
+onevent timer0
+    callsub updateSpeed
+
+#onevent timer1
+#    callsub updateSpeed
+
 onevent LedControl
 led_1=event.args[0]
 led_2=-event.args[1]
 
 onevent STOP
+callsub stopTimer
 mot1.pid.enable=0
 mot2.pid.enable=0
 mot1.pid.target_speed=0
 mot2.pid.target_speed=0
 
 onevent MotorControl
+callsub stopTimer
 mot1.pid.enable=2
 mot2.pid.enable=2
 DesiredSpeedLeft=event.args[1]
@@ -107,6 +166,7 @@ else
 end
 
 onevent MotorControlFish_bot_H
+callsub stopTimer
 if pwgnd&lt;1 then
 	emit PowerDown[IDControl]
 end
@@ -152,7 +212,7 @@ else
 				mot2.pid.target_speed=Mot2BefSensor	
 			else
 				mot1.pid.target_speed=event.args[1]
-				mot2.pid.target_speed=-event.args[0]				
+                                mot2.pid.target_speed=-event.args[0]
 			end
 	else
 		mot1.pid.target_speed=event.args[1]
@@ -160,6 +220,27 @@ else
 	end
 end
 
+onevent MotorCommandsFish_bot_H
+callsub startTimer
+if pwgnd &lt; 1 then
+    emit PowerDown[IDControl]
+end
+motorCommandNew = motorCommandIdx
+for i in 1:16 do
+    if i > event.args[0] then
+        return
+    end
+    motorCommandsL[motorCommandNew] = event.args[2*(i-1)+1]
+    motorCommandsR[motorCommandNew] = event.args[2*(i-1)+2]
+    if motorCommandNew &lt; motorCommandMax-1 then
+        motorCommandNew++
+    else
+        motorCommandNew = 0
+    end
+    if motorCommandNew == motorCommandIdx then
+        return
+    end
+end
 
 onevent PositionControl
 mot1.pid.enable=3
@@ -214,10 +295,6 @@ if IR_front_left &lt; ThreshSensor and IR_front_right &lt; ThreshSensor then
 	DesiredSpeedLeft=event.args[2]
 	DesiredSpeedRight=event.args[2]
 end
-
-
-
-
 
 onevent SetObstacleAvoidanceFish_bot_H
 ObstacleAvoidance=event.args[0]

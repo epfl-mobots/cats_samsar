@@ -52,6 +52,9 @@ void Navigation::step(ControlTargetPtr target)
     case ControlTargetType::SPEED:
         setTargetSpeed(static_cast<TargetSpeed*>(target.data()));
         break;
+    case ControlTargetType::SPEEDS:
+        setTargetSpeeds(static_cast<TargetSpeeds*>(target.data()));
+        break;
     case ControlTargetType::POSITION:
         setTargetPosition(static_cast<TargetPosition*>(target.data()));
         break;
@@ -66,6 +69,31 @@ void Navigation::step(ControlTargetPtr target)
 void Navigation::setTargetSpeed(TargetSpeed* targetSpeed)
 {
     sendMotorSpeed(targetSpeed->leftSpeed(), targetSpeed->rightSpeed());
+}
+
+/*!
+ * Manages the target speeds control.
+ */
+void Navigation::setTargetSpeeds(TargetSpeeds* targetSpeeds)
+{
+    Values commands;
+    const Values::size_type size_left  = static_cast<const Values::size_type>(targetSpeeds->leftSpeeds().size());
+    const Values::size_type size_right = static_cast<const Values::size_type>(targetSpeeds->rightSpeeds().size());
+    const Values::size_type length     = static_cast<const Values::size_type>(std::max(size_left, size_right));
+    commands.reserve(2*length);
+    for (Values::size_type i = 0; i < length; i++) {
+        if (size_left > i) {
+            commands.append(targetSpeeds->leftSpeeds().at(i));
+        } else {
+            commands.append(targetSpeeds->leftSpeeds().back());
+        }
+        if (size_right > i) {
+            commands.append(targetSpeeds->rightSpeeds().at(i));
+        } else {
+            commands.append(targetSpeeds->rightSpeeds().back());
+        }
+    }
+    sendMotorCommands(commands);
 }
 
 /*!
@@ -166,6 +194,19 @@ void Navigation::sendMotorSpeed(double angularSpeed)
     int leftSpeed = linearSpeed + (angularSpeed * FishBot::InterWheelsDistanceCm) / 2.0;
     int rightSpeed = linearSpeed - (angularSpeed * FishBot::InterWheelsDistanceCm) / 2.0;
     sendMotorSpeed(leftSpeed, rightSpeed);
+}
+
+/*!
+ * Sends next motor commands to the robot.
+ */
+void Navigation::sendMotorCommands(Values commands)
+{
+    QString eventName = "MotorCommands" + m_robot->name();
+    if (commands.size() % 2) {
+        commands.append(commands.back());
+    }
+    commands.prepend(static_cast<qint16>(commands.size()));
+    m_robot->sendEvent(eventName, commands);
 }
 
 /*!

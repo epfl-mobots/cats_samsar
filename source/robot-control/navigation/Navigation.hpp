@@ -5,6 +5,7 @@
 #include "MotionPatternType.hpp"
 #include "PathPlanner.hpp"
 #include "ObstacleAvoidance.hpp"
+#include "control-modes/ControlTarget.hpp"
 #include "settings/RobotControlSettings.hpp"
 
 #include <AgentState.hpp>
@@ -97,10 +98,12 @@ signals:
     void notifyUseObstacleAvoidanceChanged(bool value);
     //! Informs that the robot's trajectory has changed.
     void notifyTrajectoryChanged(QQueue<PositionMeters>);
-    
+
 private:
     //! Manages the target speed control.
     void setTargetSpeed(TargetSpeed* targetSpeed);
+    //! Manages the target speeds control.
+    void setTargetSpeeds(TargetSpeeds* targetSpeeds);
     //! Manages the target position control.
     void setTargetPosition(TargetPosition* targetPostion);
     //! Manages the local obstacle avoidance on the robot.
@@ -118,6 +121,8 @@ private:
     void sendMotorSpeed(int leftSpeed, int rightSpeed);
     //! Sends the motor speed to the robot. It's converted from the angular speed.
     void sendMotorSpeed(double angularSpeedCmSec);
+    //! Sends next motor commands to the robot.
+    void sendMotorCommands(Values commands);
     //! Sends the fish behavior parameters to the robot.
     void sendFishMotionParameters(int angle, int distance, int speed);
     //! Sends the local obstacle type to the robot.

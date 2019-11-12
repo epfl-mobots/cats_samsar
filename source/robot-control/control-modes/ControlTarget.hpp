@@ -1,6 +1,8 @@
 #ifndef CATS2_CONTROL_TARGET_HPP
 #define CATS2_CONTROL_TARGET_HPP
 
+#include "interfaces/Values.hpp"
+
 #include <AgentState.hpp>
 #include <QtCore/QSharedPointer>
 
@@ -10,6 +12,7 @@
 enum class ControlTargetType
 {
     SPEED,
+    SPEEDS,
     POSITION
 };
 
@@ -60,6 +63,31 @@ private:
     float m_rightSpeed;
 };
 
+/*!
+ * \brief Defines the target speeds for the robot.
+ */
+class TargetSpeeds : public ControlTarget
+{
+public:
+    //! Constructor.
+    explicit TargetSpeeds(Values leftSpeeds = Values(), Values rightSpeeds = Values()) :
+        ControlTarget(ControlTargetType::SPEEDS),
+        m_leftSpeeds(leftSpeeds),
+        m_rightSpeeds(rightSpeeds)
+    {
+    }
+
+    //! Return the left motor speeds.
+    Values leftSpeeds() const { return m_leftSpeeds; }
+    //! Return the right motor speeds.
+    Values rightSpeeds() const { return m_rightSpeeds; }
+
+private:
+    //! Left motor target speeds.
+    Values m_leftSpeeds;
+    //! Right motor target speeds.
+    Values m_rightSpeeds;
+};
 
 /*!
  * \brief Stores the target position for the robot.

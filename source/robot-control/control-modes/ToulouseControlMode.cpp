@@ -72,10 +72,41 @@ void ToulouseControlMode::resetModel()
         m_sim = factory.create();
         updateModelParameters();
         //        cv::imshow( "ModelGrid", m_currentGrid);
+    } else {
+        for (auto& a : m_sim->agents) {
+            Fishmodel::ToulouseModel* tm = reinterpret_cast<Fishmodel::ToulouseModel*>(a.second.get());
+            tm->reinit();
+        }
     }
+}
 
-    for (auto& a : m_sim->agents) {
-        Fishmodel::ToulouseModel* tm = reinterpret_cast<Fishmodel::ToulouseModel*>(a.second.get());
-        tm->reinit();
+/*!
+ * The step of the control mode.
+ */
+ControlTargetPtr ToulouseControlMode::step()
+{
+    ControlTargetPtr target = FishModelBase::step();
+    if (target->type() != ControlTargetType::SPEED) {
+        const QList<double> speeds = dynamic_cast<Fishmodel::ToulouseModel*>(m_sim->robots[0].second)->getSpeedCommands();
+        Values speedsL;
+        Values speedsR;
+        for (int i = 0; i < speeds.size(); i++) {
+            const qint16 speed = static_cast<qint16>(std::round(speeds.at(i)));
+            if (i % 2 == 0) {
+                speedsL.append(static_cast<qint16>(speed));
+            } else {
+                speedsR.append(static_cast<qint16>(speed));
+            }
+        }
+        target.reset(new TargetSpeeds(speedsL, speedsR));
     }
+    return target;
+}
+
+/*!
+ * Informs on what kind of control targets this control mode generates.
+ */
+QList<ControlTargetType> ToulouseControlMode::supportedTargets()
+{
+    return QList<ControlTargetType>({ControlTargetType::SPEED, ControlTargetType::SPEEDS, ControlTargetType::POSITION});
 }

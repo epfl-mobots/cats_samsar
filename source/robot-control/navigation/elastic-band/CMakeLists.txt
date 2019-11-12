@@ -49,6 +49,9 @@ set(hdrs
     TimedElasticBand.hpp
 )
 
+set(ros /opt/ros/kinetic)
+list(APPEND CMAKE_PREFIX_PATH ${ros})
+
 find_package(catkin      REQUIRED COMPONENTS teb_local_planner)
 find_package(Qt5         REQUIRED COMPONENTS Widgets Charts)
 find_package(SUITESPARSE REQUIRED)
@@ -64,13 +67,14 @@ endif()
 
 function(g2o_replace inc lib)
     if(NOT "${root}" STREQUAL "")
-        string(REPLACE /opt/ros/kinetic/include/g2o ${root}/include/g2o ${inc} "${${inc}}")
-        string(REPLACE /opt/ros/kinetic/lib/libg2o_ ${root}/lib/libg2o_ ${lib} "${${lib}}")
+        string(REPLACE ${ros}/include/g2o ${root}/include/g2o ${inc} "${${inc}}")
+        string(REPLACE ${ros}/lib/libg2o_ ${root}/lib/libg2o_ ${lib} "${${lib}}")
         set(${inc} ${${inc}} PARENT_SCOPE)
         set(${lib} ${${lib}} PARENT_SCOPE)
     endif()
 endfunction()
 
+list(REMOVE_ITEM catkin_LIBRARIES ${ros}/lib/libteb_local_planner.so)
 g2o_replace(catkin_INCLUDE_DIRS catkin_LIBRARIES)
 g2o_replace(   G2O_INCLUDE_DIR     G2O_LIBRARIES)
 
@@ -84,7 +88,7 @@ set(lib elastic-band)
 
 add_library               (${lib}        SHARED  ${srcs} ${hdrs})
 target_include_directories(${lib} SYSTEM PUBLIC  ${EXTERNAL_INCLUDE_DIRS})
-target_link_libraries     (${lib}        PRIVATE ${EXTERNAL_LIBS} -fsanitize=address)
+target_link_libraries     (${lib}        PUBLIC  ${EXTERNAL_LIBS} -fsanitize=address)
 target_compile_options    (${lib}        PRIVATE                  -std=c++14)
 
 install(TARGETS ${lib}  DESTINATION .)

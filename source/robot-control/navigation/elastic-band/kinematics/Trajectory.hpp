@@ -324,11 +324,23 @@ public:
     */
     PoseSE2Container getProfilePose() const
     {
-        PoseSE2Container profile(_trajectory.size());
+        PoseSE2Container profile(_trajectory.size() > 0 ? _trajectory.size() : 0);
         for (size_t i = 0; i < profile.size(); i++) {
             profile.at(i) = PoseSE2Ptr(new PoseSE2(_trajectory.at(i)->pose()));
         }
         return profile;
+    }
+
+    /**
+    * @brief Access the pose profile
+    * @param profile vector of PoseSE2 instances constituting the pose profile
+    */
+    void getProfilePose(PoseSE2Container& profile) const
+    {
+        profile.resize(_trajectory.size() > 0 ? _trajectory.size() : 0);
+        for (size_t i = 0; i < profile.size(); i++) {
+            profile.at(i) = PoseSE2Ptr(new PoseSE2(_trajectory.at(i)->pose()));
+        }
     }
 
     /**
@@ -337,11 +349,23 @@ public:
     */
     VelocityContainer getProfileVelocity() const
     {
-        VelocityContainer profile(_trajectory.size() - 1);
+        VelocityContainer profile(_trajectory.size() > 0 ? _trajectory.size() - 1 : 0);
         for (size_t i = 0; i < profile.size(); i++) {
             profile.at(i) = VelocityPtr(new Velocity(_trajectory.at(i)->velocity()));
         }
         return profile;
+    }
+
+    /**
+    * @brief Access the velocity profile
+    * @param profile vector of Velocity instances constituting the velocity profile
+    */
+    void getProfileVelocity(VelocityContainer& profile) const
+    {
+        profile.resize(_trajectory.size() > 0 ? _trajectory.size() - 1 : 0);
+        for (size_t i = 0; i < profile.size(); i++) {
+            profile.at(i) = VelocityPtr(new Velocity(_trajectory.at(i)->velocity()));
+        }
     }
 
     /**
@@ -350,11 +374,23 @@ public:
     */
     AccelerationContainer getProfileAcceleration() const
     {
-        AccelerationContainer profile(_trajectory.size() - 2);
+        AccelerationContainer profile(_trajectory.size() > 1 ? _trajectory.size() - 2 : 0);
         for (size_t i = 0; i < profile.size(); i++) {
             profile.at(i) = AccelerationPtr(new Acceleration(_trajectory.at(i)->acceleration()));
         }
         return profile;
+    }
+
+    /**
+    * @brief Access the acceleration profile
+    * @param profile vector of Acceleration instances constituting the acceleration profile
+    */
+    void getProfileAcceleration(AccelerationContainer& profile) const
+    {
+        profile.resize(_trajectory.size() > 1 ? _trajectory.size() - 2 : 0);
+        for (size_t i = 0; i < profile.size(); i++) {
+            profile.at(i) = AccelerationPtr(new Acceleration(_trajectory.at(i)->acceleration()));
+        }
     }
 
     /**
@@ -363,11 +399,23 @@ public:
     */
     TimestampContainer getProfileTimestamp() const
     {
-        TimestampContainer profile(_trajectory.size());
+        TimestampContainer profile(_trajectory.size() > 0 ? _trajectory.size() : 0);
         for (size_t i = 0; i < profile.size(); i++) {
             profile.at(i) =  TimestampPtr(new Timestamp(_trajectory.at(i)->timestamp()));
         }
         return profile;
+    }
+
+    /**
+    * @brief Access the timestamp profile
+    * @param profile vector of Timestamp instances constituting the timestamp profile
+    */
+    void getProfileTimestamp(TimestampContainer& profile) const
+    {
+        profile.resize(_trajectory.size() > 0 ? _trajectory.size() : 0);
+        for (size_t i = 0; i < profile.size(); i++) {
+            profile.at(i) =  TimestampPtr(new Timestamp(_trajectory.at(i)->timestamp()));
+        }
     }
 
     /**
@@ -376,11 +424,23 @@ public:
     */
     TimestepContainer getProfileTimestep() const
     {
-        TimestepContainer profile(_trajectory.size() - 1);
+        TimestepContainer profile(_trajectory.size() > 0 ? _trajectory.size() - 1 : 0);
         for (size_t i = 0; i < profile.size(); i++) {
             profile.at(i) = TimestepPtr(new Timestep(_trajectory.at(i+1)->timestamp() - _trajectory.at(i)->timestamp()));
         }
         return profile;
+    }
+
+    /**
+    * @brief Access the timestep profile
+    * @param profile vector of Timestep instances constituting the timestep profile
+    */
+    void getProfileTimestep(TimestepContainer& profile) const
+    {
+        profile.resize(_trajectory.size() > 0 ? _trajectory.size() - 1 : 0);
+        for (size_t i = 0; i < profile.size(); i++) {
+            profile.at(i) = TimestepPtr(new Timestep(_trajectory.at(i+1)->timestamp() - _trajectory.at(i)->timestamp()));
+        }
     }
 
     /**

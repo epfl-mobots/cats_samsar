@@ -19,16 +19,16 @@
 <event size="2" name="MotorControlFish_bot_H"/>
 <event size="2" name="MotorControlFish_bot_I"/>
 <event size="2" name="MotorControlFish_bot_J"/>
-<event size="41" name="MotorCommandsFish_bot_A"/>
-<event size="41" name="MotorCommandsFish_bot_B"/>
-<event size="41" name="MotorCommandsFish_bot_C"/>
-<event size="41" name="MotorCommandsFish_bot_D"/>
-<event size="41" name="MotorCommandsFish_bot_E"/>
-<event size="41" name="MotorCommandsFish_bot_F"/>
-<event size="41" name="MotorCommandsFish_bot_G"/>
-<event size="41" name="MotorCommandsFish_bot_H"/>
-<event size="41" name="MotorCommandsFish_bot_I"/>
-<event size="41" name="MotorCommandsFish_bot_J"/>
+<event size="31" name="MotorCommandsFish_bot_A"/>
+<event size="31" name="MotorCommandsFish_bot_B"/>
+<event size="31" name="MotorCommandsFish_bot_C"/>
+<event size="31" name="MotorCommandsFish_bot_D"/>
+<event size="31" name="MotorCommandsFish_bot_E"/>
+<event size="31" name="MotorCommandsFish_bot_F"/>
+<event size="31" name="MotorCommandsFish_bot_G"/>
+<event size="31" name="MotorCommandsFish_bot_H"/>
+<event size="31" name="MotorCommandsFish_bot_I"/>
+<event size="31" name="MotorCommandsFish_bot_J"/>
 <event size="3" name="FishBehaviorFish_bot_A"/>
 <event size="3" name="FishBehaviorFish_bot_B"/>
 <event size="3" name="FishBehaviorFish_bot_C"/>
@@ -96,9 +96,9 @@ var vuobstacle=0
 # Variables used for motor commands
 var motorCommandIdx = 0  # currently applied command index
 var motorCommandNew = 0  #     newly fetched command index
-var motorCommandMax = 20 # maximum number of commands fetched per wheel on every event
-var motorCommandsL[20]   #  left wheel motor command
-var motorCommandsR[20]   # right wheel motor command
+var motorCommandMax = 15 # maximum number of commands fetched per wheel on every event
+var motorCommandsL[15]   #  left wheel motor command
+var motorCommandsR[15]   # right wheel motor command
 var timerInstance = 0 # timer instance
 var timerEnabled  = 0 # timer state
 var timerPeriod   = 5 # timer period = control loop cycle [ms]

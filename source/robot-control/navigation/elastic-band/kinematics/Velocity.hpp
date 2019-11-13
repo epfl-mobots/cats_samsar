@@ -667,11 +667,11 @@ public:
 
 private:
 
-    Eigen::Vector3d _vel_robot; // x,y,z
-    Eigen::Vector2d _vel_wheel; // l,r (left,right)
-    double _vel_orientation; // o (theta)
-    double _vel_translation; // v
-    double _vel_rotation;    // w
+    Eigen::Vector3d _vel_robot; // x,y,z (axis components)
+    Eigen::Vector2d _vel_wheel; // l,r (left,right speeds)
+    double _vel_orientation; // o (heading direction theta)
+    double _vel_translation; // v (linear velocity)
+    double _vel_rotation;    // w (angular velocity)
     double _wheel_radius;   // r (wheel radius)
     double _wheel_distance; // d (inter-wheel distance)
 

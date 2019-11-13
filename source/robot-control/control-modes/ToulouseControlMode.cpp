@@ -93,12 +93,13 @@ ControlTargetPtr ToulouseControlMode::step()
         for (int i = 0; i < speeds.size(); i++) {
             const qint16 speed = static_cast<qint16>(std::round(speeds.at(i)));
             if (i % 2 == 0) {
-                speedsL.append(static_cast<qint16>(speed));
+                speedsL.append(speed);
             } else {
-                speedsR.append(static_cast<qint16>(speed));
+                speedsR.append(speed);
             }
         }
         target.reset(new TargetSpeeds(speedsL, speedsR));
+        qDebug() << "<<<<<<<<<<<<<<< TOULOUSE CONTROL MODE STEP: new target speeds >>>>>>>>>>>>>>";
     }
     return target;
 }

@@ -87,9 +87,8 @@ ControlTargetPtr ToulouseControlMode::step()
 {
     ControlTargetPtr target = FishModelBase::step();
     if (target->type() != ControlTargetType::SPEED) {
-        const QList<double> speeds = dynamic_cast<Fishmodel::ToulouseModel*>(m_sim->robots[0].second)->getSpeedCommands();
-        Values speedsL;
-        Values speedsR;
+        Values speedsL, speedsR;
+        const QList<double> speeds = reinterpret_cast<Fishmodel::ToulouseModel*>(m_sim->robots[0].second)->getSpeedCommands();
         for (int i = 0; i < speeds.size(); i++) {
             const qint16 speed = static_cast<qint16>(std::round(speeds.at(i)));
             if (i % 2 == 0) {

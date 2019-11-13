@@ -95,6 +95,7 @@ var vuobstacle=0
 
 # Variables used for motor commands
 var motorCommandIdx = 0  # currently applied command index
+var motorCommandEnd = 0  #     endly applied command index
 var motorCommandNew = 0  #     newly fetched command index
 var motorCommandMax = 15 # maximum number of commands fetched per wheel on every event
 var motorCommandsL[15]   #  left wheel motor command
@@ -114,10 +115,12 @@ sub updateSpeed
     call math.max(DesiredSpeedRight, DesiredSpeedRight, -mot2.pid.speed_max)
     mot1.pid.target_speed =  DesiredSpeedLeft
     mot2.pid.target_speed = -DesiredSpeedRight
-    if motorCommandIdx &lt; motorCommandMax-1 then
-        motorCommandIdx++
-    else
-        motorCommandIdx = 0
+    if motorCommandIdx != motorCommandEnd then
+        if motorCommandIdx &lt; motorCommandMax-1 then
+            motorCommandIdx++
+        else
+            motorCommandIdx = 0
+        end
     end
 
 sub startTimer
@@ -219,6 +222,7 @@ if pwgnd &lt; 1 then
 end
 motorCommandNew = motorCommandIdx
 for i in 1:16 do
+    motorCommandEnd = motorCommandNew
     if i > event.args[0] then
         return
     end

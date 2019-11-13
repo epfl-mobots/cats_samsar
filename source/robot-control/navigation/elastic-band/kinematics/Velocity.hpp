@@ -533,6 +533,8 @@ public:
             _vel_orientation = rhs._vel_orientation;
             _vel_translation = rhs._vel_translation;
             _vel_rotation    = rhs._vel_rotation;
+            _wheel_radius    = rhs._wheel_radius;
+            _wheel_distance  = rhs._wheel_distance;
         }
         return *this;
     }

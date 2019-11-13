@@ -202,6 +202,9 @@ void Navigation::sendMotorSpeed(double angularSpeed)
 void Navigation::sendMotorCommands(Values commands)
 {
     QString eventName = "MotorCommands" + m_robot->name();
+    while (commands.size() > 30) { // aseba events are limited to 32 args
+        commands.removeLast();
+    }
     if (commands.size() % 2) {
         commands.append(commands.back());
     }

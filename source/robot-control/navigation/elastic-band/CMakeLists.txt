@@ -12,6 +12,7 @@ set(srcs
 )
 
 set(hdrs
+    g2o_actions/TerminateAction.hpp
     g2o_types/BaseTebEdges.hpp
     g2o_types/EdgeAcceleration.hpp
     g2o_types/EdgeDynamicObstacle.hpp
@@ -58,6 +59,8 @@ find_package(SUITESPARSE REQUIRED)
 find_package(G2O         REQUIRED)
 find_package(Eigen3      REQUIRED)
 
+list(REMOVE_ITEM catkin_LIBRARIES ${ros}/lib/libteb_local_planner.so)
+
 set(root "")
 if(EXISTS /usr/local/include/g2o)
     set(root /usr/local)
@@ -74,7 +77,6 @@ function(g2o_replace inc lib)
     endif()
 endfunction()
 
-list(REMOVE_ITEM catkin_LIBRARIES ${ros}/lib/libteb_local_planner.so)
 g2o_replace(catkin_INCLUDE_DIRS catkin_LIBRARIES)
 g2o_replace(   G2O_INCLUDE_DIR     G2O_LIBRARIES)
 
@@ -86,10 +88,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 set(lib elastic-band)
 
-add_library               (${lib}        SHARED  ${srcs} ${hdrs})
-target_include_directories(${lib} SYSTEM PUBLIC  ${EXTERNAL_INCLUDE_DIRS})
-target_link_libraries     (${lib}        PUBLIC  ${EXTERNAL_LIBS} -fsanitize=address)
-target_compile_options    (${lib}        PRIVATE                  -std=c++14)
+add_library               (${lib}        SHARED ${srcs} ${hdrs})
+target_include_directories(${lib} SYSTEM PUBLIC ${EXTERNAL_INCLUDE_DIRS})
+target_link_libraries     (${lib}        PUBLIC ${EXTERNAL_LIBS} -fsanitize=address)
+target_compile_options    (${lib}        PRIVATE                 -std=c++14)
 
 install(TARGETS ${lib}  DESTINATION .)
 install(FILES   ${hdrs} DESTINATION include/${lib})

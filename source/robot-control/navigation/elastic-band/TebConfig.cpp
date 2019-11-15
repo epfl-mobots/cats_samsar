@@ -107,6 +107,7 @@ void TebConfig::loadRosParamFromNodeHandle(const ros::NodeHandle& nh)
   // Optimization
   nh.param("no_inner_iterations", optim.no_inner_iterations, optim.no_inner_iterations);
   nh.param("no_outer_iterations", optim.no_outer_iterations, optim.no_outer_iterations);
+  nh.param("stop_below_percentage_improvement", optim.stop_below_percentage_improvement, optim.stop_below_percentage_improvement);
   nh.param("optimization_activate", optim.optimization_activate, optim.optimization_activate);
   nh.param("optimization_verbose", optim.optimization_verbose, optim.optimization_verbose);
   nh.param("penalty_epsilon", optim.penalty_epsilon, optim.penalty_epsilon);
@@ -221,6 +222,7 @@ void TebConfig::reconfigure(teb_local_planner::TebLocalPlannerReconfigureConfig&
   // Optimization
   optim.no_inner_iterations = cfg.no_inner_iterations;
   optim.no_outer_iterations = cfg.no_outer_iterations;
+  optim.stop_below_percentage_improvement = 0; // TODO: add member stop_below_percentage_improvement in class teb_local_planner::TebLocalPlannerReconfigureConfig
   optim.optimization_activate = cfg.optimization_activate;
   optim.optimization_verbose = cfg.optimization_verbose;
   optim.penalty_epsilon = cfg.penalty_epsilon;

@@ -175,6 +175,93 @@ boost::shared_ptr<g2o::SparseOptimizer> TebPlanner::initOptimizer()
   return optimizer;
 }
 
+namespace {
+void removeOptimizerTerminateAction(SparseOptimizer* optimizer, TerminateAction* terminateAction)
+{
+  terminateAction->setOptimizerStopFlag(optimizer, false);
+  optimizer->removePostIterationAction(terminateAction);
+}
+}
+
+bool TebPlanner::optimizeTEB(int iterations_innerloop, int iterations_outerloop, int end_condition_threshold,
+                             double obst_cost_scale, double viapoint_cost_scale, bool compute_cost_afterwards, bool alternative_time_cost)
+{
+  if (!optimizer_ || !cfg_->optim.optimization_activate)
+    return false;
+
+  bool success = false;
+  optimized_ = false;
+
+  double weight_multiplier = 1.0;
+
+  // TODO(roesmann): we introduced the non-fast mode with the support of dynamic obstacles
+  //                (which leads to better results in terms of x-y-t homotopy planning).
+  //                 however, we have not tested this mode intensively yet, so we keep
+  //                 the legacy fast mode as default until we finish our tests.
+  bool fast_mode = !cfg_->obstacles.include_dynamic_obstacles;
+
+  // Convert threshold from percentage to actual value
+  double improvement_threshold = end_condition_threshold / 100.;
+
+  // If no resizing is needed, optimize the graph all at once
+  if (!cfg_->trajectory.teb_autosize)
+  {
+    iterations_innerloop = iterations_innerloop * iterations_outerloop;
+    iterations_outerloop = 1;
+  }
+
+  // Set the custom terminate action with improvement as end condition
+  TerminateAction* resizingAction;
+  TerminateAction* terminateAction = new TerminateAction();
+  terminateAction->setImprovementThreshold(improvement_threshold);
+  terminateAction->setMaxIterations(iterations_innerloop);
+  optimizer_->addPostIterationAction(terminateAction);
+  if (iterations_outerloop > 1)
+  {
+    resizingAction = new TerminateAction();
+    resizingAction->setImprovementThreshold(improvement_threshold);
+    resizingAction->setMaxIterations(iterations_outerloop);
+  }
+
+  for (int i = 0; i < iterations_outerloop; ++i)
+  {
+    if (cfg_->trajectory.teb_autosize)
+      teb_.autoResize(cfg_->trajectory.dt_ref, cfg_->trajectory.dt_hysteresis, cfg_->trajectory.min_samples, cfg_->trajectory.max_samples, fast_mode);
+
+    success = buildGraph(weight_multiplier);
+    if (!success)
+    {
+        clearGraph();
+        removeOptimizerTerminateAction(&(*optimizer_), terminateAction);
+        return false;
+    }
+    success = optimizeGraph(iterations_innerloop, false);
+    if (!success)
+    {
+        clearGraph();
+        removeOptimizerTerminateAction(&(*optimizer_), terminateAction);
+        return false;
+    }
+    optimized_ = true;
+
+    if (i < iterations_outerloop-1)
+    {
+      if (resizingAction->isOptimizerStoppable(&(*optimizer_), i))
+        i = iterations_outerloop-1;
+    }
+
+    if (compute_cost_afterwards && i == iterations_outerloop-1) // compute cost vec only in the last iteration
+      computeCurrentCost(obst_cost_scale, viapoint_cost_scale, alternative_time_cost);
+
+    clearGraph();
+
+    weight_multiplier *= cfg_->optim.weight_adapt_factor;
+  }
+
+  removeOptimizerTerminateAction(&(*optimizer_), terminateAction);
+
+  return true;
+}
 
 bool TebPlanner::optimizeTEB(int iterations_innerloop, int iterations_outerloop, bool compute_cost_afterwards,
                              double obst_cost_scale, double viapoint_cost_scale, bool alternative_time_cost)
@@ -199,7 +286,6 @@ bool TebPlanner::optimizeTEB(int iterations_innerloop, int iterations_outerloop,
     {
       //teb_.autoResize(cfg_->trajectory.dt_ref, cfg_->trajectory.dt_hysteresis, cfg_->trajectory.min_samples, cfg_->trajectory.max_samples);
       teb_.autoResize(cfg_->trajectory.dt_ref, cfg_->trajectory.dt_hysteresis, cfg_->trajectory.min_samples, cfg_->trajectory.max_samples, fast_mode);
-
     }
 
     success = buildGraph(weight_multiplier);
@@ -287,7 +373,7 @@ bool TebPlanner::plan(const Trajectory& initial_plan, const bool fix_timediff_ve
     vel_goal_.first = true; // we just reactivate and use the previously set velocity (should be zero if nothing was modified)
 
   // now optimize
-  bool success = optimizeTEB(cfg_->optim.no_inner_iterations, cfg_->optim.no_outer_iterations);
+  bool success = optimizeTEB(cfg_->optim.no_inner_iterations, cfg_->optim.no_outer_iterations, cfg_->optim.stop_below_percentage_improvement);
   trajectory_ref_ = nullptr;
   return success;
 }
@@ -422,6 +508,8 @@ bool TebPlanner::optimizeGraph(int no_iterations,bool clear_after)
 
   optimizer_->setVerbose(cfg_->optim.optimization_verbose);
   optimizer_->initializeOptimization();
+  optimizer_->computeInitialGuess();
+  optimizer_->computeActiveErrors();
 
   int iter = optimizer_->optimize(no_iterations);
 

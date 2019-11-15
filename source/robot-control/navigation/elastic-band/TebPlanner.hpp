@@ -62,6 +62,9 @@
 #include <elastic-band/g2o_types/EdgeViaPoint.hpp>
 #include <elastic-band/g2o_types/EdgePreferRotDir.hpp>
 
+// g2o custom actions for the TEB planner
+#include <elastic-band/g2o_actions/TerminateAction.hpp>
+
 // g2o lib stuff
 #include <g2o/core/sparse_optimizer.h>
 #include <g2o/core/block_solver.h>
@@ -239,7 +242,38 @@ public:
    */
   virtual bool getVelocityCommand(double& vx, double& vy, double& omega, int look_ahead_poses) const;
   
-  
+
+  /**
+   * @brief Optimize a previously initialized trajectory (actual TEB optimization loop).
+   *
+   * optimizeTEB implements the main optimization loop. \n
+   * It consists of two nested loops:
+   * 	- The outer loop resizes the trajectory according to the temporal resolution by invoking TimedElasticBand::autoResize().
+   * 	  Afterwards the internal method optimizeGraph() is called that constitutes the innerloop.
+   * 	- The inner loop calls the solver (g2o framework, resp. sparse Levenberg-Marquardt) and iterates a specified
+   * 	  number of optimization calls (\c iterations_innerloop).
+   *
+   * The outer loop is repeated \c iterations_outerloop times. \n
+   * The ratio of inner and outer loop iterations significantly defines the contraction behavior
+   * and convergence rate of the trajectory optimization. Based on our experiences, 2-6 innerloop iterations are sufficient. \n
+   * The number of outer loop iterations should be determined by considering the maximum CPU time required to match the control rate. \n
+   * Moreover, the optimizer can be stopped when the cost improvement does not exceed \c end_condition_threshold between consecutive iterations. \n
+   * Optionally, the cost vector can be calculated by specifying \c compute_cost_afterwards, see computeCurrentCost().
+   * @remarks This method is usually called from a plan() method
+   * @param iterations_innerloop Number of iterations for the actual solver loop
+   * @param iterations_outerloop Specifies how often the trajectory should be resized followed by the inner solver loop.
+   * @param end_condition_threshold Percentage of improvement below which the optimization is automatically stopped.
+   * @param obst_cost_scale Specify extra scaling for obstacle costs (only used if \c compute_cost_afterwards is true)
+   * @param viapoint_cost_scale Specify extra scaling for via-point costs (only used if \c compute_cost_afterwards is true)
+   * @param compute_cost_afterwards If \c true, calculate the cost vector according to computeCurrentCost(),
+   *                                the vector can be accessed afterwards using getCurrentCost().
+   * @param alternative_time_cost Replace the cost for the time optimal objective by the actual (weighted) transition time
+   *                              (only used if \c compute_cost_afterwards is true).
+   * @return \c true if the optimization terminates successfully, \c false otherwise
+   */
+  bool optimizeTEB(int iterations_innerloop, int iterations_outerloop, int end_condition_threshold,
+                   double obst_cost_scale = 1.0, double viapoint_cost_scale = 1.0, bool compute_cost_afterwards = false, bool alternative_time_cost = false);
+
   /**
    * @brief Optimize a previously initialized trajectory (actual TEB optimization loop).
    * 

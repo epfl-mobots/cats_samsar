@@ -137,6 +137,7 @@ public:
   {
     int no_inner_iterations; //!< Number of solver iterations called in each outerloop iteration
     int no_outer_iterations; //!< Each outerloop iteration automatically resizes the trajectory and invokes the internal optimizer with no_inner_iterations
+    int stop_below_percentage_improvement; //!< Stop the optimization process at the end of an outerloop iteration as soon as the percentage of improvement is below this threshold
 
     bool optimization_activate; //!< Activate the optimization
     bool optimization_verbose; //!< Print verbose information
@@ -292,6 +293,7 @@ public:
 
     optim.no_inner_iterations = 5;
     optim.no_outer_iterations = 4;
+    optim.stop_below_percentage_improvement = 1;
     optim.optimization_activate = true;
     optim.optimization_verbose = false;
     optim.penalty_epsilon = 0.1;

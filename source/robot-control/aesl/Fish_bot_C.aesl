@@ -73,7 +73,7 @@ var DesiredSpeedRight=0
 var IDControl=0
 
 # Variables used for obstacle avoidance
-var ObstacleAvoidance=1 #0=no obstacle avoidance 1=braitenberg  2=turn to avoid
+var ObstacleAvoidance=0 #0=no obstacle avoidance 1=braitenberg  2=turn to avoid # FIXME: disabled obstacle avoidance for test purposes
 var ThreshSensor=30
 
 # Variables used for turn to avoid
@@ -94,13 +94,12 @@ var desiredDistance=0
 var vuobstacle=0
 
 # Variables used for motor commands
-var motorCommandIdx = 0  # currently applied command index
-var motorCommandEnd = 0  #     endly applied command index
-var motorCommandNew = 0  #     newly fetched command index
-var motorCommandMax = 15 # maximum number of commands fetched per wheel on every event
-var motorCommandsL[15]   #  left wheel motor command
-var motorCommandsR[15]   # right wheel motor command
-var timerInstance = 0 # timer instance
+var motorCommandIdx = 0   # currently applied command index
+var motorCommandEnd = 0   #     endly applied command index
+var motorCommandNew = 0   #     newly fetched command index
+var motorCommandMax = 15  # maximum number of commands fetched per wheel on every event
+var motorCommandsL   [15] #  left wheel motor command
+var motorCommandsR   [15] # right wheel motor command
 var timerEnabled  = 0 # timer state
 var timerPeriod   = 5 # timer period = control loop cycle [ms]
 
@@ -125,23 +124,18 @@ sub updateSpeed
 
 sub startTimer
     if timerEnabled == 0 then
-        #timer.period[timerInstance] = timerPeriod
         timer = timerPeriod
         timerEnabled = 1
     end
 
 sub stopTimer
     if timerEnabled == 1 then
-        #timer.period[timerInstance] = 0
         timer = 0
         timerEnabled = 0
     end
 
 onevent timer0
     callsub updateSpeed
-
-#onevent timer1
-#    callsub updateSpeed
 
 onevent LedControl
 led_1=event.args[0]
@@ -220,14 +214,15 @@ callsub startTimer
 if pwgnd &lt; 1 then
     emit PowerDown[IDControl]
 end
+ObstacleAvoidance = 0 # FIXME: disabled obstacle avoidance for test purposes
 motorCommandNew = motorCommandIdx
 for i in 1:16 do
-    motorCommandEnd = motorCommandNew
     if i > event.args[0] then
         return
     end
     motorCommandsL[motorCommandNew] = event.args[2*(i-1)+1]
     motorCommandsR[motorCommandNew] = event.args[2*(i-1)+2]
+    motorCommandEnd = motorCommandNew
     if motorCommandNew &lt; motorCommandMax-1 then
         motorCommandNew++
     else
@@ -296,7 +291,7 @@ onevent IR
 if pwgnd&lt;1 then
 	emit PowerDown[IDControl]
 end
-	
+# FIXME: disabled obstacle avoidance for test purposes
 #if ObstacleAvoidance==1 then
 #	Mot1BefSensor=DesiredSpeedLeft
 #	Mot2BefSensor=-DesiredSpeedRight
@@ -325,55 +320,52 @@ end
 #		mot2.pid.target_speed=Mot2BefSensor			
 #	end
 
-if ObstacleAvoidance==2 then
-	Mot1BefSensor=mot1.pid.target_speed
-	Mot2BefSensor=mot2.pid.target_speed
-	if IR_front_left > ThreshSensor and IR_front_right &lt; ThreshSensor then
-		i=0
-		emit Obstacle[IDControl]
-		mot1.pid.enable=2
-		mot2.pid.enable=2
-		mot1.pid.target_speed=-SpeedAvoid
-		mot2.pid.target_speed=-SpeedAvoid
-		while i&lt;TimeAvoid do
-			i=i+1		
-		end
-		mot1.pid.target_speed=Mot1BefSensor
-		mot2.pid.target_speed=Mot2BefSensor
-	elseif IR_front_right > ThreshSensor and IR_front_left &lt; ThreshSensor then
-		i=0
-		emit Obstacle[IDControl]
-		mot1.pid.enable=2
-		mot2.pid.enable=2
-		mot1.pid.target_speed=SpeedAvoid
-		mot2.pid.target_speed=SpeedAvoid
-		while i&lt;TimeAvoid do
-			i=i+1		
-		end
-		mot1.pid.target_speed=Mot1BefSensor
-		mot2.pid.target_speed=Mot2BefSensor
-	
-	elseif IR_front_right > ThreshSensor and IR_front_left > ThreshSensor then
-		i=0
-		emit Obstacle[IDControl]
-		mot1.pid.enable=2
-		mot2.pid.enable=2
-		mot1.pid.target_speed=-5
-		mot2.pid.target_speed=5
-		while i&lt;TimeAvoid do
-			i=i+1		
-		end
-		mot1.pid.target_speed=Mot1BefSensor
-		mot2.pid.target_speed=Mot2BefSensor	
-	end
-
-end
-
-
+#if ObstacleAvoidance==2 then
+#	Mot1BefSensor=mot1.pid.target_speed
+#	Mot2BefSensor=mot2.pid.target_speed
+#	if IR_front_left > ThreshSensor and IR_front_right &lt; ThreshSensor then
+#		i=0
+#		emit Obstacle[IDControl]
+#		mot1.pid.enable=2
+#		mot2.pid.enable=2
+#		mot1.pid.target_speed=-SpeedAvoid
+#		mot2.pid.target_speed=-SpeedAvoid
+#		while i&lt;TimeAvoid do
+#			i=i+1
+#		end
+#		mot1.pid.target_speed=Mot1BefSensor
+#		mot2.pid.target_speed=Mot2BefSensor
+#	elseif IR_front_right > ThreshSensor and IR_front_left &lt; ThreshSensor then
+#		i=0
+#		emit Obstacle[IDControl]
+#		mot1.pid.enable=2
+#		mot2.pid.enable=2
+#		mot1.pid.target_speed=SpeedAvoid
+#		mot2.pid.target_speed=SpeedAvoid
+#		while i&lt;TimeAvoid do
+#			i=i+1
+#		end
+#		mot1.pid.target_speed=Mot1BefSensor
+#		mot2.pid.target_speed=Mot2BefSensor
+#
+#	elseif IR_front_right > ThreshSensor and IR_front_left > ThreshSensor then
+#		i=0
+#		emit Obstacle[IDControl]
+#		mot1.pid.enable=2
+#		mot2.pid.enable=2
+#		mot1.pid.target_speed=-5
+#		mot2.pid.target_speed=5
+#		while i&lt;TimeAvoid do
+#			i=i+1
+#		end
+#		mot1.pid.target_speed=Mot1BefSensor
+#		mot2.pid.target_speed=Mot2BefSensor
+#	end
+#
+#end
 
 onevent SetObstacleAvoidanceFish_bot_C
 ObstacleAvoidance=event.args[0]
-
 </node>
 
 

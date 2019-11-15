@@ -4,7 +4,6 @@ set(srcs
     Obstacles.cpp
     RecoveryBehaviors.cpp
     TebConfig.cpp
-    TebLocalPlannerROS.cpp
     TebPlanner.cpp
     TebPlot.cpp
     TebVisualization.cpp
@@ -43,7 +42,6 @@ set(hdrs
     RecoveryBehaviors.hpp
     RobotFootprintModel.hpp
     TebConfig.hpp
-    TebLocalPlannerROS.hpp
     TebPlanner.hpp
     TebPlot.hpp
     TebVisualization.hpp

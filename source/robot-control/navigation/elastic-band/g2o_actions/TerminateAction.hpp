@@ -100,22 +100,37 @@ public:
             // Compute the improvement and stop the optimizer
             // in case the improvement is below the threshold
             // or we reached the maximum number of iterations
-            bool stopOptimizer = false;
-            if (params->iteration < _maxIterations) {
-                number_t currentChi = optimizer->activeRobustChi2();
-                number_t improvement = (_lastChi - currentChi) / _lastChi;
-                _lastChi = currentChi;
-                if (improvement >= 0 && improvement < _improvementThreshold) {
-                    stopOptimizer = true;
-                }
-            } else {
-                stopOptimizer = true;
-            }
-            if (stopOptimizer) { // Tell the optimizer to stop
+            if (isOptimizerStoppable(optimizer, params->iteration)) { // Tell the optimizer to stop
                 setOptimizerStopFlag(optimizer, true);
             }
         }
         return this;
+    }
+
+    bool isOptimizerStoppable(const SparseOptimizer* optimizer, const int iteration)
+    {
+        bool stopOptimizer = false;
+        if (iteration < _maxIterations) {
+            number_t currentChi = optimizer->activeRobustChi2();
+            number_t improvement = (_lastChi - currentChi) / _lastChi;
+            _lastChi = currentChi;
+            if (improvement >= 0 && improvement < _improvementThreshold) {
+                stopOptimizer = true;
+            }
+        } else {
+            stopOptimizer = true;
+        }
+        return stopOptimizer;
+    }
+
+    void setOptimizerStopFlag(const SparseOptimizer* optimizer, const bool stop)
+    {
+        if (optimizer->forceStopFlag()) {
+            *(optimizer->forceStopFlag()) = stop;
+        } else {
+            _auxTerminateFlag = stop;
+            const_cast<SparseOptimizer*>(optimizer)->setForceStopFlag(&_auxTerminateFlag);
+        }
     }
 
     number_t improvementThreshold() const {return _improvementThreshold;}
@@ -125,16 +140,6 @@ public:
     void setMaxIterations(int maxIterations) {_maxIterations = maxIterations;}
 
 protected:
-
-    void setOptimizerStopFlag(const SparseOptimizer* optimizer, bool stop)
-    {
-        if (optimizer->forceStopFlag()) {
-            *(optimizer->forceStopFlag()) = stop;
-        } else {
-            _auxTerminateFlag = stop;
-            const_cast<SparseOptimizer*>(optimizer)->setForceStopFlag(&_auxTerminateFlag);
-        }
-    }
 
     number_t _improvementThreshold;
     number_t _lastChi;

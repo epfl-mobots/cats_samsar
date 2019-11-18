@@ -39,6 +39,8 @@ public:
     QString name() const { return m_name; }
     //! Return the robot's id.
     QString id() const { return m_id; }
+    //! Return the robot's firmware id.
+    int firmwareId() const { return m_firmwareId; }
     //! Sets the robot's color
     void setLedColor(QColor color) { m_ledColor = color; }
 

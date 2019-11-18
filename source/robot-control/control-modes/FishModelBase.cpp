@@ -48,13 +48,20 @@ void FishModelBase::start()
  */
 ControlTargetPtr FishModelBase::step()
 {
+    const bool timeToUpdate = m_sim && m_targetUpdateTimer.isTimedOutSec(m_sim->dt);
+
     // if it's the time to update the model
-    if (m_sim && m_targetUpdateTimer.isTimedOutSec(m_sim->dt)) {
+    if (timeToUpdate) {
         m_targetPosition = computeTargetPosition();
         m_targetUpdateTimer.reset();
     }
 
     if (m_targetPosition.isValid()) {
+        if (!timeToUpdate) {
+            // do not resend previous commands
+            return ControlTargetPtr(nullptr);
+        }
+
         PositionMeters robotPosition = m_robot->state().position();
         QString status;
         if (m_parameters.ignoreFish)
@@ -65,6 +72,7 @@ ControlTargetPtr FishModelBase::step()
             status += QString(", dist. %1 m")
                           .arg(robotPosition.distance2dTo(m_targetPosition), 0, 'f', 3);
         }
+
         // TODO : temporary, to remove
         // check if the target position is inside the model area
         if (!containsPoint(m_targetPosition)) {
@@ -73,6 +81,7 @@ ControlTargetPtr FishModelBase::step()
         emit notifyControlModeStatus(status);
         return ControlTargetPtr(new TargetPosition(m_targetPosition));
     }
+
     // otherwise the robot doesn't move
     return ControlTargetPtr(new TargetSpeed(0, 0));
 }
@@ -131,49 +140,51 @@ PositionMeters FishModelBase::computeTargetPosition()
         m_sim->fishes[agentIndex].first->present = false;
     }
 
-    // update position of the robot in model
-    if (!m_parameters.ignoreRobot) {
-        PositionMeters robotPosition = m_robot->state().position();
-        OrientationRad robotOrientation = m_robot->state().orientation();
+    int robotIndex = m_robot->firmwareId();
+    if (m_sim->robots.size() > robotIndex && robotIndex >= 0) {
+        // update position of the robot in model
+        if (!m_parameters.ignoreRobot) {
+            PositionMeters robotPosition = m_robot->state().position();
+            OrientationRad robotOrientation = m_robot->state().orientation();
+            if (robotPosition.isValid() && containsPoint(robotPosition)) {
+                m_sim->robots[robotIndex].first->headPos.first = robotPosition.x() - minX();
+                m_sim->robots[robotIndex].first->headPos.second = robotPosition.y() - minY();
 
-        if (robotPosition.isValid() && containsPoint(robotPosition)) {
-            m_sim->robots[0].first->headPos.first = robotPosition.x() - minX();
-            m_sim->robots[0].first->headPos.second = robotPosition.y() - minY();
-
-            if (robotOrientation.isValid()) {
-                m_sim->robots[0].first->direction = robotOrientation.angleRad();
+                if (robotOrientation.isValid()) {
+                    m_sim->robots[robotIndex].first->direction = robotOrientation.angleRad();
+                }
+                else {
+                    m_sim->robots[robotIndex].first->direction = 0;
+                }
+                m_sim->robots[robotIndex].first->present = true;
             }
             else {
-                m_sim->robots[0].first->direction = 0;
+                qDebug() << "The robot position is outside of the setup "
+                            "area or invalid";
+                m_sim->robots[robotIndex].first->present = false;
             }
-            m_sim->robots[0].first->present = true;
         }
         else {
-            qDebug() << "The robot position is outside of the setup "
-                        "area or invalid";
-            m_sim->robots[0].first->present = false;
+            m_sim->robots[robotIndex].first->present = false;
         }
-    }
-    else {
-        m_sim->robots[0].first->present = false;
-    }
 
-    // run the simulation
-    m_sim->step();
-    // get the target value
-    if (m_sim->robots.size() > 0) { // we have only one robot so it is #0
+        // run the simulation
+        //m_sim->step();
+        m_sim->robots[robotIndex].second->step();
+
+        // get the target value
         targetPosition.setX(
             // (
-            m_sim->robots[0].first->headPos.first
-            // + m_sim->robots[0].first->tailPos.first) / 2.
+            m_sim->robots[robotIndex].first->headPos.first
+            // + m_sim->robots[robotIndex].first->tailPos.first) / 2.
             + minX());
         targetPosition.setY(
             // (
-            m_sim->robots[0].first->headPos.second
-            // + m_sim->robots[0].first->tailPos.second) / 2.
+            m_sim->robots[robotIndex].first->headPos.second
+            // + m_sim->robots[robotIndex].first->tailPos.second) / 2.
             + minY());
         targetPosition.setValid(true);
-        qDebug() << QString("New target is %1").arg(targetPosition.toString());
+        //qDebug() << QString("New target is %1").arg(targetPosition.toString());
     }
 
     return targetPosition;

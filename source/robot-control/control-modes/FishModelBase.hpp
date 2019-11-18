@@ -47,6 +47,9 @@ protected:
     //! Computes the target position from the model.
     PositionMeters computeTargetPosition();
 
+    //! Indicates wheter the target position is valid.
+    bool isTargetValid() {return m_targetPosition.isValid();}
+
 protected:
     //! The model related data.
     std::unique_ptr<Fishmodel::Arena> m_arena;

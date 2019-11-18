@@ -209,9 +209,6 @@ void Navigation::sendMotorCommands(Values commands)
         commands.append(commands.back());
     }
     commands.prepend(static_cast<qint16>(commands.size() / 2));
-    for (int i = 0; i < commands.size(); i++) {
-        qInfo() << "<<<<<<<<<<< COMMAND: #" << i << "=" << commands.at(i);
-    }
     m_robot->sendEvent(eventName, commands);
 }
 

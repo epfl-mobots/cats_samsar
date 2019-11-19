@@ -70,8 +70,19 @@ public:
     Velocity()
     {
         setZero();
-        _wheel_radius    = 1;
-        _wheel_distance  = 1;
+        _wheel_radius   = 1;
+        _wheel_distance = 1;
+    }
+
+    /**
+    * @brief Overloaded constructor with minimal parameters
+    * @param v translational velocity
+    * @param w rotational velocity in rad/s
+    * @param o orientation in rad
+    */
+    Velocity(const double v, const double w, const double o = 0)
+    {
+        VelocityRobot(1, 1, v, w, o);
     }
 
     /**

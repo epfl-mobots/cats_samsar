@@ -506,7 +506,7 @@ bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, const bool f
       dt = timestep_profile.back()->count() - sum_dt_manual;
     else
       dt = estimateDeltaT(BackPose(), goal, max_vel_x, max_vel_theta);
-    if (!fix_timediff_vertices || !fix_goal_pose_vertex)
+    if (fix_timediff_vertices || !fix_goal_pose_vertex)
     {
       addPose(goal, fix_goal_pose_vertex);
       addTimeDiff(dt, fix_timediff_vertices);

@@ -148,6 +148,8 @@ typedef std::vector<TimestampPtr> TimestampContainer;
 //! Abbrev. for containers storing multiple Timestamp instances
 typedef std::vector<Timestamp> TimestampVector;
 
+//! Abbrev. for types of Timestep
+typedef timestamp_t timestep_t;
 //! Abbrev. for instances of Timestep
 typedef Timestamp Timestep;
 //! Abbrev. for shared instances of Timestep

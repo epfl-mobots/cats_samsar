@@ -145,20 +145,34 @@ public:
     * @return const 3D pose (position and orientation)
     */
   const Eigen::Vector3d pose3d() const {return Eigen::Vector3d(_position[0], _position[1], _theta);}
-
+  
   /**
     * @brief Access the 2D position part
     * @see estimate
     * @return reference to the 2D position part
     */ 
   Eigen::Vector2d& position() {return _position;}
-
+  
   /**
     * @brief Access the 2D position part (read-only)
     * @see estimate
     * @return const reference to the 2D position part
     */ 
   const Eigen::Vector2d& position() const {return _position;}
+  
+  /**
+    * @brief Access the scalar orientation part
+    * @see estimate
+    * @return reference to the scalar orientatio part
+    */ 
+  double& orientation() {return _theta;}
+  
+  /**
+    * @brief Access the scalar orientatio part (read-only)
+    * @see estimate
+    * @return const reference to the scalar orientatio part
+    */ 
+  const double& orientation() const {return _theta;}
   
   /**
     * @brief Access the x-coordinate the pose

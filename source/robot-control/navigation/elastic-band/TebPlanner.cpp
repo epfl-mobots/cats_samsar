@@ -1165,6 +1165,13 @@ void TebPlanner::AddEdgesPreferRotDir()
   }
 }
 
+void TebPlanner::computeCurrentCost(const Trajectory* initial_plan, const double obst_cost_scale, const double viapoint_cost_scale, const bool alternative_time_cost)
+{
+  trajectory_ref_ = initial_plan;
+  computeCurrentCost(obst_cost_scale, viapoint_cost_scale, alternative_time_cost);
+  trajectory_ref_ = nullptr;
+}
+
 void TebPlanner::computeCurrentCost(double obst_cost_scale, double viapoint_cost_scale, bool alternative_time_cost)
 {
   // check if graph is empty/exist  -> important if function is called between buildGraph and optimizeGraph/clearGraph
@@ -1367,7 +1374,7 @@ void TebPlanner::getFullTrajectory(Trajectory& trajectory) const
   // timestep profile
   for (size_t i = 0; i < timestep_profile.size(); ++i)
   {
-    timestep_profile.at(i) = TimestepPtr(new Timestep(timestamp_t(teb_.TimeDiff(i))));
+    timestep_profile.at(i) = TimestepPtr(new Timestep(timestep_t(teb_.TimeDiff(i))));
   }
   // pose profile
   for (size_t i = 0; i < pose_profile.size(); ++i)

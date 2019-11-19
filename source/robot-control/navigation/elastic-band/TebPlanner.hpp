@@ -475,6 +475,28 @@ public:
   bool isOptimized() const {return optimized_;};
 	
   /**
+   * @brief Compute the cost vector of a given optimization problem with respect to a reference trajectory.
+   * 
+   * Use this method to obtain information about the current edge errors / costs (local cost functions). \n
+   * The vector of cost values is composed according to the different edge types (time_optimal, obstacles, ...). \n
+   * Refer to the method declaration for the detailed composition. \n
+   * The cost for the edges that minimize time differences (EdgeTimeOptimal) corresponds to the sum of all single
+   * squared time differneces: \f$ \sum_i \Delta T_i^2 \f$. Sometimes, the user may want to get a value that is proportional
+   * or identical to the actual trajectory transition time \f$ \sum_i \Delta T_i \f$. \n
+   * Set \c alternative_time_cost to true in order to get the cost calculated using the latter equation, but check the 
+   * implemented definition, if the value is scaled to match the magnitude of other cost values.
+   * 
+   * @see getCurrentCost
+   * @see optimizeTEB
+   * @param initial_plan Pointer to instance of the reference Trajectory.
+   * @param obst_cost_scale Specify extra scaling for obstacle costs.
+   * @param viapoint_cost_scale Specify extra scaling for via points.
+   * @param alternative_time_cost Replace the cost for the time optimal objective by the actual (weighted) transition time.
+   * @return TebCostVec containing the cost values
+   */
+  void computeCurrentCost(const Trajectory* = nullptr, const double obst_cost_scale = 1.0, const double viapoint_cost_scale = 1.0, const bool alternative_time_cost = false);
+  
+  /**
    * @brief Compute the cost vector of a given optimization problen (hyper-graph must exist).
    * 
    * Use this method to obtain information about the current edge errors / costs (local cost functions). \n

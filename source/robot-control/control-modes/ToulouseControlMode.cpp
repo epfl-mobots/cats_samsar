@@ -36,8 +36,7 @@ void ToulouseControlMode::updateModelParameters()
         tm->perceived_agents = fishModelSettings.rummyFishModelSettings.perceived_agents;
         tm->gamma_rand = fishModelSettings.rummyFishModelSettings.gamma_rand;
         tm->gamma_wall = fishModelSettings.rummyFishModelSettings.gamma_wall;
-        tm->wall_interaction_range
-            = fishModelSettings.rummyFishModelSettings.wall_interaction_range;
+        tm->wall_interaction_range = fishModelSettings.rummyFishModelSettings.wall_interaction_range;
         tm->body_length = fishModelSettings.rummyFishModelSettings.body_length;
 
         tm->alpha = fishModelSettings.rummyFishModelSettings.alpha;
@@ -48,6 +47,8 @@ void ToulouseControlMode::updateModelParameters()
 
         tm->id() = id_count++;
 
+        tm->robot() = m_robot;
+
         tm->reinit();
     }
 }
@@ -56,15 +57,12 @@ void ToulouseControlMode::resetModel()
 {
     if (!m_currentGrid.empty()) {
         // size of the area covered by the matrix
-        Fishmodel::Coord_t size
-            = {m_currentGrid.cols * m_gridSizeMeters, m_currentGrid.rows * m_gridSizeMeters};
+        Fishmodel::Coord_t size = {m_currentGrid.cols * m_gridSizeMeters, m_currentGrid.rows * m_gridSizeMeters};
         // create the arena
         m_arena.reset(new Fishmodel::Arena(m_currentGrid, size));
         Fishmodel::EpflSimulationFactory factory(*m_arena);
         factory.nbFishes = static_cast<size_t>(RobotControlSettings::get().numberOfAnimals());
-        factory.nbRobots = static_cast<size_t>(
-            RobotControlSettings::get()
-                .numberOfRobots()); // we generate one simulator for every robot
+        factory.nbRobots = static_cast<size_t>(RobotControlSettings::get().numberOfRobots()); // we generate one simulator for every robot
         factory.nbVirtuals = 0;
         factory.behaviorFishes = "TM";
         factory.behaviorRobots = "TM";

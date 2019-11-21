@@ -343,6 +343,11 @@ void TebPlanner::setVelocityGoal(const geometry_msgs::Twist& vel_goal)
   vel_goal_.second = vel_goal;
 }
 
+bool TebPlanner::plan(const std::vector<TrajectoryPtr>& initial_plan, const bool fix_timediff_vertices, const bool fix_pose_vertices, const bool fix_goal_pose_vertex, const bool free_goal_vel, const Velocity* start_vel)
+{
+  
+}
+
 bool TebPlanner::plan(const Trajectory& initial_plan, const bool fix_timediff_vertices, const bool fix_pose_vertices, const bool fix_goal_pose_vertex, const bool free_goal_vel, const Velocity* start_vel)
 {
   ROS_ASSERT_MSG(initialized_, "Call initialize() first.");
@@ -1357,6 +1362,11 @@ void TebPlanner::getVelocityProfile(std::vector<geometry_msgs::Twist>& velocity_
   velocity_profile.back().linear.x = vel_goal_.second.linear.x;
   velocity_profile.back().linear.y = vel_goal_.second.linear.y;
   velocity_profile.back().angular.z = vel_goal_.second.angular.z;
+}
+
+void TebPlanner::getFullTrajectory(std::vector<TrajectoryPtr>& trajectory) const
+{
+  
 }
 
 void TebPlanner::getFullTrajectory(Trajectory& trajectory) const

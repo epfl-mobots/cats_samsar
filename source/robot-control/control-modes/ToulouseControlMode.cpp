@@ -84,9 +84,11 @@ void ToulouseControlMode::resetModel()
 ControlTargetPtr ToulouseControlMode::step()
 {
     ControlTargetPtr target = FishModelBase::step();
+    Fishmodel::ToulouseModel* robot = reinterpret_cast<Fishmodel::ToulouseModel*>(m_sim->robots[m_robot->firmwareId()].second);
+    robot->to_be_optimized() = true;
     if (!target.isNull() && isTargetValid()) {
         Values speedsL, speedsR;
-        const QList<double> speeds = reinterpret_cast<Fishmodel::ToulouseModel*>(m_sim->robots[m_robot->firmwareId()].second)->getSpeedCommands();
+        const QList<double> speeds = robot->getSpeedCommands();
         for (int i = 0; i < speeds.size(); i++) {
             const qint16 speed = static_cast<qint16>(std::round(speeds.at(i)));
             if (i % 2 == 0) {

@@ -154,6 +154,28 @@ public:
   //@{
   
   /**
+   * @brief Plan a trajectory for multiple agents based on an initial reference plan.
+   * 
+   * Call this method to create and optimize a trajectory that is initialized
+   * according to an initial reference plan (given as a container of points,
+   * each point possessing a pose, a velocity, an acceleration and a timestamp). \n
+   * The method supports hot-starting from previous solutions, if avaiable: \n
+   * 	- If no trajectory exists yet, a new trajectory is initialized based on the initial plan,
+   *	  see TimedElasticBand::initTrajectoryToGoal
+   * 	- If a previous solution is available, update the trajectory based on the initial plan,
+   * 	  see TimedElasticBand::updateAndPruneTEB
+   * 	- Afterwards optimize the recently initialized or updated trajectory by calling optimizeTEB() and invoking g2o
+   * @param initial_plan vector of instances of TrajectoryPtr
+   * @param fix_timediff_vertices if \c true, fix all time difference vertices during optimization
+   * @param fix_pose_vertices if \c true, fix all pose vertices during optimization
+   * @param fix_goal_pose_vertex if \c true, fix the goal pose vertex during optimization (overriding \c fix_pose_vertices for this specific pose)
+   * @param free_goal_vel if \c true, a nonzero final velocity at the goal pose is allowed, otherwise the final velocity will be \c vel_goal_, which is by default zero (/!\ default: true)
+   * @param start_vel current start velocity (e.g. the velocity of the robot, only translational (nonholonomic) and rotational components are used)
+   * @return \c true if planning was successful, \c false otherwise
+   */
+  virtual bool plan(const std::vector<TrajectoryPtr>& initial_plan, const bool fix_timediff_vertices = false, const bool fix_pose_vertices = false, const bool fix_goal_pose_vertex = true, const bool free_goal_vel = true, const Velocity* start_vel = NULL);
+  
+  /**
    * @brief Plan a trajectory based on an initial reference plan.
    * 
    * Call this method to create and optimize a trajectory that is initialized
@@ -596,6 +618,23 @@ public:
    * @param[out] velocity_profile velocity profile will be written to this vector (after clearing any existing content) with the size=no_poses+1
    */
   void getVelocityProfile(std::vector<geometry_msgs::Twist>& velocity_profile) const;
+  
+  /**
+   * @brief Return the complete trajectory of multiple agents including pose, velocity, acceleration, and timestamp profiles
+   * 
+   * It is useful for evaluation and debugging purposes or for open-loop control.
+   * Since the velocity obtained using difference quotients is the mean velocity between consecutive poses,
+   * the velocity at each pose at time step k is obtained by taking the average between both velocities.
+   * Similarly, the acceleration is computed as the average between two consecutive velocities.
+   * The start and goal velocities are not included because they are only used to contrain the acceleration during optimization.
+   * Usually, either the start and goal velocities are equal to the first and last components of the trajectory,
+   * or the start velocity corresponds to the previously/currently applied velocity and the goal velocity can been treated separately.
+   * Thus the next velocity command is in fact the average between the first two poses, so the start and goal velocities are not relevant.
+   * Therefore the start and goal velocities are not returned, especially since they are already known (as provided) by the user.
+   * Call getVelocityProfile() to get the full list of velocities between consecutive points as well as start and goal velocities.
+   * @param[out] trajectory the resulting trajectory
+   */
+  void getFullTrajectory(std::vector<TrajectoryPtr>& trajectory) const;
   
   /**
    * @brief Return the complete trajectory including pose, velocity, acceleration, and timestamp profiles

@@ -85,7 +85,6 @@ ControlTargetPtr ToulouseControlMode::step()
 {
     ControlTargetPtr target = FishModelBase::step();
     Fishmodel::ToulouseModel* robot = reinterpret_cast<Fishmodel::ToulouseModel*>(m_sim->robots[m_robot->firmwareId()].second);
-    robot->to_be_optimized() = true;
     if (!target.isNull() && isTargetValid()) {
         Values speedsL, speedsR;
         const QList<double> speeds = robot->getSpeedCommands();
@@ -99,6 +98,8 @@ ControlTargetPtr ToulouseControlMode::step()
         }
         target.reset(new TargetSpeeds(speedsL, speedsR));
     }
+    robot->has_stepped() = false;
+    robot->to_be_optimized() = true;
     return target;
 }
 

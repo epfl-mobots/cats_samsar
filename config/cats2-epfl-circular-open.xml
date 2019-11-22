@@ -22,7 +22,7 @@
                 <varSpeed>0.51</varSpeed>
             </agent>
             <simulation>
-                <dt>0.1</dt>
+                <dt>0</dt>
             </simulation>
     
             <Toulouse>

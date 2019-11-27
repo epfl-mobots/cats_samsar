@@ -356,6 +356,8 @@ bool TebPlanner::plan(const std::vector<TrajectoryPtr>& initial_plan, const bool
 bool TebPlanner::plan(const Trajectory& initial_plan, const bool fix_timediff_vertices, const bool fix_pose_vertices, const bool fix_goal_pose_vertex, const bool free_goal_vel, const Velocity* start_vel)
 {
   ROS_ASSERT_MSG(initialized_, "Call initialize() first.");
+  if (initial_plan.trajectory().empty())
+    return false;
   trajectory_ref_ = &initial_plan;
   if (!teb_.isInit())
   {
@@ -1369,12 +1371,12 @@ void TebPlanner::getVelocityProfile(std::vector<geometry_msgs::Twist>& velocity_
   velocity_profile.back().angular.z = vel_goal_.second.angular.z;
 }
 
-void TebPlanner::getFullTrajectory(std::vector<TrajectoryPtr>& trajectory) const
+void TebPlanner::getFullTrajectory(std::vector<TrajectoryPtr>& trajectories, std::vector<Timestamp> timestamps) const
 {
   
 }
 
-void TebPlanner::getFullTrajectory(Trajectory& trajectory) const
+void TebPlanner::getFullTrajectory(Trajectory& trajectory, Timestamp timestamp) const
 {
   const size_t n = teb_.sizePoses();
 
@@ -1398,7 +1400,7 @@ void TebPlanner::getFullTrajectory(Trajectory& trajectory) const
   }
 
   // insert timestep and pose profiles (velocity and acceleration profiles are computed automatically)
-  trajectory.setProfileTimestep(timestep_profile, false);
+  trajectory.setProfileTimestep(timestep_profile, timestamp, false);
   trajectory.setProfilePose(pose_profile);
 }
 

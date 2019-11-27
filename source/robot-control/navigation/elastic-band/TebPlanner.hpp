@@ -634,9 +634,10 @@ public:
    * Thus the next velocity command is in fact the average between the first two poses, so the start and goal velocities are not relevant.
    * Therefore the start and goal velocities are not returned, especially since they are already known (as provided) by the user.
    * Call getVelocityProfile() to get the full list of velocities between consecutive points as well as start and goal velocities.
-   * @param[out] trajectory the resulting trajectory
+   * @param timestamps the initial timestamps of the trajectories
+   * @param[out] trajectories the resulting trajectories
    */
-  void getFullTrajectory(std::vector<TrajectoryPtr>& trajectory) const;
+  void getFullTrajectory(std::vector<TrajectoryPtr>& trajectories, std::vector<Timestamp> timestamps = std::vector<Timestamp>{}) const;
   
   /**
    * @brief Return the complete trajectory including pose, velocity, acceleration, and timestamp profiles
@@ -651,9 +652,10 @@ public:
    * Thus the next velocity command is in fact the average between the first two poses, so the start and goal velocities are not relevant.
    * Therefore the start and goal velocities are not returned, especially since they are already known (as provided) by the user.
    * Call getVelocityProfile() to get the full list of velocities between consecutive points as well as start and goal velocities.
+   * @param timestamp the initial timestamp of the trajectory
    * @param[out] trajectory the resulting trajectory
    */
-  void getFullTrajectory(Trajectory& trajectory) const;
+  void getFullTrajectory(Trajectory& trajectory, Timestamp timestamp = Timestamp::zero()) const;
   
   /**
    * @brief Return the complete trajectory including poses, velocity profiles and temporal information

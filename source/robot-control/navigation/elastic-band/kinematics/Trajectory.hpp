@@ -514,12 +514,13 @@ public:
     /**
     * @brief Modify the timestep profile
     * @param profile vector of milliseconds constituting the timestep profile
+    * @param initial initial timestamp in the series of the timestamp profile
     * @param update whether to update the other trajectory profiles
     */
-    void setProfileTimestep(const TimestepContainer profile, const bool update = true)
+    void setProfileTimestep(const TimestepContainer profile, const Timestamp initial = Timestamp::zero(), const bool update = true)
     {
         resize(profile.size() + 1);
-        _trajectory.front()->timestamp() = Timestamp::zero();
+        _trajectory.front()->timestamp() = initial;
         for (size_t i = 0; i < profile.size(); i++) {
             _trajectory.at(i+1)->timestamp() = *profile.at(i) + _trajectory.at(i)->timestamp();
         }

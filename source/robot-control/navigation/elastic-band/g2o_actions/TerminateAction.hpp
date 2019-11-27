@@ -52,6 +52,7 @@
 #include <g2o/core/hyper_graph_action.h>
 
 #include <limits>
+#include <chrono>
 
 namespace elastic_band
 {
@@ -62,8 +63,11 @@ using namespace g2o;
  * \brief Stop iterating based on the improvement which is (oldChi - currentChi) / oldChi.
  *
  * Adapted from g2o::SparseOptimizerTerminateAction where the gain (oldChi - currentChi) / currentChi
- * is replaced by the (bounded and normalized) percent improvement (oldChi - currentChi) / oldChi.
- * If the improvement is larger than zero and below the threshold, then the optimizer is stopped.
+ * is replaced by the (bounded and normalized) percent improvement (oldChi - currentChi) / oldChi
+ * and the end conditions additionally include a timeout with the resolution of a microsecond.
+ * If the improvement  is larger than zero and below the associated threshold, or
+ * if the elapsed time is larger than zero and above the associated threshold, or
+ * if the maximum number of iterations is reached, then the optimizer is stopped.
  * Typical usage of this action includes adding it as a postIteration action,
  * by calling addPostIterationAction on a sparse optimizer.
  */
@@ -74,9 +78,11 @@ public:
     TerminateAction() :
         HyperGraphAction(),
         _improvementThreshold(cst(1e-6)),
+        _timeoutThreshold(0),
         _lastChi(0),
         _auxTerminateFlag(false),
-        _maxIterations(std::numeric_limits<int>::max())
+        _maxIterations(std::numeric_limits<int>::max()),
+        _startingTime(std::chrono::system_clock::now())
     {
     }
 
@@ -100,6 +106,7 @@ public:
             // Compute the improvement and stop the optimizer
             // in case the improvement is below the threshold
             // or we reached the maximum number of iterations
+            // or the allocated task budget has been exhausted
             if (isOptimizerStoppable(optimizer, params->iteration)) { // Tell the optimizer to stop
                 setOptimizerStopFlag(optimizer, true);
             }
@@ -111,11 +118,17 @@ public:
     {
         bool stopOptimizer = false;
         if (iteration < _maxIterations) {
-            number_t currentChi = optimizer->activeRobustChi2();
-            number_t improvement = (_lastChi - currentChi) / _lastChi;
+            const number_t currentChi = optimizer->activeRobustChi2();
+            const number_t improvement = (_lastChi - currentChi) / _lastChi;
             _lastChi = currentChi;
             if (improvement >= 0 && improvement < _improvementThreshold) {
                 stopOptimizer = true;
+            } else if (_timeoutThreshold > 0) {
+                const std::chrono::time_point<std::chrono::system_clock> currentTime = std::chrono::system_clock::now();
+                const number_t elapsedTime = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - _startingTime).count();
+                if (elapsedTime >= 0 && elapsedTime > _timeoutThreshold) {
+                    stopOptimizer = true;
+                }
             }
         } else {
             stopOptimizer = true;
@@ -136,15 +149,22 @@ public:
     number_t improvementThreshold() const {return _improvementThreshold;}
     void setImprovementThreshold(number_t improvementThreshold) {_improvementThreshold = improvementThreshold;}
 
+    number_t timeoutThreshold() const {return _timeoutThreshold;}
+    void setTimeoutThreshold(number_t timeoutThreshold) {_timeoutThreshold = timeoutThreshold;}
+
     int maxIterations() const {return _maxIterations;}
     void setMaxIterations(int maxIterations) {_maxIterations = maxIterations;}
+
+    void resetTimer() {_startingTime = std::chrono::system_clock::now();}
 
 protected:
 
     number_t _improvementThreshold;
+    number_t _timeoutThreshold;
     number_t _lastChi;
     bool _auxTerminateFlag;
     int _maxIterations;
+    std::chrono::time_point<std::chrono::system_clock> _startingTime;
 };
 
 } // namespace elastic_band

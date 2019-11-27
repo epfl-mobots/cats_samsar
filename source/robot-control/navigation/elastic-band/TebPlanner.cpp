@@ -183,7 +183,7 @@ void removeOptimizerTerminateAction(SparseOptimizer* optimizer, TerminateAction*
 }
 }
 
-bool TebPlanner::optimizeTEB(int iterations_innerloop, int iterations_outerloop, int end_condition_threshold,
+bool TebPlanner::optimizeTEB(int iterations_innerloop, int iterations_outerloop, int end_condition_improvement, int end_condition_timeout,
                              double obst_cost_scale, double viapoint_cost_scale, bool compute_cost_afterwards, bool alternative_time_cost)
 {
   if (!optimizer_ || !cfg_->optim.optimization_activate)
@@ -200,8 +200,9 @@ bool TebPlanner::optimizeTEB(int iterations_innerloop, int iterations_outerloop,
   //                 the legacy fast mode as default until we finish our tests.
   bool fast_mode = !cfg_->obstacles.include_dynamic_obstacles;
 
-  // Convert threshold from percentage to actual value
-  double improvement_threshold = end_condition_threshold / 100.;
+  // Convert thresholds to actual values
+  double threshold_improvement = end_condition_improvement / 100.;
+  double threshold_timeout = static_cast<double>(end_condition_timeout);
 
   // If no resizing is needed, optimize the graph all at once
   if (!cfg_->trajectory.teb_autosize)
@@ -210,18 +211,22 @@ bool TebPlanner::optimizeTEB(int iterations_innerloop, int iterations_outerloop,
     iterations_outerloop = 1;
   }
 
-  // Set the custom terminate action with improvement as end condition
-  TerminateAction* resizingAction;
+  // Set the custom terminate action with improvement and timeout as end conditions
+  TerminateAction* resizingAction = nullptr;
   TerminateAction* terminateAction = new TerminateAction();
-  terminateAction->setImprovementThreshold(improvement_threshold);
+  terminateAction->setImprovementThreshold(threshold_improvement);
+  terminateAction->setTimeoutThreshold(threshold_timeout);
   terminateAction->setMaxIterations(iterations_innerloop);
-  optimizer_->addPostIterationAction(terminateAction);
+  terminateAction->resetTimer();
   if (iterations_outerloop > 1)
   {
     resizingAction = new TerminateAction();
-    resizingAction->setImprovementThreshold(improvement_threshold);
+    resizingAction->setImprovementThreshold(threshold_improvement);
+    resizingAction->setTimeoutThreshold(threshold_timeout);
     resizingAction->setMaxIterations(iterations_outerloop);
+    resizingAction->resetTimer();
   }
+  optimizer_->addPostIterationAction(terminateAction);
 
   for (int i = 0; i < iterations_outerloop; ++i)
   {
@@ -378,7 +383,7 @@ bool TebPlanner::plan(const Trajectory& initial_plan, const bool fix_timediff_ve
     vel_goal_.first = true; // we just reactivate and use the previously set velocity (should be zero if nothing was modified)
 
   // now optimize
-  bool success = optimizeTEB(cfg_->optim.no_inner_iterations, cfg_->optim.no_outer_iterations, cfg_->optim.stop_below_percentage_improvement);
+  bool success = optimizeTEB(cfg_->optim.no_inner_iterations, cfg_->optim.no_outer_iterations, cfg_->optim.stop_below_percentage_improvement, cfg_->optim.stop_after_elapsed_time_microsecs);
   trajectory_ref_ = nullptr;
   return success;
 }

@@ -279,12 +279,14 @@ public:
    * The ratio of inner and outer loop iterations significantly defines the contraction behavior
    * and convergence rate of the trajectory optimization. Based on our experiences, 2-6 innerloop iterations are sufficient. \n
    * The number of outer loop iterations should be determined by considering the maximum CPU time required to match the control rate. \n
-   * Moreover, the optimizer can be stopped when the cost improvement does not exceed \c end_condition_threshold between consecutive iterations. \n
+   * Moreover, the optimizer can be stopped when the cost improvement does not exceed \c end_condition_improvement between consecutive iterations,
+   * or when the total elapsed time of the optimization process exceeds \c end_condition_timeout given as a time interval in microseconds. \n
    * Optionally, the cost vector can be calculated by specifying \c compute_cost_afterwards, see computeCurrentCost().
    * @remarks This method is usually called from a plan() method
    * @param iterations_innerloop Number of iterations for the actual solver loop
    * @param iterations_outerloop Specifies how often the trajectory should be resized followed by the inner solver loop.
-   * @param end_condition_threshold Percentage of improvement below which the optimization is automatically stopped.
+   * @param end_condition_improvement Percentage of improvement below which the optimization is automatically stopped.
+   * @param end_condition_timeout Microseconds of timeout after which the optimization is automatically stopped.
    * @param obst_cost_scale Specify extra scaling for obstacle costs (only used if \c compute_cost_afterwards is true)
    * @param viapoint_cost_scale Specify extra scaling for via-point costs (only used if \c compute_cost_afterwards is true)
    * @param compute_cost_afterwards If \c true, calculate the cost vector according to computeCurrentCost(),
@@ -293,7 +295,7 @@ public:
    *                              (only used if \c compute_cost_afterwards is true).
    * @return \c true if the optimization terminates successfully, \c false otherwise
    */
-  bool optimizeTEB(int iterations_innerloop, int iterations_outerloop, int end_condition_threshold,
+  bool optimizeTEB(int iterations_innerloop, int iterations_outerloop, int end_condition_improvement, int end_condition_timeout,
                    double obst_cost_scale = 1.0, double viapoint_cost_scale = 1.0, bool compute_cost_afterwards = false, bool alternative_time_cost = false);
 
   /**

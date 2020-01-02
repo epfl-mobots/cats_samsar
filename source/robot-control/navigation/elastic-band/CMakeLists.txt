@@ -11,6 +11,7 @@ set(srcs
 )
 
 set(hdrs
+    g2o_actions/OrientateAction.hpp
     g2o_actions/TerminateAction.hpp
     g2o_types/BaseTebEdges.hpp
     g2o_types/EdgeAcceleration.hpp

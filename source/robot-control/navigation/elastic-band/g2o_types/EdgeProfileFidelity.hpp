@@ -115,8 +115,8 @@ public:
     }
     double vel = dist / dt;
 
-    // vel *= g2o::sign(deltaS[0] * std::cos(conf1->theta()) + deltaS[1] * std::sin(conf1->theta())); // consider direction
-    vel *= fast_sigmoid(100 * (deltaS.x() * std::cos(conf1->theta()) + deltaS.y() * std::sin(conf1->theta()))); // consider direction
+    vel *= g2o::sign(deltaS[0] * std::cos(conf1->theta()) + deltaS[1] * std::sin(conf1->theta())); // consider direction
+    // vel *= fast_sigmoid(100 * (deltaS.x() * std::cos(conf1->theta()) + deltaS.y() * std::sin(conf1->theta()))); // consider direction
 
     const double omega = angle_diff / dt;
 

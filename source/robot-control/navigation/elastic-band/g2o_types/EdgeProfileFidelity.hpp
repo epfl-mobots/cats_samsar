@@ -50,6 +50,8 @@
 #include <elastic-band/g2o_types/BaseTebEdges.hpp>
 #include <elastic-band/g2o_types/VertexPose.hpp>
 #include <elastic-band/g2o_types/VertexTimeDiff.hpp>
+#include <elastic-band/kinematics/Timestamp.hpp>
+#include <elastic-band/kinematics/Velocity.hpp>
 #include <elastic-band/TebConfig.hpp>
 
 #include <iostream>

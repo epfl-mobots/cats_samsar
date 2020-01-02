@@ -42,6 +42,8 @@
 #ifndef _ACCELERATION_HPP_
 #define _ACCELERATION_HPP_
 
+#include <g2o/stuff/misc.h>
+
 #include <Eigen/Core>
 
 namespace elastic_band

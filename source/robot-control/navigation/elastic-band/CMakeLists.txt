@@ -1,18 +1,9 @@
-set(srcs
-    GraphSearchInterface.cpp
-    HomotopyClassPlanner.cpp
-    Obstacles.cpp
-    RecoveryBehaviors.cpp
-    TebConfig.cpp
-    TebPlanner.cpp
-    TebPlot.cpp
-    TebVisualization.cpp
-    TimedElasticBand.cpp
-)
-
-set(hdrs
+set(hdrs_g2o_actions
     g2o_actions/OrientateAction.hpp
     g2o_actions/TerminateAction.hpp
+)
+
+set(hdrs_g2o_types
     g2o_types/BaseTebEdges.hpp
     g2o_types/EdgeAcceleration.hpp
     g2o_types/EdgeDynamicObstacle.hpp
@@ -27,11 +18,20 @@ set(hdrs
     g2o_types/Penalties.hpp
     g2o_types/VertexPose.hpp
     g2o_types/VertexTimeDiff.hpp
+)
+
+set(hdrs_kinematics
     kinematics/Acceleration.hpp
     kinematics/PoseSE2.hpp
     kinematics/Timestamp.hpp
     kinematics/Trajectory.hpp
     kinematics/Velocity.hpp
+)
+
+set(hdrs
+  ${hdrs_g2o_actions}
+  ${hdrs_g2o_types}
+  ${hdrs_kinematics}
     Distances.hpp
     EquivalenceClass.hpp
     GraphSearchInterface.hpp
@@ -47,6 +47,29 @@ set(hdrs
     TebPlot.hpp
     TebVisualization.hpp
     TimedElasticBand.hpp
+)
+
+set(srcs_g2o_actions)
+
+set(srcs_g2o_types
+    g2o_types/CustomTypes.cpp
+)
+
+set(srcs_kinematics)
+
+set(srcs
+  ${srcs_g2o_actions}
+  ${srcs_g2o_types}
+  ${srcs_kinematics}
+    GraphSearchInterface.cpp
+    HomotopyClassPlanner.cpp
+    Obstacles.cpp
+    RecoveryBehaviors.cpp
+    TebConfig.cpp
+    TebPlanner.cpp
+    TebPlot.cpp
+    TebVisualization.cpp
+    TimedElasticBand.cpp
 )
 
 set(ros /opt/ros/kinetic)
@@ -85,8 +108,14 @@ list(APPEND EXTERNAL_LIBS Qt5::Widgets Qt5::Charts)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 
-set(lib elastic-band)
+set(lib g2o_custom_types)
+add_library               (${lib}        SHARED ${srcs_g2o_types} ${hdrs_g2o_types})
+target_include_directories(${lib} SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/g2o_types)
+target_include_directories(${lib} SYSTEM PUBLIC ${EXTERNAL_INCLUDE_DIRS})
+target_link_libraries     (${lib}        PUBLIC ${EXTERNAL_LIBS} -fsanitize=address)
+target_compile_options    (${lib}        PUBLIC                  -std=c++14)
 
+set(lib elastic-band)
 add_library               (${lib}        SHARED ${srcs} ${hdrs})
 target_include_directories(${lib} SYSTEM PUBLIC ${EXTERNAL_INCLUDE_DIRS})
 target_link_libraries     (${lib}        PUBLIC ${EXTERNAL_LIBS} -fsanitize=address)

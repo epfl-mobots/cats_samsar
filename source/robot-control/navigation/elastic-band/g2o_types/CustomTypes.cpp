@@ -46,7 +46,9 @@
 
 #include <elastic-band/g2o_types/EdgeAcceleration.hpp>
 #include <elastic-band/g2o_types/EdgeDynamicObstacle.hpp>
+#include <elastic-band/g2o_types/EdgeDynamics.hpp>
 #include <elastic-band/g2o_types/EdgeKinematics.hpp>
+#include <elastic-band/g2o_types/EdgeNeighbor.hpp>
 #include <elastic-band/g2o_types/EdgeObstacle.hpp>
 #include <elastic-band/g2o_types/EdgePreferRotDir.hpp>
 #include <elastic-band/g2o_types/EdgeProfileFidelity.hpp>
@@ -75,10 +77,14 @@ G2O_REGISTER_TYPE(EDGE_ACCELERATION_GOAL, EdgeAccelerationGoal);
 G2O_REGISTER_TYPE(EDGE_ACCELERATION_HOLONOMIC, EdgeAccelerationHolonomic);
 G2O_REGISTER_TYPE(EDGE_ACCELERATION_HOLONOMIC_START, EdgeAccelerationHolonomicStart);
 G2O_REGISTER_TYPE(EDGE_ACCELERATION_HOLONOMIC_GOAL, EdgeAccelerationHolonomicGoal);
+G2O_REGISTER_TYPE(EDGE_DYNAMICS, EdgeDynamics);
+G2O_REGISTER_TYPE(EDGE_DYNAMICS_HOLONOMIC, EdgeDynamicsHolonomic);
 G2O_REGISTER_TYPE(EDGE_KINEMATICS_DIFF_DRIVE, EdgeKinematicsDiffDrive);
 G2O_REGISTER_TYPE(EDGE_KINEMATICS_CARLIKE, EdgeKinematicsCarlike);
+G2O_REGISTER_TYPE(EDGE_NEIGHBOR, EdgeNeighbor);
 G2O_REGISTER_TYPE(EDGE_OBSTACLE, EdgeObstacle);
 G2O_REGISTER_TYPE(EDGE_INFLATED_OBSTACLE, EdgeInflatedObstacle);
+G2O_REGISTER_TYPE(EDGE_INFLUENTIAL_OBSTACLE, EdgeInfluentialObstacle);
 G2O_REGISTER_TYPE(EDGE_DYNAMIC_OBSTACLE, EdgeDynamicObstacle);
 G2O_REGISTER_TYPE(EDGE_VIA_POINT, EdgeViaPoint);
 G2O_REGISTER_TYPE(EDGE_PREFER_ROTDIR, EdgePreferRotDir);

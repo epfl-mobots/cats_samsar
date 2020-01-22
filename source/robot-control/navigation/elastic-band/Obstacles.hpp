@@ -591,6 +591,110 @@ public:
 };
 
 /**
+ * @class AnnularObstacle
+ * @brief Implements a 2D annular obstacle (point obstacle plus circumscribed radius)
+ */
+class AnnularObstacle : public CircularObstacle
+{
+public:
+
+  /**
+    * @brief Default constructor of the annular obstacle class
+    */
+  AnnularObstacle() : CircularObstacle()
+  {}
+
+  /**
+    * @brief Construct AnnularObstacle using a 2d center position vector and radius
+    * @param position 2d position that defines the current obstacle position
+    * @param radius radius of the obstacle
+    */
+  AnnularObstacle(const Eigen::Ref< const Eigen::Vector2d>& position, double radius) : CircularObstacle(position, radius)
+  {}
+
+  /**
+    * @brief Construct AnnularObstacle using x- and y-center-coordinates and radius
+    * @param x x-coordinate
+    * @param y y-coordinate
+    * @param radius radius of the obstacle
+    */
+  AnnularObstacle(double x, double y, double radius) : CircularObstacle(x, y, radius)
+  {}
+
+
+  // implements checkCollision() of the base class
+  virtual bool checkCollision(const Eigen::Vector2d& point, double min_dist) const
+  {
+      return getMinimumDistance(point) < min_dist;
+  }
+
+
+  // implements checkLineIntersection() of the base class
+  virtual bool checkLineIntersection(const Eigen::Vector2d& line_start, const Eigen::Vector2d& line_end, double min_dist=0) const
+  {
+      // Distance Line - Circle
+      // refer to http://www.spieleprogrammierer.de/wiki/2D-Kollisionserkennung#Kollision_Kreis-Strecke
+      Eigen::Vector2d a = line_end-line_start; // not normalized!  a=y-x
+      Eigen::Vector2d b = pos_-line_start; // b=m-x
+
+      // Now find nearest point to circle v=x+a*t with t=a*b/(a*a) and bound to 0<=t<=1
+      double t = a.dot(b)/a.dot(a);
+      if (t<0) t=0; // bound t (since a is not normalized, t can be scaled between 0 and 1 to parametrize the line
+      else if (t>1) t=1;
+      Eigen::Vector2d nearest_point = line_start + a*t;
+
+      // check collision
+      return checkCollision(nearest_point, min_dist);
+  }
+
+
+  // implements getMinimumDistance() of the base class
+  virtual double getMinimumDistance(const Eigen::Vector2d& position) const
+  {
+    return radius_ - (position-pos_).norm();
+  }
+
+  // implements getMinimumDistance() of the base class
+  virtual double getMinimumDistance(const Eigen::Vector2d& line_start, const Eigen::Vector2d& line_end) const
+  {
+    return radius_ - max_distance_point_to_segment_2d(pos_, line_start, line_end);
+  }
+
+  // implements getMinimumDistance() of the base class
+  virtual double getMinimumDistance(const Point2dContainer& polygon) const
+  {
+    return radius_ - max_distance_point_to_polygon_2d(pos_, polygon);
+  }
+
+  // implements getMinimumDistanceVec() of the base class
+  virtual Eigen::Vector2d getClosestPoint(const Eigen::Vector2d& position) const
+  {
+    return pos_ + radius_*(position-pos_).normalized();
+  }
+
+  // implements getMinimumSpatioTemporalDistance() of the base class
+  virtual double getMinimumSpatioTemporalDistance(const Eigen::Vector2d& position, double t) const
+  {
+    return radius_ - (pos_ + t*centroid_velocity_ - position).norm();
+  }
+
+  // implements getMinimumSpatioTemporalDistance() of the base class
+  virtual double getMinimumSpatioTemporalDistance(const Eigen::Vector2d& line_start, const Eigen::Vector2d& line_end, double t) const
+  {
+    return radius_ - max_distance_point_to_segment_2d(pos_ + t*centroid_velocity_, line_start, line_end);
+  }
+
+  // implements getMinimumSpatioTemporalDistance() of the base class
+  virtual double getMinimumSpatioTemporalDistance(const Point2dContainer& polygon, double t) const
+  {
+    return radius_ - max_distance_point_to_polygon_2d(pos_ + t*centroid_velocity_, polygon);
+  }
+
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+};
+
+/**
 * @class LineObstacle
 * @brief Implements a 2D line obstacle
 */

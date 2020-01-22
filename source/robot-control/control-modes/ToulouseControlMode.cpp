@@ -8,10 +8,21 @@
 #include <QtCore/QDebug>
 #include <QtCore/QtMath>
 
-ToulouseControlMode::ToulouseControlMode(FishBot* robot)
-    : FishModelBase(robot, ControlModeType::TOULOUSE_MODE)
+ToulouseControlMode::ToulouseControlMode(FishBot* robot, QList<FishBot*> robots)
+    : FishModelBase(robot, ControlModeType::TOULOUSE_MODE), m_robots(robots)
 {
-    resetModel();
+    for (auto& rbt : m_robots) {
+        if (rbt->getSimulation() != nullptr) {
+            m_sim = rbt->getSimulation();
+            break;
+        }
+    }
+
+    if (m_sim != nullptr) {
+        m_robot->setSimulation(m_sim); // FIXME: assignment is not working, patched in FishBot
+    } else {
+        resetModel();
+    }
 }
 
 void ToulouseControlMode::updateModelParameters()
@@ -47,8 +58,6 @@ void ToulouseControlMode::updateModelParameters()
 
         tm->id() = id_count++;
 
-        tm->robot() = m_robot;
-
         tm->reinit();
     }
 }
@@ -67,7 +76,8 @@ void ToulouseControlMode::resetModel()
         factory.behaviorFishes = "TM";
         factory.behaviorRobots = "TM";
         factory.behaviorVirtuals = "TM";
-        m_sim = factory.create();
+        m_sim = factory.createAndShare();
+        m_robot->setSimulation(m_sim); // FIXME: assignment is not working, patched in FishBot
         updateModelParameters();
         //        cv::imshow( "ModelGrid", m_currentGrid);
     } else {
@@ -79,6 +89,18 @@ void ToulouseControlMode::resetModel()
 }
 
 /*!
+ * Called when the control mode is activated. Used to reset mode's parameters.
+ */
+void ToulouseControlMode::start()
+{
+    Fishmodel::ToulouseModel* robot = reinterpret_cast<Fishmodel::ToulouseModel*>(m_sim->robots[m_robot->firmwareId()].second);
+    if (robot->robot() == nullptr) {
+        robot->robot() = m_robot;
+    }
+    FishModelBase::start();
+}
+
+/*!
  * The step of the control mode.
  */
 ControlTargetPtr ToulouseControlMode::step()
@@ -87,17 +109,20 @@ ControlTargetPtr ToulouseControlMode::step()
     Fishmodel::ToulouseModel* robot = reinterpret_cast<Fishmodel::ToulouseModel*>(m_sim->robots[m_robot->firmwareId()].second);
     if (!target.isNull() && isTargetValid()) {
         Values speedsL, speedsR;
-        const QList<double> speeds = robot->getSpeedCommands();
+        int index;
+        QList<double> speeds;
+        std::tie(index, speeds) = robot->getSpeedCommands();
         for (int i = 0; i < speeds.size(); i++) {
-            const qint16 speed = static_cast<qint16>(std::round(speeds.at(i)));
+            const qint16 speed = static_cast<qint16>(std::ceil(speeds.at(i)));
             if (i % 2 == 0) {
                 speedsL.append(speed);
             } else {
                 speedsR.append(speed);
             }
         }
-        target.reset(new TargetSpeeds(speedsL, speedsR));
+        target.reset(new TargetSpeeds(speedsL, speedsR, index));
     }
+    robot->is_kicking() = false;
     robot->has_stepped() = false;
     robot->to_be_optimized() = true;
     return target;

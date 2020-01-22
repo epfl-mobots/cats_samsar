@@ -88,8 +88,7 @@ void StatisticsPublisher::updateStatistics(QString id, double value)
     if (m_statistics.contains(id))
         m_statistics[id] = value;
     else
-        qDebug() << QString("Attempting to update an unregistered statistics %1")
-                    .arg(id);
+        /*qDebug() << QString("Attempting to update an unregistered statistics %1").arg(id)*/;
 }
 
 /*!

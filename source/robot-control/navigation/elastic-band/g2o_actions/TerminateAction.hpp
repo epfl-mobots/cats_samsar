@@ -64,8 +64,10 @@ using namespace g2o;
  *
  * Adapted from g2o::SparseOptimizerTerminateAction where the gain (oldChi - currentChi) / currentChi
  * is replaced by the (bounded and normalized) percent improvement (oldChi - currentChi) / oldChi
- * and the end conditions additionally include a timeout with the resolution of a microsecond.
+ * and the end conditions additionally include a minimum significant error
+ * as well as a timeout with the resolution of a microsecond.
  * If the improvement  is larger than zero and below the associated threshold, or
+ * if the graph error  is larger than zero and below the associated threshold, or
  * if the elapsed time is larger than zero and above the associated threshold, or
  * if the maximum number of iterations is reached, then the optimizer is stopped.
  * Typical usage of this action includes adding it as a postIteration action,
@@ -79,6 +81,7 @@ public:
         HyperGraphAction(),
         _improvementThreshold(cst(1e-6)),
         _timeoutThreshold(0),
+        _chiThreshold(0),
         _lastChi(0),
         _auxTerminateFlag(false),
         _maxIterations(std::numeric_limits<int>::max()),
@@ -100,13 +103,19 @@ public:
             // hence we reset the stop flag
             setOptimizerStopFlag(optimizer, false);
         } else if (params->iteration == 0) {
-            // First iteration, just store the chi2 value
+            // First iteration, we store the chi2 value
             _lastChi = optimizer->activeRobustChi2();
+            // Check whether it is worthwhile
+            // to continue the optimization
+            if (_lastChi <= _chiThreshold) { // Tell the optimizer to stop
+                setOptimizerStopFlag(optimizer, true);
+            }
         } else {
             // Compute the improvement and stop the optimizer
             // in case the improvement is below the threshold
-            // or we reached the maximum number of iterations
             // or the allocated task budget has been exhausted
+            // or the hypergraph error can fairly be neglected
+            // or we reached the maximum number of iterations
             if (isOptimizerStoppable(optimizer, params->iteration)) { // Tell the optimizer to stop
                 setOptimizerStopFlag(optimizer, true);
             }
@@ -117,10 +126,11 @@ public:
     bool isOptimizerStoppable(const SparseOptimizer* optimizer, const int iteration)
     {
         bool stopOptimizer = false;
-        if (iteration < _maxIterations) {
-            const number_t currentChi = optimizer->activeRobustChi2();
-            const number_t improvement = (_lastChi - currentChi) / _lastChi;
-            _lastChi = currentChi;
+        const number_t previousChi = _lastChi;
+        const number_t currentChi = optimizer->activeRobustChi2();
+        _lastChi = currentChi;
+        if (iteration < _maxIterations && currentChi > _chiThreshold) {
+            const number_t improvement = (previousChi - currentChi) / previousChi;
             if (improvement >= 0 && improvement < _improvementThreshold) {
                 stopOptimizer = true;
             } else if (_timeoutThreshold > 0) {
@@ -152,6 +162,9 @@ public:
     number_t timeoutThreshold() const {return _timeoutThreshold;}
     void setTimeoutThreshold(number_t timeoutThreshold) {_timeoutThreshold = timeoutThreshold;}
 
+    number_t chiThreshold() const {return _chiThreshold;}
+    void setChiThreshold(number_t chiThreshold) {_chiThreshold = std::abs(chiThreshold);}
+
     int maxIterations() const {return _maxIterations;}
     void setMaxIterations(int maxIterations) {_maxIterations = maxIterations;}
 
@@ -161,6 +174,7 @@ protected:
 
     number_t _improvementThreshold;
     number_t _timeoutThreshold;
+    number_t _chiThreshold;
     number_t _lastChi;
     bool _auxTerminateFlag;
     int _maxIterations;

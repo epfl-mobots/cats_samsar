@@ -427,7 +427,7 @@ bool TimedElasticBand::initTrajectoryToGoal(const std::vector<geometry_msgs::Pos
   return true;
 }
 
-bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, const bool fix_timediff_vertices, const bool fix_pose_vertices, const bool fix_goal_pose_vertex, const double max_vel_x, const double max_vel_theta, const bool estimate_orient, const int min_samples, const bool guess_backwards_motion)
+bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, const std::shared_ptr<std::vector<size_t>> fix_pose_indices, const bool fix_timediff_vertices, const bool fix_pose_vertices, const bool fix_goal_pose_vertex, const double max_vel_x, const double max_vel_theta, const bool estimate_orient, const int min_samples, const bool guess_backwards_motion)
 {
   if (!isInit())
   {
@@ -460,7 +460,7 @@ bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, const bool f
       }
       else
       {
-        yaw = pose_profile.at(i)->theta();
+        yaw = pose_profile.at(i)->orientation();
       }
       PoseSE2 intermediate_pose(pose_profile.at(i)->position().x(), pose_profile.at(i)->position().y(), yaw);
       if (timestep_profile.at(i-1)->count() > 0)
@@ -501,7 +501,7 @@ bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, const bool f
       }
     }
 
-    // Now add final state with given orientation
+    // add final state with given orientation
     if (timestep_profile.back()->count() > sum_dt_manual)
       dt = timestep_profile.back()->count() - sum_dt_manual;
     else
@@ -516,6 +516,16 @@ bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, const bool f
       addPoseAndTimeDiff(goal, dt);
       setPoseVertexFixed(sizePoses() - 1, true); // GoalConf is a fixed constraint during optimization
     }
+
+    // fix key trajectory poses if specified
+    if (fix_pose_indices != nullptr && !fix_pose_indices->empty())
+    {
+      for (size_t i = 0; i < fix_pose_indices->size(); ++i)
+      {
+        if (fix_pose_indices->at(i) < sizePoses())
+          setPoseVertexFixed(fix_pose_indices->at(i), true);
+      }
+    }
   }
   else // size!=0
   {
@@ -527,6 +537,122 @@ bool TimedElasticBand::initTrajectoryToGoal(const Trajectory& plan, const bool f
   return true;
 }
 
+bool TimedElasticBand::initTrajectoryToGoal(const std::vector<TrajectoryPtr>& plan, const std::vector<std::shared_ptr<std::vector<size_t>>> fix_pose_indices, const bool fix_timediff_vertices, const bool fix_pose_vertices, const bool fix_goal_pose_vertex, const double max_vel_x, const double max_vel_theta, const bool estimate_orient, const int min_samples, const bool guess_backwards_motion)
+{
+  if (!isInit())
+  {
+    size_t offset = 0;
+    for (size_t r = 0; r < plan.size(); ++r)
+    {
+      const TimestepContainer timestep_profile = plan.at(r)->getProfileTimestep();
+      const PoseSE2Container  pose_profile     = plan.at(r)->getProfilePose();
+      const PoseSE2 start(*pose_profile.front());
+      const PoseSE2 goal (*pose_profile.back());
+
+      addPose(start); // add starting point with given orientation
+      setPoseVertexFixed(0 + offset, true); // StartConf is a fixed constraint during optimization
+
+      bool backwards = false;
+      if (guess_backwards_motion && (goal.position() - start.position()).dot(start.orientationUnitVec()) < 0) // check if the goal is behind the start pose (w.r.t. start orientation)
+        backwards = true;
+      // TODO: dt ~ max_vel_x_backwards for backwards motions
+
+      double dt;
+
+      for (size_t i = 1; i < pose_profile.size() - 1; ++i)
+      {
+        double yaw;
+        if (estimate_orient)
+        {
+          // get yaw from the orientation of the distance vector between pose{i+1} and pose{i}
+          double dx = pose_profile.at(i+1)->position().x() - pose_profile.at(i)->position().x();
+          double dy = pose_profile.at(i+1)->position().y() - pose_profile.at(i)->position().y();
+          yaw = std::atan2(dy, dx);
+          if (backwards)
+            yaw = g2o::normalize_theta(yaw + M_PI);
+        }
+        else
+        {
+          yaw = pose_profile.at(i)->orientation();
+        }
+        PoseSE2 intermediate_pose(pose_profile.at(i)->position().x(), pose_profile.at(i)->position().y(), yaw);
+        if (timestep_profile.at(i-1)->count() > 0)
+          dt = timestep_profile.at(i-1)->count();
+        else
+          dt = estimateDeltaT(BackPose(), intermediate_pose, max_vel_x, max_vel_theta);
+        if (fix_timediff_vertices || fix_pose_vertices)
+        {
+          addPose(intermediate_pose, fix_pose_vertices);
+          addTimeDiff(dt, fix_timediff_vertices);
+        }
+        else
+        {
+          addPoseAndTimeDiff(intermediate_pose, dt);
+        }
+      }
+
+      // if number of samples is not larger than min_samples, insert manually
+      double sum_dt_manual = 0;
+      if (sizePoses() - offset < min_samples - 1)
+      {
+        ROS_DEBUG("initTEBtoGoal(): number of generated samples is less than specified by min_samples. Forcing the insertion of more samples...");
+        while (sizePoses() - offset < min_samples - 1) // subtract goal point that will be added later
+        {
+          // simple strategy: interpolate between the current pose and the goal
+          PoseSE2 intermediate_pose = PoseSE2::average(BackPose(), goal);
+          dt = estimateDeltaT(BackPose(), intermediate_pose, max_vel_x, max_vel_theta);
+          if (fix_timediff_vertices || fix_pose_vertices)
+          {
+            addPose(intermediate_pose, fix_pose_vertices);
+            addTimeDiff(dt, fix_timediff_vertices);
+          }
+          else
+          {
+            addPoseAndTimeDiff(intermediate_pose, dt); // let the optimizer correct the timestep (TODO: better initialization)
+          }
+          sum_dt_manual += dt;
+        }
+      }
+
+      // add final state with given orientation
+      if (timestep_profile.back()->count() > sum_dt_manual)
+        dt = timestep_profile.back()->count() - sum_dt_manual;
+      else
+        dt = estimateDeltaT(BackPose(), goal, max_vel_x, max_vel_theta);
+      if (fix_timediff_vertices || !fix_goal_pose_vertex)
+      {
+        addPose(goal, fix_goal_pose_vertex);
+        addTimeDiff(dt, fix_timediff_vertices);
+      }
+      else
+      {
+        addPoseAndTimeDiff(goal, dt);
+        setPoseVertexFixed(sizePoses() - 1, true); // GoalConf is a fixed constraint during optimization
+      }
+
+      // fix key trajectory poses if specified
+      if (fix_pose_indices.at(r) != nullptr && !fix_pose_indices.at(r)->empty())
+      {
+        for (size_t i = 0; i < fix_pose_indices.at(r)->size(); ++i)
+        {
+          if (fix_pose_indices.at(r)->at(i) < sizePoses() - offset)
+            setPoseVertexFixed(fix_pose_indices.at(r)->at(i) + offset, true);
+        }
+      }
+
+      // increment offset for next robot
+      offset += pose_profile.size();
+    }
+  }
+  else // size!=0
+  {
+    ROS_WARN("Cannot init TEB between given configuration and goal, because TEB vectors are not empty or TEB is already initialized (call this function before adding states yourself)!");
+    ROS_WARN("Number of TEB configurations: %d, Number of TEB timediffs: %d", sizePoses(), sizeTimeDiffs());
+    return false;
+  }
+
+  return true;
+}
 
 int TimedElasticBand::findClosestTrajectoryPose(const Eigen::Ref<const Eigen::Vector2d>& ref_point, double* distance, int begin_idx) const
 {

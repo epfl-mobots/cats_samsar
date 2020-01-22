@@ -24,9 +24,10 @@ CATS2 depends on the following packages
 * Boost
 * ZeroMQ
 * protobuf
+* [QtCharts](https://github.com/qt/qtcharts)
+* [g2o](https://github.com/RainerKuemmerle/g2o)
 * [dashel](https://github.com/aseba-community/dashel)
 * [enki](https://github.com/enki-community/enki)
-* [g2o](https://github.com/RainerKuemmerle/g2o)
 * [aseba](https://github.com/gribovskiy/aseba)
 
 ## Compile CATS2 under Ubuntu 14.04
@@ -72,7 +73,7 @@ Can be downloaded here https://info.qt.io/download-qt-for-application-developmen
     cd cmake-3.8.0/
     ./bootstrap --qt-gui
     make -j24
-    make install
+    sudo make install
 
 ### Install gstreamer-0.10 and qt-gstreamer-0.10.3
 
@@ -90,7 +91,7 @@ Please use OpenCV 3.x to compile CATS without problems. Version 3.2.0 is suggest
     cd build
     cmake .. -DOPENCV_EXTRA_MODULES_PATH="path-to-opencv-contrib"
     make -j24
-    make install
+    sudo make install
 
 ### Install or compile from sources dashel and enki
 
@@ -132,6 +133,19 @@ with the g2o libraries previously compiled from source
 instead of the ones provided by ROS as dependency,
 owing to version compatibility with source code.
 
+### Compile QtCharts
+
+QtCharts module is used to plot trajectory profiles during CATS execution.
+For compatibility with the version of Qt used on Ubuntu 14.04, QtCharts 5.7 shall be installed.
+
+    git clone https://github.com/qt/qtcharts.git -b 5.7
+    cd qtcharts
+    mkdir build
+    cd build
+    qmake ..
+    make -j24
+    sudo make install
+
 ### Compile aseba
 
 Aseba is a dependency linked as a git submodule.
@@ -156,7 +170,7 @@ Then the aseba libraries must be compiled and installed from source:
 
 ### Compile CATS2
 
-    (be sure to be located at the root directory of CATS2)
+    (make sure to be located at the root directory of CATS2)
     mkdir build
     cd build
     cmake ..

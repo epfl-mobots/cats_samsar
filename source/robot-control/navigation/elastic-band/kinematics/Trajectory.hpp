@@ -563,10 +563,10 @@ public:
         for (size_t i = 0; i < _trajectory.size() - 1; i++) {
             r = _robot_parameters.wheel_radius;
             d = _robot_parameters.wheel_distance;
-            p = _trajectory.at(i+1)->pose().position() - _trajectory.at(i)->pose().position();
-            a = _trajectory.at(i+1)->pose().theta()    - _trajectory.at(i)->pose().theta();
-            sx = p.x() * std::cos(_trajectory.at(i)->pose().theta());
-            sy = p.y() * std::sin(_trajectory.at(i)->pose().theta());
+            p = _trajectory.at(i+1)->pose().position()    - _trajectory.at(i)->pose().position();
+            a = _trajectory.at(i+1)->pose().orientation() - _trajectory.at(i)->pose().orientation();
+            sx = p.x() * std::cos(_trajectory.at(i)->pose().orientation());
+            sy = p.y() * std::sin(_trajectory.at(i)->pose().orientation());
             vx = p.x() / timesteps.at(i)->count();
             vy = p.y() / timesteps.at(i)->count();
             v = g2o::sign(sx + sy) * p.norm() / timesteps.at(i)->count();

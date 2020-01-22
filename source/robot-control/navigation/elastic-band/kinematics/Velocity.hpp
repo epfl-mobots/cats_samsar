@@ -111,8 +111,8 @@ public:
         assert(r > 0 && d > 0);
         _wheel_radius    = r;
         _wheel_distance  = d;
-        _vel_orientation = atan2(x, y);
-        _vel_translation = (std::cos(_vel_orientation) != 0) ? x / std::cos(_vel_orientation) : y / std::sin(_vel_orientation);
+        _vel_orientation = g2o::normalize_theta(std::atan2(x, y));
+        _vel_translation = std::abs(std::cos(_vel_orientation)) > 0 ? x / std::cos(_vel_orientation) : y / std::sin(_vel_orientation);
         _vel_rotation    = z;
         _vel_robot = Eigen::Vector3d(x, y, z);
         _vel_wheel = Eigen::Vector2d(_vel_translation/r - _vel_rotation*d/(2*r), _vel_translation/r + _vel_rotation*d/(2*r));
@@ -250,6 +250,18 @@ public:
     * @return const reference to the rotational velocity
     */
     const double& rotation() const {return _vel_rotation;}
+
+    /**
+    * @brief Access the strafing part of the velocity
+    * @return default strafing velocity
+    */
+    double strafing() {return 0;}
+
+    /**
+    * @brief Access the strafing part of the velocity (read-only)
+    * @return const default strafing velocity
+    */
+    const double strafing() const {return 0;}
 
     /**
     * @brief Access the x-axis translation part of the velocity

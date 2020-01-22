@@ -66,8 +66,8 @@
 <keywords flag="true"/>
 
 
-<!--node Fish_bot_B-->
-<node nodeId="31" name="Fish_bot_B">
+<!--node Fish_bot_L-->
+<node nodeId="41" name="Fish_bot_L">
 
 # some variables
 var i=0
@@ -82,7 +82,7 @@ var DesiredSpeedRight=0
 var IDControl=0
 
 # Variables used for obstacle avoidance
-var ObstacleAvoidance=3 #0=no obstacle avoidance 1=braitenberg  2=turn to avoid 3=braitenberg for MotorCommands
+var ObstacleAvoidance=0 #0=no obstacle avoidance 1=braitenberg  2=turn to avoid 3=braitenberg for MotorCommands
 var ThreshSensor=30
 var ThreshSensorMotorCommands=10
 
@@ -176,7 +176,7 @@ else
 	mot2.pid.target_speed=-event.args[0]
 end
 
-onevent MotorControlFish_bot_B
+onevent MotorControlFish_bot_L
 callsub stopTimer
 if pwgnd&lt;1 then
 	emit PowerDown[IDControl]
@@ -230,7 +230,7 @@ else
 #	end
 end
 
-onevent MotorCommandsFish_bot_B
+onevent MotorCommandsFish_bot_L
 callsub stopTimer
 if pwgnd &lt; 1 then
     emit PowerDown[IDControl]
@@ -301,7 +301,7 @@ oldPositionRight=mot2.position
 mot1.pid.target_position = oldPositionLeft + event.args[0]
 mot2.pid.target_position = oldPositionRight - event.args[1]
 
-#onevent FishBehaviorFish_bot_B
+#onevent FishBehaviorFish_bot_L
 #callsub stopTimer
 #if IR_front_left &lt; ThreshSensor and IR_front_right &lt; ThreshSensor then
 #
@@ -470,7 +470,7 @@ if ObstacleAvoidance == 3 then
     end
 end
 
-onevent SetObstacleAvoidanceFish_bot_B
+onevent SetObstacleAvoidanceFish_bot_L
 ObstacleAvoidance=event.args[0]
 
 </node>

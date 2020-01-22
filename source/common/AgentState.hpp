@@ -125,7 +125,6 @@ public:
     //! Return the position validity status.
     bool isValid() const
     {
-        return true;
         return m_valid;
     }
 

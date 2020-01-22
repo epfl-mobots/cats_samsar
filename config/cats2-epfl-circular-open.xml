@@ -1,10 +1,12 @@
 <?xml version="1.0"?>
 <opencv_storage>
     <experiment>
-        <type>Interspecies</type>
-        <name>Circular-open</name>
+        <!--<type>Interspecies</type>
+        <name>Circular-open</name>-->
+        <type>Toulouse</type>
+        <name>epfl-circular-open-small</name>
         <agents>
-            <numberOfAnimals>1</numberOfAnimals>
+            <numberOfAnimals>0</numberOfAnimals>
         </agents>
         <!-- <setupMapPath>setup/epfl-circular-open.xml</setupMapPath> -->
         <setupMapPath>setup/epfl-circular-open-small.xml</setupMapPath>
@@ -24,16 +26,23 @@
             <simulation>
                 <dt>0</dt>
             </simulation>
-    
             <Toulouse>
+                <!-- Parameters for one agent -->
+                <radius>0.25</radius>
+                <perceived_agents>0</perceived_agents>
+                <gamma_rand>0.35</gamma_rand>
+                <gamma_wall>0.12</gamma_wall>
+                <wall_interaction_range>0.06</wall_interaction_range>
+                <body_length>0.03</body_length>
+                <!-- Parameters for two agents -->
+                <!--
                 <radius>0.24</radius>
-                
                 <perceived_agents>1</perceived_agents>
                 <gamma_rand>0.45</gamma_rand>
                 <gamma_wall>0.15</gamma_wall>
                 <wall_interaction_range>0.06</wall_interaction_range>
                 <body_length>0.03</body_length>
-
+                -->
                 <alpha>0.66667</alpha>
                 <tau0>0.8</tau0>
                 <velocity_coef>0.14</velocity_coef>
@@ -89,7 +98,6 @@
                 <kpDist>70.0</kpDist>
                 <kiDist>1.00</kiDist>
                 <kdDist>2.00</kdDist>
-
 <!--                 <kp>5.0</kp>
                 <ki>0.05</ki>
                 <kd>0.00</kd>
@@ -111,6 +119,15 @@
                 <targetDeltaAngleDeg>20.</targetDeltaAngleDeg>
             </circularSetup>
         </controllers>
+        <fishBot_1>
+            <id>B</id>
+            <ledColor>
+                <r>207</r>
+                <g>91</g>
+                <b>93</b>
+            </ledColor>
+            <connectionTarget>ser:device=/dev/rfcomm0</connectionTarget>
+        </fishBot_1>
         <fishBot_2>
             <id>H</id>
             <ledColor>
@@ -120,21 +137,12 @@
             </ledColor>
             <connectionTarget>ser:device=/dev/rfcomm1</connectionTarget>
         </fishBot_2>
-        <fishBot_1>
-        <id>C</id>
+        <fishBot_3>
+            <id>C</id>
             <ledColor>
                 <r>190</r>
                 <g>255</g>
                 <b>190</b>
-            </ledColor>
-            <connectionTarget>ser:device=/dev/rfcomm0</connectionTarget>
-        </fishBot_1>
-        <fishBot_3>
-            <id>B</id>
-            <ledColor>
-                <r>207</r>
-                <g>91</g>
-                <b>93</b>
             </ledColor>
             <connectionTarget>ser:device=/dev/rfcomm2</connectionTarget>
         </fishBot_3>
@@ -146,9 +154,8 @@
                 value in the calibration file.
             -->
             <imageSize>
-               <!-- <width>1024</width>
-                <height>1024</height> -->               
-
+                <!--<width>1024</width>
+                <height>1024</height>-->
                 <width>512</width>
                 <height>512</height>
             </imageSize>
@@ -170,6 +177,8 @@
             <imageSize>
                 <width>640</width>
                 <height>480</height>
+                <!--<width>512</width>
+                <height>512</height>-->
             </imageSize>
             <cameraCalibrationFile>camera-calibration/epfl-setup-180/cats2-epfl-180-angle-below-camera.xml</cameraCalibrationFile>
             <tracking>
@@ -183,8 +192,11 @@
                         <threshold>30</threshold>
                     </fishBot_H>
                     <fishBot_B>
-                        <threshold>70</threshold>
+                        <threshold>50</threshold>
                     </fishBot_B>
+                    <fishBot_L>
+                        <threshold>50</threshold>
+                    </fishBot_L>
                 </fishBotLedsTracking>
             </tracking>
         </cameraBelow>

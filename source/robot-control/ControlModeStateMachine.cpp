@@ -24,7 +24,7 @@
 /*!
  * Constructor.
  */
-ControlModeStateMachine::ControlModeStateMachine(FishBot* robot, QObject* parent)
+ControlModeStateMachine::ControlModeStateMachine(FishBot* robot, QList<FishBot*> robots, QObject* parent)
     : QObject(parent), m_currentControlMode(ControlModeType::IDLE), m_robot(robot)
 {
     // fill the map will all control modes
@@ -45,7 +45,7 @@ ControlModeStateMachine::ControlModeStateMachine(FishBot* robot, QObject* parent
     m_controlModes.insert(
         ControlModeType::SOCIAL_FISH_MODEL, ControlModePtr(new SocialFishControlMode(m_robot)));
     m_controlModes.insert(
-        ControlModeType::TOULOUSE_MODE, ControlModePtr(new ToulouseControlMode(m_robot)));
+        ControlModeType::TOULOUSE_MODE, ControlModePtr(new ToulouseControlMode(m_robot, robots)));
     m_controlModes.insert(
         ControlModeType::DENSEST_POINT, ControlModePtr(new DensestPoint(m_robot)));
 

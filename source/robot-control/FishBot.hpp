@@ -13,6 +13,8 @@
 
 #include "interfaces/DBusInterface.hpp"
 
+#include <model/model.hpp>
+
 #include <AgentState.hpp>
 #include <Timer.hpp>
 
@@ -31,7 +33,7 @@ class FishBot : public QObject
     Q_OBJECT
 public:
     //! Constructor.
-    explicit FishBot(QString id);
+    explicit FishBot(QString id, QList<FishBot*> robots = QList<FishBot*>());
     //! Destructor.
     virtual ~FishBot() final;
 
@@ -43,6 +45,10 @@ public:
     int firmwareId() const { return m_firmwareId; }
     //! Sets the robot's color
     void setLedColor(QColor color) { m_ledColor = color; }
+
+    //! Get/Set the robot's simulator.
+    Fishmodel::Simulation* getSimulation() { return m_simulation; }
+    void setSimulation(Fishmodel::Simulation* simulation) { m_simulation = simulation; }
 
 public:
     //! Sets the robot's interface.
@@ -119,13 +125,31 @@ public:
 
 public:
     //! Sets the robot's state.
-    void setState(StateWorld state) {m_state = state; }
+    void setState(StateWorld state) { m_state = state; }
     //! Returns the robot's state.
     StateWorld state() const { return m_state; }
+
+    //! Computes the robot's speed.
+    double computeSpeed(StateWorld state, std::chrono::milliseconds timestamp);
+    //! Informs on the robot's speed validity.
+    bool isValidSpeed() { return m_speedValid; }
+    //! Sets the robot's speed.
+    void setSpeed(double speed) { m_speed = speed; }
+    //! Returns the robot's speed.
+    double speed() const { return m_speed; }
+
+    //! Sets the robot's timestamp.
+    void setTimestamp(std::chrono::milliseconds timestamp) { m_timestamp = timestamp; }
+    //! Returns the robot's timestamp.
+    std::chrono::milliseconds timestamp() const { return m_timestamp; }
 
     //! Receives data of all tracked robots, finds and sets the one corresponding
     //! to this robot and keeps the rest in case it's needed by the control mode.
     void setRobotsData(QList<AgentDataWorld> robotsPositions);
+    //! Receives data of all tracked robots, finds and sets the one corresponding
+    //! to this robot and keeps the rest in case it's needed by the control mode.
+    //! Also computes an approximation of the focal agent's speed.
+    void setRobotsData(QList<AgentDataWorld> robotsPositions, std::chrono::milliseconds timestamp);
     //! Returns the data of other robots.
     const QList<AgentDataWorld>& otherRobotsData() const { return m_otherRobotsData; }
     //! Received states of all tracked fish, keeps them in case it's needed by
@@ -246,6 +270,12 @@ private:
     QColor m_ledColor;
     //! The robot's state.
     StateWorld m_state;
+    //! The robot's speed.
+    double m_speed;
+    //! The robot's speed validity.
+    bool m_speedValid;
+    //! The robot's timestamp.
+    std::chrono::milliseconds m_timestamp;
     // TODO : this interfaces should be placed to a separated Connection class
     //! The interface to communicate with the robot. Shared by all robots.
     DBusInterfacePtr m_sharedRobotInterface;
@@ -259,6 +289,9 @@ private:
     ExperimentManager m_experimentManager;
     //! The control loop state machine that generates the targets for the navigation.
     ControlModeStateMachine m_controlStateMachine;
+
+    //! The simulation that is running for this robot (only used by ToulouseControlMode).
+    Fishmodel::Simulation* m_simulation = nullptr;
 
     //! The data of other robots.
     QList<AgentDataWorld> m_otherRobotsData;

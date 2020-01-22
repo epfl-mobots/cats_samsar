@@ -16,7 +16,7 @@
 /*!
  * Constructor.
  */
-FishBot::FishBot(QString id)
+FishBot::FishBot(QString id, QList<FishBot*> robots)
     : QObject(nullptr),
       m_id(id),
       m_firmwareId(-1),
@@ -24,13 +24,19 @@ FishBot::FishBot(QString id)
                  .arg(m_id)), // NOTE : don't change this name as the .aesl files are searched by it
       m_ledColor(Qt::black),
       m_state(),
+      m_speed(0),
+      m_speedValid(false),
+      m_timestamp(std::chrono::milliseconds::zero()),
       m_sharedRobotInterface(nullptr),
       m_uniqueRobotInterface(nullptr),
       m_experimentManager(this),
-      m_controlStateMachine(this),
+      m_controlStateMachine(this, robots),
       m_navigation(this),
       m_computeStatistics(CommandLineParameters::get().publishRobotsStatistics())
 {
+    // simulator
+    m_simulation = m_controlStateMachine.simulation(); // FIXME: patch because assignment is not working in ToulouseControlMode
+
     // control areas
     connect(&m_experimentManager, &ExperimentManager::notifyPolygons,
         [=](QList<AnnotatedPolygons> polygons) {
@@ -305,6 +311,26 @@ void FishBot::setRobotsData(QList<AgentDataWorld> robotsData)
     }
 }
 
+/*! Received positions of all tracked robots, finds and sets the one
+ * corresponding to this robot and keeps the rest in case it's needed
+ * by the control mode.
+ * Also computes an approximation of the focal agent's speed.
+ */
+void FishBot::setRobotsData(QList<AgentDataWorld> robotsData, std::chrono::milliseconds timestamp)
+{
+    m_otherRobotsData.clear();
+    foreach (AgentDataWorld agentData, robotsData) {
+        if (agentData.id() == m_id) {
+            setSpeed(computeSpeed(agentData.state(), timestamp));
+            setState(agentData.state());
+            setTimestamp(timestamp);
+        }
+        else {
+            m_otherRobotsData.append(agentData);
+        }
+    }
+}
+
 /*!
  * Received positions of all tracked fish, keeps them in case it's
  * needed by the control mode.
@@ -316,6 +342,20 @@ void FishBot::setFishStates(QList<StateWorld> fishStates)
     // updates the statistics
     if (m_computeStatistics)
         computeStatistics();
+}
+
+
+//! Computes the robot's speed.
+double FishBot::computeSpeed(StateWorld state, std::chrono::milliseconds timestamp)
+{
+    double speed = m_speed;
+    m_speedValid = m_state.position().isValid()
+                &&   state.position().isValid()
+                && m_timestamp.count() > 0
+                &&   timestamp.count() > m_timestamp.count();
+    if (m_speedValid)
+        speed = state.position().distance2dTo(m_state.position()) * 1000. / (timestamp - m_timestamp).count();
+    return speed;
 }
 
 /*!

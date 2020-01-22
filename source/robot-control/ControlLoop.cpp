@@ -19,7 +19,11 @@ ControlLoop::ControlLoop() :
 {
     // create the robots
     for (QString id : RobotControlSettings::get().ids()) {
-        m_robots.append(FishBotPtr(new FishBot(id)));
+        QList<FishBot*> robots;
+        for (auto& robot : m_robots)
+            robots.append(robot.data());
+
+        m_robots.append(FishBotPtr(new FishBot(id, robots)));
         m_robots.last()->setLedColor(RobotControlSettings::get().robotSettings(id).ledColor());
 
         // ensure that only one robot can be in manual mode
@@ -229,7 +233,7 @@ void ControlLoop::onTrackingResultsReceived(QList<AgentDataWorld> agentsData,
 
     // transfers the data to all robots
     for (auto& robot : m_robots) {
-        robot->setRobotsData(robotsData);
+        robot->setRobotsData(robotsData, timestamp);
         // HACK : update only when any fish found, it's done to prevent setting
         // zero fish in a case when fish tracker is slower than the the robot
         // tracker and thus we don't receive its data in time; as a result in

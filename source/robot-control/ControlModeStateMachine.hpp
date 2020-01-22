@@ -4,6 +4,7 @@
 #include "RobotControlPointerTypes.hpp"
 #include <control-modes/ControlModeType.hpp>
 #include <control-modes/ModelParameters.hpp>
+#include <control-modes/ToulouseControlMode.hpp>
 
 #include <AgentState.hpp>
 
@@ -17,7 +18,7 @@ class ControlModeStateMachine : public QObject
     Q_OBJECT
 public:
     //! Constructor.
-    explicit ControlModeStateMachine(FishBot* robot, QObject *parent = 0);
+    explicit ControlModeStateMachine(FishBot* robot, QList<FishBot*> robots = QList<FishBot*>(), QObject *parent = 0);
 
     //! The state machine step. Returns the control target values.
     ControlTargetPtr step();
@@ -29,6 +30,9 @@ public:
     //! Checks that the current control modes can generate targets with
     //! different motion patterns.
     bool supportsMotionPatterns();
+
+    //! Returns a pointer to the robot's simulator (only used by ToulouseControlMode).
+    Fishmodel::Simulation* simulation() const { return reinterpret_cast<ToulouseControlMode*>(m_controlModes[ControlModeType::TOULOUSE_MODE].data())->simulation(); }
 
 public:
     //! Sets the target position for the go-to-position control mode.

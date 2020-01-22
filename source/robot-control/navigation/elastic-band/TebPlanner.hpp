@@ -53,16 +53,19 @@
 // g2o custom edges and vertices for the TEB planner
 #include <elastic-band/g2o_types/EdgeVelocity.hpp>
 #include <elastic-band/g2o_types/EdgeAcceleration.hpp>
+#include <elastic-band/g2o_types/EdgeDynamics.hpp>
 #include <elastic-band/g2o_types/EdgeKinematics.hpp>
 #include <elastic-band/g2o_types/EdgeTimeOptimal.hpp>
 #include <elastic-band/g2o_types/EdgeShortestPath.hpp>
 #include <elastic-band/g2o_types/EdgeProfileFidelity.hpp>
+#include <elastic-band/g2o_types/EdgeNeighbor.hpp>
 #include <elastic-band/g2o_types/EdgeObstacle.hpp>
 #include <elastic-band/g2o_types/EdgeDynamicObstacle.hpp>
 #include <elastic-band/g2o_types/EdgeViaPoint.hpp>
 #include <elastic-band/g2o_types/EdgePreferRotDir.hpp>
 
 // g2o custom actions for the TEB planner
+#include <elastic-band/g2o_actions/OrientateAction.hpp>
 #include <elastic-band/g2o_actions/TerminateAction.hpp>
 
 // g2o lib stuff
@@ -166,14 +169,13 @@ public:
    * 	  see TimedElasticBand::updateAndPruneTEB
    * 	- Afterwards optimize the recently initialized or updated trajectory by calling optimizeTEB() and invoking g2o
    * @param initial_plan vector of instances of TrajectoryPtr
+   * @param fix_pose_indices fix all pose vertices at the specified indices during optimization (overriding \c fix_pose_vertices and \c fix_goal_pose_vertex)
    * @param fix_timediff_vertices if \c true, fix all time difference vertices during optimization
    * @param fix_pose_vertices if \c true, fix all pose vertices during optimization
    * @param fix_goal_pose_vertex if \c true, fix the goal pose vertex during optimization (overriding \c fix_pose_vertices for this specific pose)
-   * @param free_goal_vel if \c true, a nonzero final velocity at the goal pose is allowed, otherwise the final velocity will be \c vel_goal_, which is by default zero (/!\ default: true)
-   * @param start_vel current start velocity (e.g. the velocity of the robot, only translational (nonholonomic) and rotational components are used)
    * @return \c true if planning was successful, \c false otherwise
    */
-  virtual bool plan(const std::vector<TrajectoryPtr>& initial_plan, const bool fix_timediff_vertices = false, const bool fix_pose_vertices = false, const bool fix_goal_pose_vertex = true, const bool free_goal_vel = true, const Velocity* start_vel = NULL);
+  virtual bool plan(const std::vector<TrajectoryPtr>& initial_plan, const std::vector<std::shared_ptr<std::vector<size_t>>> fix_pose_indices = std::vector<std::shared_ptr<std::vector<size_t>>>(), const bool fix_timediff_vertices = false, const bool fix_pose_vertices = false, const bool fix_goal_pose_vertex = true);
   
   /**
    * @brief Plan a trajectory based on an initial reference plan.
@@ -188,6 +190,7 @@ public:
    * 	  see TimedElasticBand::updateAndPruneTEB
    * 	- Afterwards optimize the recently initialized or updated trajectory by calling optimizeTEB() and invoking g2o
    * @param initial_plan instance of Trajectory
+   * @param fix_pose_indices fix all pose vertices at the specified indices during optimization (overriding \c fix_pose_vertices and \c fix_goal_pose_vertex)
    * @param fix_timediff_vertices if \c true, fix all time difference vertices during optimization
    * @param fix_pose_vertices if \c true, fix all pose vertices during optimization
    * @param fix_goal_pose_vertex if \c true, fix the goal pose vertex during optimization (overriding \c fix_pose_vertices for this specific pose)
@@ -195,7 +198,7 @@ public:
    * @param start_vel current start velocity (e.g. the velocity of the robot, only translational (nonholonomic) and rotational components are used)
    * @return \c true if planning was successful, \c false otherwise
    */
-  virtual bool plan(const Trajectory& initial_plan, const bool fix_timediff_vertices = false, const bool fix_pose_vertices = false, const bool fix_goal_pose_vertex = true, const bool free_goal_vel = true, const Velocity* start_vel = NULL);
+  virtual bool plan(const Trajectory& initial_plan, const std::shared_ptr<std::vector<size_t>> fix_pose_indices = nullptr, const bool fix_timediff_vertices = false, const bool fix_pose_vertices = false, const bool fix_goal_pose_vertex = true, const bool free_goal_vel = true, const Velocity* start_vel = NULL);
   
   /**
    * @brief Plan a trajectory based on an initial reference plan.
@@ -287,6 +290,7 @@ public:
    * @param iterations_outerloop Specifies how often the trajectory should be resized followed by the inner solver loop.
    * @param end_condition_improvement Percentage of improvement below which the optimization is automatically stopped.
    * @param end_condition_timeout Microseconds of timeout after which the optimization is automatically stopped.
+   * @param end_condition_error Amount of graph error below which the optimization is automatically stopped.
    * @param obst_cost_scale Specify extra scaling for obstacle costs (only used if \c compute_cost_afterwards is true)
    * @param viapoint_cost_scale Specify extra scaling for via-point costs (only used if \c compute_cost_afterwards is true)
    * @param compute_cost_afterwards If \c true, calculate the cost vector according to computeCurrentCost(),
@@ -295,7 +299,8 @@ public:
    *                              (only used if \c compute_cost_afterwards is true).
    * @return \c true if the optimization terminates successfully, \c false otherwise
    */
-  bool optimizeTEB(int iterations_innerloop, int iterations_outerloop, int end_condition_improvement, int end_condition_timeout,
+  bool optimizeTEB(int iterations_innerloop, int iterations_outerloop,
+                   double end_condition_improvement, double end_condition_timeout, double end_condition_error,
                    double obst_cost_scale = 1.0, double viapoint_cost_scale = 1.0, bool compute_cost_afterwards = false, bool alternative_time_cost = false);
 
   /**
@@ -759,12 +764,31 @@ protected:
   void AddTEBVertices();
   
   /**
+   * @brief Add all edges (local cost functions) for limiting the translational and angular velocity and acceleration
+   * as well as for minimizing the difference to the reference velocity and timestep profiles.
+   * @see EdgeVelocity
+   * @see EdgeAcceleration
+   * @see EdgeAccelerationStart
+   * @see EdgeAccelerationGoal
+   * @see EdgeProfileFidelity
+   * @see buildGraph
+   * @see optimizeGraph
+   * @param length Indicate the dimension of the current robot trajectory in the full hypergraph
+   * @param offset Indicate the beginning of the current robot trajectory in the full hypergraph
+   * @param shift Shift the time-diff idx of the current robot trajectory in the full hypergraph
+   */
+  void AddEdgesDynamics(size_t length, size_t offset = 0, size_t shift = 0);
+  
+  /**
    * @brief Add all edges (local cost functions) for limiting the translational and angular velocity.
    * @see EdgeVelocity
    * @see buildGraph
    * @see optimizeGraph
+   * @param length Indicate the dimension of the current robot trajectory in the full hypergraph
+   * @param offset Indicate the beginning of the current robot trajectory in the full hypergraph
+   * @param shift Shift the time-diff idx of the current robot trajectory in the full hypergraph
    */
-  void AddEdgesVelocity();
+  void AddEdgesVelocity(size_t length, size_t offset = 0, size_t shift = 0);
   
   /**
    * @brief Add all edges (local cost functions) for limiting the translational and angular acceleration.
@@ -773,60 +797,77 @@ protected:
    * @see EdgeAccelerationGoal
    * @see buildGraph
    * @see optimizeGraph
+   * @param length Indicate the dimension of the current robot trajectory in the full hypergraph
+   * @param offset Indicate the beginning of the current robot trajectory in the full hypergraph
+   * @param shift Shift the time-diff idx of the current robot trajectory in the full hypergraph
    */
-  void AddEdgesAcceleration();
-
+  void AddEdgesAcceleration(size_t length, size_t offset = 0, size_t shift = 0);
+  
   /**
-   * @brief Add all edges (local cost functions) for minimizing the transition time (resp. minimize time differences)
-   * @see EdgeTimeOptimal
-   * @see buildGraph
-   * @see optimizeGraph
-   */
-  void AddEdgesTimeOptimal();
-
-  /**
-   * @brief Add all edges (local cost functions) for minimizing the path length
-   * @see EdgeShortestPath
-   * @see buildGraph
-   * @see optimizeGraph
-   */
-  void AddEdgesShortestPath();
-
-  /**
-   * @brief Add all edges (local cost functions) for minimizing the difference to the reference velocity and timestep profiles
+   * @brief Add all edges (local cost functions) for minimizing the difference to the reference velocity and timestep profiles.
    * @see EdgeProfileFidelity
    * @see buildGraph
    * @see optimizeGraph
+   * @param length Indicate the dimension of the current robot trajectory in the full hypergraph
+   * @param offset Indicate the beginning of the current robot trajectory in the full hypergraph
+   * @param shift Shift the time-diff idx of the current robot trajectory in the full hypergraph
    */
-  void AddEdgesProfileFidelity();
-
+  void AddEdgesProfileFidelity(size_t length, size_t offset = 0, size_t shift = 0);
+  
   /**
-   * @brief Add all edges (local cost functions) related to keeping a distance from static obstacles
+   * @brief Add all edges (local cost functions) for minimizing the path length.
+   * @see EdgeShortestPath
+   * @see buildGraph
+   * @see optimizeGraph
+   * @param length Indicate the dimension of the current robot trajectory in the full hypergraph
+   * @param offset Indicate the beginning of the current robot trajectory in the full hypergraph
+   */
+  void AddEdgesShortestPath(size_t length, size_t offset = 0);
+  
+  /**
+   * @brief Add all edges (local cost functions) for minimizing the transition time (resp. minimize time differences).
+   * @see EdgeTimeOptimal
+   * @see buildGraph
+   * @see optimizeGraph
+   * @param length Indicate the dimension of the current robot trajectory in the full hypergraph
+   * @param offset Indicate the beginning of the current robot trajectory in the full hypergraph
+   * @param shift Shift the time-diff idx of the current robot trajectory in the full hypergraph
+   */
+  void AddEdgesTimeOptimal(size_t length, size_t offset = 0, size_t shift = 0);
+  
+  /**
+   * @brief Add all edges (local cost functions) related to keeping a distance from neighboring robots.
+   * @see EdgeNeighbor
+   * @see buildGraph
+   * @see optimizeGraph
+   * @param length Indicate the dimension of the current robot trajectory in the full hypergraph
+   * @param offset Indicate the beginning of the current robot trajectory in the full hypergraph
+   */
+  void AddEdgesNeighbors();
+  
+  /**
+   * @brief Add all edges (local cost functions) related to keeping a distance from static obstacles.
    * @warning do not combine with AddEdgesInflatedObstacles
    * @see EdgeObstacle
    * @see buildGraph
    * @see optimizeGraph
+   * @param length Indicate the dimension of the current robot trajectory in the full hypergraph
+   * @param offset Indicate the beginning of the current robot trajectory in the full hypergraph
    * @param weight_multiplier Specify an additional weight multipler (in addition to the the config weight)
    */
-  void AddEdgesObstacles(double weight_multiplier=1.0);
+  void AddEdgesObstacles(size_t length, size_t offset = 0, double weight_multiplier = 1.0);
   
   /**
-   * @brief Add all edges (local cost functions) related to keeping a distance from static obstacles (legacy association strategy)
+   * @brief Add all edges (local cost functions) related to keeping a distance from static obstacles (legacy association strategy).
    * @warning do not combine with AddEdgesInflatedObstacles
    * @see EdgeObstacle
    * @see buildGraph
    * @see optimizeGraph
+   * @param length Indicate the dimension of the current robot trajectory in the full hypergraph
+   * @param offset Indicate the beginning of the current robot trajectory in the full hypergraph
    * @param weight_multiplier Specify an additional weight multipler (in addition to the the config weight)
    */
-  void AddEdgesObstaclesLegacy(double weight_multiplier=1.0);
-  
-  /**
-   * @brief Add all edges (local cost functions) related to minimizing the distance to via-points
-   * @see EdgeViaPoint
-   * @see buildGraph
-   * @see optimizeGraph
-   */
-  void AddEdgesViaPoints();
+  void AddEdgesObstaclesLegacy(size_t length, size_t offset = 0, double weight_multiplier = 1.0);
   
   /**
    * @brief Add all edges (local cost functions) related to keeping a distance from dynamic (moving) obstacles.
@@ -835,38 +876,57 @@ protected:
    * @see EdgeDynamicObstacle
    * @see buildGraph
    * @see optimizeGraph
+   * @param length Indicate the dimension of the current robot trajectory in the full hypergraph
+   * @param offset Indicate the beginning of the current robot trajectory in the full hypergraph
    * @param weight_multiplier Specify an additional weight multipler (in addition to the the config weight)
-
    */
-  void AddEdgesDynamicObstacles(double weight_multiplier=1.0);
-
+  void AddEdgesDynamicObstacles(size_t length, size_t offset = 0, double weight_multiplier = 1.0);
+  
   /**
-   * @brief Add all edges (local cost functions) for satisfying kinematic constraints of a differential drive robot
+   * @brief Add all edges (local cost functions) related to minimizing the distance to via-points.
+   * @see EdgeViaPoint
+   * @see buildGraph
+   * @see optimizeGraph
+   */
+  void AddEdgesViaPoints();
+  
+  /**
+   * @brief Add all edges (local cost functions) for satisfying kinematic constraints of a differential drive robot.
    * @warning do not combine with AddEdgesKinematicsCarlike()
    * @see AddEdgesKinematicsCarlike
    * @see buildGraph
    * @see optimizeGraph
+   * @param length Indicate the dimension of the current robot trajectory in the full hypergraph
+   * @param offset Indicate the beginning of the current robot trajectory in the full hypergraph
    */
-  void AddEdgesKinematicsDiffDrive();
+  void AddEdgesKinematicsDiffDrive(size_t length, size_t offset = 0);
   
   /**
-   * @brief Add all edges (local cost functions) for satisfying kinematic constraints of a carlike robot
+   * @brief Add all edges (local cost functions) for satisfying kinematic constraints of a carlike robot.
    * @warning do not combine with AddEdgesKinematicsDiffDrive()
    * @see AddEdgesKinematicsDiffDrive
    * @see buildGraph
    * @see optimizeGraph
+   * @param length Indicate the dimension of the current robot trajectory in the full hypergraph
+   * @param offset Indicate the beginning of the current robot trajectory in the full hypergraph
    */
-  void AddEdgesKinematicsCarlike();
+  void AddEdgesKinematicsCarlike(size_t length, size_t offset = 0);
   
   /**
-   * @brief Add all edges (local cost functions) for prefering a specifiy turning direction (by penalizing the other one)
+   * @brief Add all edges (local cost functions) for prefering a specifiy turning direction (by penalizing the other one).
    * @see buildGraph
    * @see optimizeGraph
+   * @param length Indicate the dimension of the current robot trajectory in the full hypergraph
+   * @param offset Indicate the beginning of the current robot trajectory in the full hypergraph
    */
-  void AddEdgesPreferRotDir(); 
+  void AddEdgesPreferRotDir(size_t length, size_t offset = 0);
   
   //@}
   
+//  /**
+//   * @brief Problem scaling
+//   */
+//  void scaleProblem(const double scale_factor);
   
   /**
    * @brief Initialize and configure the g2o sparse optimizer.
@@ -880,6 +940,8 @@ protected:
   ObstacleContainer* obstacles_; //!< Store obstacles that are relevant for planning
   const ViaPointContainer* via_points_; //!< Store via points for planning
   const Trajectory* trajectory_ref_; //!< Store reference trajectory for planning
+  const std::vector<TrajectoryPtr>* trajectories_ref_; //!< Store list of reference trajectories for planning
+  std::vector<size_t> offsets_; //!< Store reference trajectories lengths
   
   double cost_; //!< Store cost value of the current hyper-graph
   RotType prefer_rotdir_; //!< Store whether to prefer a specific initial rotation in optimization (might be activated in case the robot oscillates)

@@ -56,7 +56,7 @@ typedef std::vector< Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d> 
  * @param point 2D point
  * @param line_start 2D point representing the start of the line segment
  * @param line_end 2D point representing the end of the line segment
- * @return Closest point on the line segment
+ * @return closest point on the line segment
  */
 inline Eigen::Vector2d closest_point_on_line_segment_2d(const Eigen::Ref<const Eigen::Vector2d>& point, const Eigen::Ref<const Eigen::Vector2d>& line_start, const Eigen::Ref<const Eigen::Vector2d>& line_end)
 {
@@ -72,18 +72,6 @@ inline Eigen::Vector2d closest_point_on_line_segment_2d(const Eigen::Ref<const E
   else if (u >= 1) return line_end;
   
   return line_start + u*diff;
-}
-  
-/**
- * @brief Helper function to calculate the distance between a line segment and a point
- * @param point 2D point
- * @param line_start 2D point representing the start of the line segment
- * @param line_end 2D point representing the end of the line segment
- * @return minimum distance to a given line segment
- */
-inline double distance_point_to_segment_2d(const Eigen::Ref<const Eigen::Vector2d>& point, const Eigen::Ref<const Eigen::Vector2d>& line_start, const Eigen::Ref<const Eigen::Vector2d>& line_end)
-{
-  return  (point - closest_point_on_line_segment_2d(point, line_start, line_end)).norm(); 
 }
   
 /**
@@ -129,6 +117,18 @@ inline bool check_line_segments_intersection_2d(const Eigen::Ref<const Eigen::Ve
   
   
 /**
+ * @brief Helper function to calculate the smallest distance between a line segment and a point
+ * @param point 2D point
+ * @param line_start 2D point representing the start of the line segment
+ * @param line_end 2D point representing the end of the line segment
+ * @return smallest distance to a given line segment
+ */
+inline double distance_point_to_segment_2d(const Eigen::Ref<const Eigen::Vector2d>& point, const Eigen::Ref<const Eigen::Vector2d>& line_start, const Eigen::Ref<const Eigen::Vector2d>& line_end)
+{
+  return (point - closest_point_on_line_segment_2d(point, line_start, line_end)).norm();
+}
+  
+/**
  * @brief Helper function to calculate the smallest distance between two line segments
  * @param line1_start 2D point representing the start of the first line segment
  * @param line1_end 2D point representing the end of the first line segment
@@ -155,7 +155,6 @@ inline double distance_segment_to_segment_2d(const Eigen::Ref<const Eigen::Vecto
   
   return *std::min_element(distances.begin(), distances.end());
 }
-  
   
 /**
  * @brief Helper function to calculate the smallest distance between a point and a closed polygon
@@ -190,8 +189,8 @@ inline double distance_point_to_polygon_2d(const Eigen::Vector2d& point, const P
   }
   
   return dist;
-}  
-
+}
+  
 /**
  * @brief Helper function to calculate the smallest distance between a line segment and a closed polygon
  * @param line_start 2D point representing the start of the line segment
@@ -227,7 +226,7 @@ inline double distance_segment_to_polygon_2d(const Eigen::Vector2d& line_start, 
   
   return dist;
 }
-
+  
 /**
  * @brief Helper function to calculate the smallest distance between two closed polygons
  * @param vertices1 Vertices describing the first closed polygon (the first vertex is not repeated at the end)
@@ -261,7 +260,164 @@ inline double distance_polygon_to_polygon_2d(const Point2dContainer& vertices1, 
 
   return dist;
 }
+
+
+/**
+ * @brief Helper function to obtain the farthest point on a line segment w.r.t. a reference point
+ * @param point 2D point
+ * @param line_start 2D point representing the start of the line segment
+ * @param line_end 2D point representing the end of the line segment
+ * @return farthest point on the line segment
+ */
+inline Eigen::Vector2d farthest_point_on_line_segment_2d(const Eigen::Ref<const Eigen::Vector2d>& point, const Eigen::Ref<const Eigen::Vector2d>& line_start, const Eigen::Ref<const Eigen::Vector2d>& line_end)
+{
+  const double dist_start = (point - line_start).norm();
+  const double dist_end = (point - line_end).norm();
+
+  if (dist_start >= dist_end)
+    return line_start;
+  else
+    return line_end;
+}
   
+/**
+ * @brief Helper function to calculate the largest distance between a line segment and a point
+ * @param point 2D point
+ * @param line_start 2D point representing the start of the line segment
+ * @param line_end 2D point representing the end of the line segment
+ * @return largest distance to a given line segment
+ */
+inline double max_distance_point_to_segment_2d(const Eigen::Ref<const Eigen::Vector2d>& point, const Eigen::Ref<const Eigen::Vector2d>& line_start, const Eigen::Ref<const Eigen::Vector2d>& line_end)
+{
+  return (point - farthest_point_on_line_segment_2d(point, line_start, line_end)).norm();
+}
+  
+/**
+ * @brief Helper function to calculate the largest distance between two line segments
+ * @param line1_start 2D point representing the start of the first line segment
+ * @param line1_end 2D point representing the end of the first line segment
+ * @param line2_start 2D point representing the start of the second line segment
+ * @param line2_end 2D point representing the end of the second line segment
+ * @return largest distance between both segments
+*/
+inline double max_distance_segment_to_segment_2d(const Eigen::Ref<const Eigen::Vector2d>& line1_start, const Eigen::Ref<const Eigen::Vector2d>& line1_end, 
+                                                 const Eigen::Ref<const Eigen::Vector2d>& line2_start, const Eigen::Ref<const Eigen::Vector2d>& line2_end)
+{
+  // TODO more efficient implementation
+  
+  // check all 4 combinations
+  std::array<double,4> distances;
+  
+  distances[0] = max_distance_point_to_segment_2d(line1_start, line2_start, line2_end);
+  distances[1] = max_distance_point_to_segment_2d(line1_end, line2_start, line2_end);
+  distances[2] = max_distance_point_to_segment_2d(line2_start, line1_start, line1_end);
+  distances[3] = max_distance_point_to_segment_2d(line2_end, line1_start, line1_end);
+  
+  return *std::max_element(distances.begin(), distances.end());
+}
+  
+/**
+ * @brief Helper function to calculate the largest distance between a point and a closed polygon
+ * @param point 2D point
+ * @param vertices Vertices describing the closed polygon (the first vertex is not repeated at the end)
+ * @return largest distance between point and polygon
+*/
+inline double max_distance_point_to_polygon_2d(const Eigen::Vector2d& point, const Point2dContainer& vertices)
+{
+  double dist = -HUGE_VAL;
+
+  // the polygon is a point
+  if (vertices.size() == 1)
+  {
+    return (point - vertices.front()).norm();
+  }
+
+  // check each polygon edge
+  for (int i=0; i<(int)vertices.size()-1; ++i)
+  {
+      double new_dist = max_distance_point_to_segment_2d(point, vertices.at(i), vertices.at(i+1));
+      if (new_dist > dist)
+        dist = new_dist;
+  }
+
+  if (vertices.size()>2) // if not a line close polygon
+  {
+    double new_dist = max_distance_point_to_segment_2d(point, vertices.back(), vertices.front()); // check last edge
+    if (new_dist > dist)
+      return new_dist;
+  }
+
+  return dist;
+}
+  
+/**
+ * @brief Helper function to calculate the largest distance between a line segment and a closed polygon
+ * @param line_start 2D point representing the start of the line segment
+ * @param line_end 2D point representing the end of the line segment
+ * @param vertices Vertices describing the closed polygon (the first vertex is not repeated at the end)
+ * @return largest distance between point and polygon
+*/
+inline double max_distance_segment_to_polygon_2d(const Eigen::Vector2d& line_start, const Eigen::Vector2d& line_end, const Point2dContainer& vertices)
+{
+  double dist = -HUGE_VAL;
+
+  // the polygon is a point
+  if (vertices.size() == 1)
+  {
+    return max_distance_point_to_segment_2d(vertices.front(), line_start, line_end);
+  }
+
+  // check each polygon edge
+  for (int i=0; i<(int)vertices.size()-1; ++i)
+  {
+      double new_dist = max_distance_segment_to_segment_2d(line_start, line_end, vertices.at(i), vertices.at(i+1));
+      if (new_dist > dist)
+        dist = new_dist;
+  }
+
+  if (vertices.size()>2) // if not a line close polygon
+  {
+    double new_dist = max_distance_segment_to_segment_2d(line_start, line_end, vertices.back(), vertices.front()); // check last edge
+    if (new_dist > dist)
+      return new_dist;
+  }
+
+  return dist;
+}
+  
+/**
+ * @brief Helper function to calculate the largest distance between two closed polygons
+ * @param vertices1 Vertices describing the first closed polygon (the first vertex is not repeated at the end)
+ * @param vertices2 Vertices describing the second closed polygon (the first vertex is not repeated at the end)
+ * @return largest distance between point and polygon
+*/
+inline double max_distance_polygon_to_polygon_2d(const Point2dContainer& vertices1, const Point2dContainer& vertices2)
+{
+  double dist = -HUGE_VAL;
+
+  // the polygon1 is a point
+  if (vertices1.size() == 1)
+  {
+    return max_distance_point_to_polygon_2d(vertices1.front(), vertices2);
+  }
+
+  // check each edge of polygon1
+  for (int i=0; i<(int)vertices1.size()-1; ++i)
+  {
+      double new_dist = max_distance_segment_to_polygon_2d(vertices1[i], vertices1[i+1], vertices2);
+      if (new_dist > dist)
+        dist = new_dist;
+  }
+
+  if (vertices1.size()>2) // if not a line close polygon1
+  {
+    double new_dist = max_distance_segment_to_polygon_2d(vertices1.back(), vertices1.front(), vertices2); // check last edge
+    if (new_dist > dist)
+      return new_dist;
+  }
+
+  return dist;
+}
   
   
   

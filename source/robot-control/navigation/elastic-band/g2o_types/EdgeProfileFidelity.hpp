@@ -112,12 +112,12 @@ public:
     const double angle_diff = g2o::normalize_theta(conf2->theta() - conf1->theta());
     if (cfg_->trajectory.exact_arc_length && angle_diff != 0)
     {
-        double radius =  dist / (2 * sin(angle_diff / 2));
-        dist = fabs(angle_diff * radius); // actual arg length!
+      double radius =  dist / (2 * std::sin(angle_diff / 2));
+      dist = std::abs(angle_diff * radius); // actual arg length!
     }
     double vel = dist / dt;
 
-    vel *= g2o::sign(deltaS[0] * std::cos(conf1->theta()) + deltaS[1] * std::sin(conf1->theta())); // consider direction
+    vel *= g2o::sign(deltaS.x() * std::cos(conf1->theta()) + deltaS.y() * std::sin(conf1->theta())); // consider direction
     // vel *= fast_sigmoid(100 * (deltaS.x() * std::cos(conf1->theta()) + deltaS.y() * std::sin(conf1->theta()))); // consider direction
 
     const double omega = angle_diff / dt;

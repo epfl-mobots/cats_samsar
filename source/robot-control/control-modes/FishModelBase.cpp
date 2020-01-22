@@ -76,7 +76,7 @@ ControlTargetPtr FishModelBase::step()
         // TODO : temporary, to remove
         // check if the target position is inside the model area
         if (!containsPoint(m_targetPosition)) {
-            qDebug() << "Attention: the target position is outside of the map";
+            //qDebug() << "Attention: the target position is outside of the map";
         }
         emit notifyControlModeStatus(status);
         return ControlTargetPtr(new TargetPosition(m_targetPosition));
@@ -129,7 +129,7 @@ PositionMeters FishModelBase::computeTargetPosition()
                 }
             }
             else {
-                qDebug() << "Number of fish in the simulator is wrongly initialized.";
+                //qDebug() << "Number of fish in the simulator is wrongly initialized.";
                 break;
             }
         }
@@ -159,8 +159,7 @@ PositionMeters FishModelBase::computeTargetPosition()
                 m_sim->robots[robotIndex].first->present = true;
             }
             else {
-                qDebug() << "The robot position is outside of the setup "
-                            "area or invalid";
+                //qDebug() << "The robot position is outside of the setup area or invalid";
                 m_sim->robots[robotIndex].first->present = false;
             }
         }

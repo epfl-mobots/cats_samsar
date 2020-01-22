@@ -82,18 +82,17 @@ void Navigation::setTargetSpeeds(TargetSpeeds* targetSpeeds)
     const Values::size_type length     = static_cast<const Values::size_type>(std::max(size_left, size_right));
     commands.reserve(2 * length);
     for (Values::size_type i = 0; i < length; i++) {
-        if (size_left > i) {
+        if (size_left > i)
             commands.append(targetSpeeds->leftSpeeds().at(i));
-        } else {
+        else
             commands.append(targetSpeeds->leftSpeeds().back());
-        }
-        if (size_right > i) {
+        if (size_right > i)
             commands.append(targetSpeeds->rightSpeeds().at(i));
-        } else {
+        else
             commands.append(targetSpeeds->rightSpeeds().back());
-        }
     }
-    sendMotorCommands(commands);
+    const int index = targetSpeeds->startingIndex();
+    sendMotorCommands(commands, index);
 }
 
 /*!
@@ -199,16 +198,15 @@ void Navigation::sendMotorSpeed(double angularSpeed)
 /*!
  * Sends next motor commands to the robot.
  */
-void Navigation::sendMotorCommands(Values commands)
+void Navigation::sendMotorCommands(Values commands, int index)
 {
     QString eventName = "MotorCommands" + m_robot->name();
-    while (commands.size() > 30) { // aseba events are limited to 32 args
+    while (commands.size() > 30) // Aseba events are limited to 32 args
         commands.removeLast();
-    }
-    if (commands.size() % 2) {
+    if (commands.size() % 2)
         commands.append(commands.back());
-    }
     commands.prepend(static_cast<qint16>(commands.size() / 2));
+    commands.prepend(static_cast<qint16>(index));
     m_robot->sendEvent(eventName, commands);
 }
 

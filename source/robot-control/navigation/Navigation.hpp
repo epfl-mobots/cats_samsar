@@ -122,7 +122,7 @@ private:
     //! Sends the motor speed to the robot. It's converted from the angular speed.
     void sendMotorSpeed(double angularSpeedCmSec);
     //! Sends next motor commands to the robot.
-    void sendMotorCommands(Values commands);
+    void sendMotorCommands(Values commands, int index = 0);
     //! Sends the fish behavior parameters to the robot.
     void sendFishMotionParameters(int angle, int distance, int speed);
     //! Sends the local obstacle type to the robot.

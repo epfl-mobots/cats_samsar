@@ -70,10 +70,11 @@ class TargetSpeeds : public ControlTarget
 {
 public:
     //! Constructor.
-    explicit TargetSpeeds(Values leftSpeeds = Values(), Values rightSpeeds = Values()) :
+    explicit TargetSpeeds(Values leftSpeeds = Values(), Values rightSpeeds = Values(), int startingIndex = 0) :
         ControlTarget(ControlTargetType::SPEEDS),
         m_leftSpeeds(leftSpeeds),
-        m_rightSpeeds(rightSpeeds)
+        m_rightSpeeds(rightSpeeds),
+        m_startingIndex(startingIndex)
     {
     }
 
@@ -81,12 +82,16 @@ public:
     Values leftSpeeds() const { return m_leftSpeeds; }
     //! Return the right motor speeds.
     Values rightSpeeds() const { return m_rightSpeeds; }
+    //! Return the starting list index.
+    int startingIndex() const { return m_startingIndex; }
 
 private:
     //! Left motor target speeds.
     Values m_leftSpeeds;
     //! Right motor target speeds.
     Values m_rightSpeeds;
+    //! Starting index from previous command list.
+    int m_startingIndex;
 };
 
 /*!

@@ -89,10 +89,15 @@ void TebConfig::loadRosParamFromNodeHandle(const ros::NodeHandle& nh)
   nh.param("yaw_goal_tolerance", goal_tolerance.yaw_goal_tolerance, goal_tolerance.yaw_goal_tolerance);
   nh.param("free_goal_vel", goal_tolerance.free_goal_vel, goal_tolerance.free_goal_vel);
   nh.param("complete_global_plan", goal_tolerance.complete_global_plan, goal_tolerance.complete_global_plan);
-
+  
+  // Neighbors
+  nh.param("association_dist", neighbors.association_dist, neighbors.association_dist);
+  nh.param("min_neighbor_dist", neighbors.min_neighbor_dist, neighbors.min_neighbor_dist);
+  
   // Obstacles
   nh.param("min_obstacle_dist", obstacles.min_obstacle_dist, obstacles.min_obstacle_dist);
   nh.param("inflation_dist", obstacles.inflation_dist, obstacles.inflation_dist);
+  nh.param("influence_dist", obstacles.influence_dist, obstacles.influence_dist);
   nh.param("dynamic_obstacle_inflation_dist", obstacles.dynamic_obstacle_inflation_dist, obstacles.dynamic_obstacle_inflation_dist);
   nh.param("include_dynamic_obstacles", obstacles.include_dynamic_obstacles, obstacles.include_dynamic_obstacles);
   nh.param("include_costmap_obstacles", obstacles.include_costmap_obstacles, obstacles.include_costmap_obstacles);
@@ -107,10 +112,15 @@ void TebConfig::loadRosParamFromNodeHandle(const ros::NodeHandle& nh)
   // Optimization
   nh.param("no_inner_iterations", optim.no_inner_iterations, optim.no_inner_iterations);
   nh.param("no_outer_iterations", optim.no_outer_iterations, optim.no_outer_iterations);
+  nh.param("stop_below_significant_error_chi2", optim.stop_below_significant_error_chi2, optim.stop_below_significant_error_chi2);
   nh.param("stop_below_percentage_improvement", optim.stop_below_percentage_improvement, optim.stop_below_percentage_improvement);
   nh.param("stop_after_elapsed_time_microsecs", optim.stop_after_elapsed_time_microsecs, optim.stop_after_elapsed_time_microsecs);
   nh.param("optimization_activate", optim.optimization_activate, optim.optimization_activate);
   nh.param("optimization_verbose", optim.optimization_verbose, optim.optimization_verbose);
+  nh.param("single_dynamics_edge", optim.single_dynamics_edge, optim.single_dynamics_edge);
+  nh.param("set_orientate_action", optim.set_orientate_action, optim.set_orientate_action);
+  nh.param("save_optimized_graph", optim.save_optimized_graph, optim.save_optimized_graph);
+  nh.param("file_optimized_graph", optim.file_optimized_graph, optim.file_optimized_graph);
   nh.param("penalty_epsilon", optim.penalty_epsilon, optim.penalty_epsilon);
   nh.param("weight_max_vel_x", optim.weight_max_vel_x, optim.weight_max_vel_x);
   nh.param("weight_max_vel_y", optim.weight_max_vel_y, optim.weight_max_vel_y);
@@ -123,10 +133,14 @@ void TebConfig::loadRosParamFromNodeHandle(const ros::NodeHandle& nh)
   nh.param("weight_kinematics_turning_radius", optim.weight_kinematics_turning_radius, optim.weight_kinematics_turning_radius);
   nh.param("weight_optimaltime", optim.weight_optimaltime, optim.weight_optimaltime);
   nh.param("weight_shortest_path", optim.weight_shortest_path, optim.weight_shortest_path);
-  nh.param("weight_profile_fidelity", optim.weight_profile_fidelity, optim.weight_profile_fidelity);
+  nh.param("weight_profile_fidelity_v", optim.weight_profile_fidelity_v, optim.weight_profile_fidelity_v);
+  nh.param("weight_profile_fidelity_w", optim.weight_profile_fidelity_w, optim.weight_profile_fidelity_w);
+  nh.param("weight_profile_fidelity_t", optim.weight_profile_fidelity_t, optim.weight_profile_fidelity_t);
+  nh.param("weight_neighbor", optim.weight_neighbor, optim.weight_neighbor);
   nh.param("weight_obstacle", optim.weight_obstacle, optim.weight_obstacle);
-  nh.param("weight_inflation", optim.weight_inflation, optim.weight_inflation);
-  nh.param("weight_dynamic_obstacle", optim.weight_dynamic_obstacle, optim.weight_dynamic_obstacle);    
+  nh.param("weight_obstacle_inflation", optim.weight_obstacle_inflation, optim.weight_obstacle_inflation);
+  nh.param("weight_obstacle_influence", optim.weight_obstacle_influence, optim.weight_obstacle_influence);
+  nh.param("weight_dynamic_obstacle", optim.weight_dynamic_obstacle, optim.weight_dynamic_obstacle);
   nh.param("weight_dynamic_obstacle_inflation", optim.weight_dynamic_obstacle_inflation, optim.weight_dynamic_obstacle_inflation);
   nh.param("weight_viapoint", optim.weight_viapoint, optim.weight_viapoint);
   nh.param("weight_prefer_rotdir", optim.weight_prefer_rotdir, optim.weight_prefer_rotdir);
@@ -207,9 +221,14 @@ void TebConfig::reconfigure(teb_local_planner::TebLocalPlannerReconfigureConfig&
   goal_tolerance.yaw_goal_tolerance = cfg.yaw_goal_tolerance;
   goal_tolerance.free_goal_vel = cfg.free_goal_vel;
   
+  // Neighbors
+  neighbors.association_dist = 0; // TODO: add member association_dist in class teb_local_planner::TebLocalPlannerReconfigureConfig
+  neighbors.min_neighbor_dist = 0; // TODO: add member min_neighbor_dist in class teb_local_planner::TebLocalPlannerReconfigureConfig
+  
   // Obstacles
   obstacles.min_obstacle_dist = cfg.min_obstacle_dist;
   obstacles.inflation_dist = cfg.inflation_dist;
+  obstacles.influence_dist = 0; // TODO: add member influence_dist in class teb_local_planner::TebLocalPlannerReconfigureConfig
   obstacles.dynamic_obstacle_inflation_dist = cfg.dynamic_obstacle_inflation_dist;
   obstacles.include_dynamic_obstacles = cfg.include_dynamic_obstacles;
   obstacles.include_costmap_obstacles = cfg.include_costmap_obstacles;
@@ -223,10 +242,15 @@ void TebConfig::reconfigure(teb_local_planner::TebLocalPlannerReconfigureConfig&
   // Optimization
   optim.no_inner_iterations = cfg.no_inner_iterations;
   optim.no_outer_iterations = cfg.no_outer_iterations;
+  optim.stop_below_significant_error_chi2 = 0; // TODO: add member stop_below_significant_error_chi2 in class teb_local_planner::TebLocalPlannerReconfigureConfig
   optim.stop_below_percentage_improvement = 0; // TODO: add member stop_below_percentage_improvement in class teb_local_planner::TebLocalPlannerReconfigureConfig
   optim.stop_after_elapsed_time_microsecs = 0; // TODO: add member stop_after_elapsed_time_microsecs in class teb_local_planner::TebLocalPlannerReconfigureConfig
   optim.optimization_activate = cfg.optimization_activate;
   optim.optimization_verbose = cfg.optimization_verbose;
+  optim.single_dynamics_edge = false; // TODO: add member single_dynamics_edge in class teb_local_planner::TebLocalPlannerReconfigureConfig
+  optim.set_orientate_action = false; // TODO: add member set_orientate_action in class teb_local_planner::TebLocalPlannerReconfigureConfig
+  optim.save_optimized_graph = false; // TODO: add member save_optimized_graph in class teb_local_planner::TebLocalPlannerReconfigureConfig
+  optim.file_optimized_graph = ""; // TODO: add member file_optimized_graph in class teb_local_planner::TebLocalPlannerReconfigureConfig
   optim.penalty_epsilon = cfg.penalty_epsilon;
   optim.weight_max_vel_x = cfg.weight_max_vel_x;
   optim.weight_max_vel_y = cfg.weight_max_vel_y;
@@ -239,9 +263,13 @@ void TebConfig::reconfigure(teb_local_planner::TebLocalPlannerReconfigureConfig&
   optim.weight_kinematics_turning_radius = cfg.weight_kinematics_turning_radius;
   optim.weight_optimaltime = cfg.weight_optimaltime;
   optim.weight_shortest_path = cfg.weight_shortest_path;
-  optim.weight_profile_fidelity = 0; // TODO: add member weight_profile_fidelity in class teb_local_planner::TebLocalPlannerReconfigureConfig
+  optim.weight_profile_fidelity_v = 0; // TODO: add member weight_profile_fidelity_v in class teb_local_planner::TebLocalPlannerReconfigureConfig
+  optim.weight_profile_fidelity_w = 0; // TODO: add member weight_profile_fidelity_w in class teb_local_planner::TebLocalPlannerReconfigureConfig
+  optim.weight_profile_fidelity_t = 0; // TODO: add member weight_profile_fidelity_t in class teb_local_planner::TebLocalPlannerReconfigureConfig
+  optim.weight_neighbor = 0; // TODO: add member weight_neighbor in class teb_local_planner::TebLocalPlannerReconfigureConfig
   optim.weight_obstacle = cfg.weight_obstacle;
-  optim.weight_inflation = cfg.weight_inflation;
+  optim.weight_obstacle_inflation = 0; // TODO: add member weight_obstacle_inflation in class teb_local_planner::TebLocalPlannerReconfigureConfig
+  optim.weight_obstacle_influence = 0; // TODO: add member weight_obstacle_influence in class teb_local_planner::TebLocalPlannerReconfigureConfig
   optim.weight_dynamic_obstacle = cfg.weight_dynamic_obstacle;
   optim.weight_dynamic_obstacle_inflation = cfg.weight_dynamic_obstacle_inflation;
   optim.weight_viapoint = cfg.weight_viapoint;
@@ -330,8 +358,8 @@ void TebConfig::checkParameters() const
       ROS_WARN("TebLocalPlannerROS() Param Warning: parameter oscillation_filter_duration must be >= 0");
 
   // weights
-  if (optim.weight_optimaltime <= 0 && optim.weight_profile_fidelity <= 0)
-      ROS_WARN("TebLocalPlannerROS() Param Warning: parameter weight_optimaltime or weight_profile_fidelity shoud be > 0 (even if weight_shortest_path is in use)");
+  if (optim.weight_optimaltime <= 0 && optim.weight_profile_fidelity_v <= 0)
+      ROS_WARN("TebLocalPlannerROS() Param Warning: parameter weight_optimaltime or weight_profile_fidelity_v shoud be > 0 (even if weight_shortest_path is in use)");
   
 }    
 

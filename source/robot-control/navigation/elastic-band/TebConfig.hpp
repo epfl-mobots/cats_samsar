@@ -55,6 +55,8 @@
 namespace elastic_band
 {
 
+using namespace std;
+
 /**
  * @class TebConfig
  * @brief Config class for the teb_local_planner and its components.
@@ -69,7 +71,7 @@ public:
   //! Trajectory related parameters
   struct Trajectory
   {
-    double teb_autosize; //!< Enable automatic resizing of the trajectory w.r.t to the temporal resolution (recommended)
+    bool teb_autosize; //!< Enable automatic resizing of the trajectory w.r.t to the temporal resolution (recommended)
     double dt_ref; //!< Desired temporal resolution of the trajectory (should be in the magniture of the underlying control rate)
     double dt_hysteresis; //!< Hysteresis for automatic resizing depending on the current temporal resolution (dt): usually 10% of dt_ref
     int min_samples; //!< Minimum number of samples (should be always greater than 2)
@@ -113,11 +115,19 @@ public:
     bool complete_global_plan; // true prevents the robot from ending the path early when it cross the end goal
   } goal_tolerance; //!< Goal tolerance related parameters
 
-  //! Obstacle related parameters
+  //! Neighbors related parameters
+  struct Neighbors
+  {
+    double association_dist; //!< Minimum required seperation from neighbors to connect vertices
+    double min_neighbor_dist; //!< Minimum desired separation from neighbors
+  } neighbors;
+
+  //! Obstacles related parameters
   struct Obstacles
   {
     double min_obstacle_dist; //!< Minimum desired separation from obstacles
     double inflation_dist; //!< buffer zone around obstacles with non-zero penalty costs (should be larger than min_obstacle_dist in order to take effect)
+    double influence_dist; //!< influential zone around obstacles with tangential alignment (should be larger than min_obstacle_dist in order to take effect)
     double dynamic_obstacle_inflation_dist; //!< Buffer zone around predicted locations of dynamic obstacles with non-zero penalty costs (should be larger than min_obstacle_dist in order to take effect)
     bool include_dynamic_obstacles; //!< Specify whether the movement of dynamic obstacles should be predicted by a constant velocity model (this also effects homotopy class planning); If false, all obstacles are considered to be static.
     bool include_costmap_obstacles; //!< Specify whether the obstacles in the costmap should be taken into account directly
@@ -137,11 +147,18 @@ public:
   {
     int no_inner_iterations; //!< Number of solver iterations called in each outerloop iteration
     int no_outer_iterations; //!< Each outerloop iteration automatically resizes the trajectory and invokes the internal optimizer with no_inner_iterations
-    int stop_below_percentage_improvement; //!< Stop the optimization process at the end of an innerloop iteration as soon as the percentage of improvement is below this threshold (set it at zero to remove this end condition)
-    int stop_after_elapsed_time_microsecs; //!< Stop the optimization process at the end of an innerloop iteration as soon as the total elapsed time is greater than this threshold (set it at zero to remove this end condition)
+
+    double stop_below_significant_error_chi2; //!< Stop the optimization process at the end of an innerloop iteration as soon as the entire active graph error is below this threshold (set it at zero to remove this end condition)
+    double stop_below_percentage_improvement; //!< Stop the optimization process at the end of an innerloop iteration as soon as the percentage of improvement is below this threshold (set it at zero to remove this end condition)
+    double stop_after_elapsed_time_microsecs; //!< Stop the optimization process at the end of an innerloop iteration as soon as the total elapsed time is greater than this threshold (set it at zero to remove this end condition)
 
     bool optimization_activate; //!< Activate the optimization
     bool optimization_verbose; //!< Print verbose information
+
+    bool single_dynamics_edge; //!< Embed all dynamics objectives and constraints in a single graph edge to avoid duplicate computation of derivatives
+    bool set_orientate_action; //!< Enable the custom orientate action at the beginning of every iteration
+    bool save_optimized_graph; //!< Write the connectivity graph in a file at the end of the optimization
+  string file_optimized_graph; //!< File in which to write the optimized connectivity graph information
 
     double penalty_epsilon; //!< Add a small safety margin to penalty functions for hard-constraint approximations
 
@@ -156,9 +173,13 @@ public:
     double weight_kinematics_turning_radius; //!< Optimization weight for enforcing a minimum turning radius (carlike robots)
     double weight_optimaltime; //!< Optimization weight for contracting the trajectory w.r.t. transition time
     double weight_shortest_path; //!< Optimization weight for contracting the trajectory w.r.t. path length
-    double weight_profile_fidelity; //!< Optimization weight for contracting the trajectory w.r.t. velocity profile
+    double weight_profile_fidelity_v; //!< Optimization weight for contracting the trajectory w.r.t. linear velocity profile
+    double weight_profile_fidelity_w; //!< Optimization weight for contracting the trajectory w.r.t. angular velocity profile
+    double weight_profile_fidelity_t; //!< Optimization weight for contracting the trajectory w.r.t. temporal velocity profile
+    double weight_neighbor; //!< Optimization weight for satisfying a minimum separation from neighbors
     double weight_obstacle; //!< Optimization weight for satisfying a minimum separation from obstacles
-    double weight_inflation; //!< Optimization weight for the inflation penalty (should be small)
+    double weight_obstacle_inflation; //!< Optimization weight for the inflation penalty (should be small)
+    double weight_obstacle_influence; //!< Optimization weight for the influence penalty (should be small)
     double weight_dynamic_obstacle; //!< Optimization weight for satisfying a minimum separation from dynamic obstacles
     double weight_dynamic_obstacle_inflation; //!< Optimization weight for the inflation penalty of dynamic obstacles (should be small)
     double weight_viapoint; //!< Optimization weight for minimizing the distance to via-points
@@ -274,10 +295,16 @@ public:
     goal_tolerance.free_goal_vel = false;
     goal_tolerance.complete_global_plan = true;
 
+    // Neighbors
+
+    neighbors.association_dist = 0;
+    neighbors.min_neighbor_dist = 0;
+
     // Obstacles
 
     obstacles.min_obstacle_dist = 0.5;
     obstacles.inflation_dist = 0.6;
+    obstacles.influence_dist = 0.7;
     obstacles.dynamic_obstacle_inflation_dist = 0.6;
     obstacles.include_dynamic_obstacles = true;
     obstacles.include_costmap_obstacles = true;
@@ -294,10 +321,15 @@ public:
 
     optim.no_inner_iterations = 5;
     optim.no_outer_iterations = 4;
+    optim.stop_below_significant_error_chi2 = 0.01;
     optim.stop_below_percentage_improvement = 1;
     optim.stop_after_elapsed_time_microsecs = 1000000;
     optim.optimization_activate = true;
     optim.optimization_verbose = false;
+    optim.single_dynamics_edge = false;
+    optim.set_orientate_action = false;
+    optim.save_optimized_graph = false;
+    optim.file_optimized_graph = "";
     optim.penalty_epsilon = 0.1;
     optim.weight_max_vel_x = 2; //1
     optim.weight_max_vel_y = 2;
@@ -310,9 +342,13 @@ public:
     optim.weight_kinematics_turning_radius = 1;
     optim.weight_optimaltime = 1;
     optim.weight_shortest_path = 0;
-    optim.weight_profile_fidelity = 0;
+    optim.weight_profile_fidelity_v = 0;
+    optim.weight_profile_fidelity_w = 0;
+    optim.weight_profile_fidelity_t = 0;
+    optim.weight_neighbor = 0;
     optim.weight_obstacle = 50;
-    optim.weight_inflation = 0.1;
+    optim.weight_obstacle_inflation = 0.1;
+    optim.weight_obstacle_influence = 1;
     optim.weight_dynamic_obstacle = 50;
     optim.weight_dynamic_obstacle_inflation = 0.1;
     optim.weight_viapoint = 1;

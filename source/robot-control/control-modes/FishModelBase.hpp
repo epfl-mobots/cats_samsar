@@ -53,7 +53,7 @@ protected:
 protected:
     //! The model related data.
     std::unique_ptr<Fishmodel::Arena> m_arena;
-    std::unique_ptr<Fishmodel::Simulation> m_sim;
+    Fishmodel::Simulation* m_sim;
 
 private:
     //! The resolution of the setup matrix.

@@ -191,7 +191,6 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 };
-  
 
 
 /**
@@ -230,8 +229,8 @@ public:
 
     double dist = robot_model_->calculateDistance(bandpt->pose(), _measurement);
 
-    // Original "straight line" obstacle cost. The max possible value
-    // before weighting is min_obstacle_dist
+    // Original "straight line" obstacle cost.
+    // The max possible value before weighting is min_obstacle_dist.
     _error[0] = penaltyBoundFromBelow(dist, cfg_->obstacles.min_obstacle_dist, cfg_->optim.penalty_epsilon);
 
     if (cfg_->optim.obstacle_cost_exponent != 1.0 && cfg_->obstacles.min_obstacle_dist > 0.0)
@@ -247,8 +246,7 @@ public:
     // Additional linear inflation cost
     _error[1] = penaltyBoundFromBelow(dist, cfg_->obstacles.inflation_dist, 0.0);
 
-
-    ROS_ASSERT_MSG(std::isfinite(_error[0]) && std::isfinite(_error[1]), "EdgeInflatedObstacle::computeError() _error[0]=%f, _error[1]=%f\n",_error[0], _error[1]);
+    ROS_ASSERT_MSG(std::isfinite(_error[0]) && std::isfinite(_error[1]), "EdgeInflatedObstacle::computeError() _error[0]=%f, _error[1]=%f\n", _error[0], _error[1]);
   }
 
   /**
@@ -287,6 +285,135 @@ protected:
   const BaseRobotFootprintModel* robot_model_; //!< Store pointer to robot_model
   
 public:         
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+};
+
+
+/**
+ * @class EdgeInfluentialObstacle
+ * @brief Edge defining the cost function for aligning tangentially to obstacles and for keeping a minimum distance from inflated obstacles.
+ *
+ * The edge depends on a single vertex \f$ \mathbf{s}_i \f$ and minimizes: \n
+ * \f$ \min \textrm{penaltyBelow}( dist2obst, min_obstacle_dist ) \cdot weight_obstacle \f$. \n
+ * Additional, a second penalty is provided with \n
+ * \f$ \min \textrm{penaltyBelow}( dist2obst, inflation_dist ) \cdot weight_obstacle_inflation \f$.
+ * Moreover, a third objective is defined by \n
+ * \f$ \min ((angle_diff / (pi/2)) * (1 - (dist2obst - min_obstacle_dist) / (influence_dist - min_obstacle_dist))) ^ 2 \cdot weight_obstacle_influence \f$.
+ * It is assumed that inflation_dist > min_obstacle_dist and influence_dist > min_obstacle_dist.
+ * \e dist2obst denotes the minimum distance to the obstacle. \n
+ * \e angle_diff denotes the angle between the heading direction and the tangent to the obstacle at the current position. \n
+ * \e penaltyBelow denotes the penalty function, see penaltyBoundFromBelow() \n
+ * @see TebPlanner::AddEdgesObstacles, TebPlanner::EdgeObstacle, TebPlanner::EdgeInflatedObstacle
+ * @remarks Do not forget to call setTebConfig() and setObstacle()
+ */
+class EdgeInfluentialObstacle : public BaseTebUnaryEdge<3, const Obstacle*, VertexPose>
+{
+public:
+
+  /**
+   * @brief Construct edge.
+   */
+  EdgeInfluentialObstacle()
+  {
+    _measurement = NULL;
+  }
+
+  /**
+   * @brief Actual cost function
+   */
+  void computeError()
+  {
+    ROS_ASSERT_MSG(cfg_ && _measurement && robot_model_, "You must call setTebConfig(), setObstacle() and setRobotModel() on EdgeInfluentialObstacle()");
+    const VertexPose* bandpt = static_cast<const VertexPose*>(_vertices[0]);
+
+    double dist = robot_model_->calculateDistance(bandpt->pose(), _measurement);
+
+    // Original "straight line" obstacle cost.
+    // The max possible value before weighting is min_obstacle_dist.
+    _error[0] = penaltyBoundFromBelow(dist, cfg_->obstacles.min_obstacle_dist, cfg_->optim.penalty_epsilon);
+
+    if (cfg_->optim.obstacle_cost_exponent != 1.0 && cfg_->obstacles.min_obstacle_dist > 0.0)
+    {
+      // Optional non-linear cost. Note the max cost (before weighting) is
+      // the same as the straight line version and that all other costs are
+      // below the straight line (for positive exponent), so it may be
+      // necessary to increase weight_obstacle and/or the inflation_weight
+      // when using larger exponents.
+      _error[0] = cfg_->obstacles.min_obstacle_dist * std::pow(_error[0] / cfg_->obstacles.min_obstacle_dist, cfg_->optim.obstacle_cost_exponent);
+    }
+
+    // Additional linear inflation cost
+    _error[1] = penaltyBoundFromBelow(dist, cfg_->obstacles.inflation_dist, 0.0);
+
+    // Additional tangent influence cost
+    // TODO: implement generic methods in obstacle classes to generate distance and normal/tangent vector
+    /*const */Eigen::Vector2d normal = bandpt->position() - _measurement->getCentroid();
+    const double distance = dist;
+    if (typeid(*_measurement).name() != typeid(AnnularObstacle).name())
+      normal *= -1;
+    if (distance <= cfg_->obstacles.influence_dist)
+    {
+      const double angle_normalization = M_PI/2;
+      const double angle_modulation = 1 - (distance - cfg_->obstacles.min_obstacle_dist) / (cfg_->obstacles.influence_dist - cfg_->obstacles.min_obstacle_dist);
+      const double normal_direction = std::atan2(normal.y(), normal.x());
+      const double robot_direction = bandpt->theta();
+      if (std::abs(g2o::normalize_theta(robot_direction - normal_direction)) < angle_normalization * angle_modulation)
+      {
+        const double tangent_direction_left  = g2o::normalize_theta(normal_direction + M_PI/2);
+        const double tangent_direction_right = g2o::normalize_theta(normal_direction - M_PI/2);
+        const double tangent_direction = std::abs(g2o::normalize_theta(robot_direction - tangent_direction_left))
+                                       < std::abs(g2o::normalize_theta(robot_direction - tangent_direction_right))
+                                       ? tangent_direction_left
+                                       : tangent_direction_right;
+        const double angle = std::abs(g2o::normalize_theta(robot_direction - tangent_direction));
+        _error[2] = std::pow((angle / angle_normalization) * angle_modulation, 2);
+      }
+      else
+        _error[2] = 0;
+    }
+    else
+      _error[2] = 0;
+
+    ROS_ASSERT_MSG(std::isfinite(_error[0]) && std::isfinite(_error[1]) && std::isfinite(_error[2]), "EdgeInfluentialObstacle::computeError() _error[0]=%f, _error[1]=%f, _error[2]=%f\n", _error[0], _error[1], _error[2]);
+  }
+
+  /**
+   * @brief Set pointer to associated obstacle for the underlying cost function
+   * @param obstacle 2D position vector containing the position of the obstacle
+   */
+  void setObstacle(const Obstacle* obstacle)
+  {
+    _measurement = obstacle;
+  }
+
+  /**
+   * @brief Set pointer to the robot model
+   * @param robot_model Robot model required for distance calculation
+   */
+  void setRobotModel(const BaseRobotFootprintModel* robot_model)
+  {
+    robot_model_ = robot_model;
+  }
+
+  /**
+   * @brief Set all parameters at once
+   * @param cfg TebConfig class
+   * @param robot_model Robot model required for distance calculation
+   * @param obstacle 2D position vector containing the position of the obstacle
+   */
+  void setParameters(const TebConfig& cfg, const BaseRobotFootprintModel* robot_model, const Obstacle* obstacle)
+  {
+    cfg_ = &cfg;
+    robot_model_ = robot_model;
+    _measurement = obstacle;
+  }
+
+protected:
+
+  const BaseRobotFootprintModel* robot_model_; //!< Store pointer to robot_model
+
+public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 };

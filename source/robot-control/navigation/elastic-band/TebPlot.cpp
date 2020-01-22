@@ -333,7 +333,7 @@ QMainWindow* TebPlot::plotProfileAcceleration(const Trajectory* trajectory, QMai
     legends.append(QString("Max. ang. acc."));
 
     QList<bool> limited = {false, false, true, true, true, true};
-    QList<double> limits = {0, 0, -130, +130, -80, +80};
+    QList<double> limits = {0, 0, -130, +130, -20000, +20000};
     QList<size_t> links = {0, 1, 0, 0, 1, 1};
     QString axis = QString("Acceleration [cm/s^2]&[rad/s^2]");
 

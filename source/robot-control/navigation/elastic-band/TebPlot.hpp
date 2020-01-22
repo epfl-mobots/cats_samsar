@@ -89,7 +89,7 @@ public:
      * @return Window containing the chart view
      */
     static QMainWindow* plotPath(const Trajectory* trajectory, QMainWindow* window = nullptr, const QString title = QString("Path"),
-                                 const QPair<double, double> range = QPair<double, double>(-1, +1), const QPair<int, int> size = QPair<int, int>(800, 800));
+                                 const QPair<double, double> range = QPair<double, double>(-0.25, +0.25), const QPair<int, int> size = QPair<int, int>(800, 800));
 
     //@}
 

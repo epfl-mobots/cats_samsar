@@ -77,6 +77,14 @@ public:
 
 
   /**
+    * @brief Calculate the distance between two robot configurations
+    * @param pose1 First robot pose
+    * @param pose2 Second robot pose
+    * @return Euclidean distance between the two poses
+    */
+  virtual double calculateDistance(const PoseSE2& pose1, const PoseSE2& pose2) const = 0;
+
+  /**
     * @brief Calculate the distance between the robot and an obstacle
     * @param current_pose Current robot pose
     * @param obstacle Pointer to the obstacle
@@ -148,6 +156,17 @@ public:
   virtual ~PointRobotFootprint() {}
 
   /**
+    * @brief Calculate the distance between two robot configurations
+    * @param pose1 First robot pose
+    * @param pose2 Second robot pose
+    * @return Euclidean distance between the two poses
+    */
+  virtual double calculateDistance(const PoseSE2& pose1, const PoseSE2& pose2) const
+  {
+    return 0; // TODO
+  }
+
+  /**
     * @brief Calculate the distance between the robot and an obstacle
     * @param current_pose Current robot pose
     * @param obstacle Pointer to the obstacle
@@ -203,7 +222,18 @@ public:
     * @param radius radius of the robot
     */
   void setRadius(double radius) {radius_ = radius;}
-  
+
+  /**
+    * @brief Calculate the distance between two robot configurations
+    * @param pose1 First robot pose
+    * @param pose2 Second robot pose
+    * @return Euclidean distance between the two poses
+    */
+  virtual double calculateDistance(const PoseSE2& pose1, const PoseSE2& pose2) const
+  {
+    return 0; // TODO
+  }
+
   /**
     * @brief Calculate the distance between the robot and an obstacle
     * @param current_pose Current robot pose
@@ -291,7 +321,24 @@ public:
    */
   void setParameters(double front_offset, double front_radius, double rear_offset, double rear_radius) 
   {front_offset_=front_offset; front_radius_=front_radius; rear_offset_=rear_offset; rear_radius_=rear_radius;}
-  
+
+  /**
+    * @brief Calculate the distance between two robot configurations
+    * @param pose1 First robot pose
+    * @param pose2 Second robot pose
+    * @return Euclidean distance between the two poses
+    */
+  virtual double calculateDistance(const PoseSE2& pose1, const PoseSE2& pose2) const
+  {
+    const Eigen::Vector2d dir1 = pose1.orientationUnitVec();
+    const Eigen::Vector2d dir2 = pose2.orientationUnitVec();
+    const double dist_ff = ((pose1.position() + dir1*front_offset_) - (pose2.position() + dir2*front_offset_)).norm() - front_radius_ - front_radius_;
+    const double dist_fr = ((pose1.position() + dir1*front_offset_) - (pose2.position() - dir2* rear_offset_)).norm() - front_radius_ -  rear_radius_;
+    const double dist_rf = ((pose1.position() - dir1* rear_offset_) - (pose2.position() + dir2*front_offset_)).norm() -  rear_radius_ - front_radius_;
+    const double dist_rr = ((pose1.position() - dir1* rear_offset_) - (pose2.position() - dir2* rear_offset_)).norm() -  rear_radius_ -  rear_radius_;
+    return std::min(std::min(dist_ff, dist_fr), std::min(dist_rf, dist_rr));
+  }
+
   /**
     * @brief Calculate the distance between the robot and an obstacle
     * @param current_pose Current robot pose
@@ -436,7 +483,18 @@ public:
     line_start_ = line_start; 
     line_end_ = line_end;
   }
-  
+
+  /**
+    * @brief Calculate the distance between two robot configurations
+    * @param pose1 First robot pose
+    * @param pose2 Second robot pose
+    * @return Euclidean distance between the two poses
+    */
+  virtual double calculateDistance(const PoseSE2& pose1, const PoseSE2& pose2) const
+  {
+    return 0; // TODO
+  }
+
   /**
     * @brief Calculate the distance between the robot and an obstacle
     * @param current_pose Current robot pose
@@ -562,7 +620,18 @@ public:
    * @param vertices footprint vertices (only x and y) around the robot center (0,0) (do not repeat the first and last vertex at the end)
    */
   void setVertices(const Point2dContainer& vertices) {vertices_ = vertices;}
-  
+
+  /**
+    * @brief Calculate the distance between two robot configurations
+    * @param pose1 First robot pose
+    * @param pose2 Second robot pose
+    * @return Euclidean distance between the two poses
+    */
+  virtual double calculateDistance(const PoseSE2& pose1, const PoseSE2& pose2) const
+  {
+    return 0; // TODO
+  }
+
   /**
     * @brief Calculate the distance between the robot and an obstacle
     * @param current_pose Current robot pose

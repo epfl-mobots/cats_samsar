@@ -36,8 +36,8 @@ sudo modprobe v4l2loopback devices=4 exclusive_caps=0,0,0,0
 
 sleep 4
 gst-launch-0.10 --gst-plugin-path=/usr/local/lib/gstreamer-0.10/ --gst-plugin-load=libgstaravis-0.4.so aravissrc  \
-		! video/x-raw-gray,bpp=8,depth=8,width=2040,height=2040,framerate=15/1 ! tee name=t \
-		! queue ! ffmpegcolorspace ! videoscale ! videorate ! video/x-raw-yuv,width=2040,height=2040 ! v4l2sink device=/dev/video0 sync=false \
+		! video/x-raw-gray,bpp=8,depth=8,width=2048,height=2048,framerate=25/1 ! tee name=t \
+		! queue ! ffmpegcolorspace ! videoscale ! videorate ! video/x-raw-yuv,width=1500,height=1500 ! v4l2sink device=/dev/video0 sync=false \
 	t.	! queue ! ffmpegcolorspace ! videoscale ! video/x-raw-yuv,width=512,height=512 ! v4l2sink device=/dev/video1 sync=false &
 pid1=$!
                 #! queue ! ffmpegcolorspace ! videoscale ! videorate ! video/x-raw-yuv,width=1024,height=1024 ! v4l2sink device=/dev/video0 sync=false & #\

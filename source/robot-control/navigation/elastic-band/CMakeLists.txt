@@ -7,7 +7,9 @@ set(hdrs_g2o_types
     g2o_types/BaseTebEdges.hpp
     g2o_types/EdgeAcceleration.hpp
     g2o_types/EdgeDynamicObstacle.hpp
+    g2o_types/EdgeDynamics.hpp
     g2o_types/EdgeKinematics.hpp
+    g2o_types/EdgeNeighbor.hpp
     g2o_types/EdgeObstacle.hpp
     g2o_types/EdgePreferRotDir.hpp
     g2o_types/EdgeProfileFidelity.hpp

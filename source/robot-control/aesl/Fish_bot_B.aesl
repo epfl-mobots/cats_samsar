@@ -84,7 +84,7 @@ var IDControl=0
 # Variables used for obstacle avoidance
 var ObstacleAvoidance=3 #0=no obstacle avoidance 1=braitenberg  2=turn to avoid 3=braitenberg for MotorCommands
 var ThreshSensor=30
-var ThreshSensorMotorCommands=10
+var ThreshSensorMotorCommands=50
 
 # Variables used for turn to avoid
 var SpeedAvoid=5

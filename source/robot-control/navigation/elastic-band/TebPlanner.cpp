@@ -124,6 +124,7 @@ void TebPlanner::visualize()
  */
 void TebPlanner::registerG2OTypes()
 {
+  g2o::Factory::destroy();
   g2o::Factory* factory = g2o::Factory::instance();
   factory->registerType("VERTEX_POSE", new g2o::HyperGraphElementCreator<VertexPose>);
   factory->registerType("VERTEX_TIMEDIFF", new g2o::HyperGraphElementCreator<VertexTimeDiff>);
@@ -302,11 +303,14 @@ bool TebPlanner::optimizeTEB(int iterations_innerloop, int iterations_outerloop,
         i = iterations_outerloop-1;
     }
 
-    if (cfg_->optim.save_optimized_graph && i == iterations_outerloop-1) // save graph only in the last iteration
-      optimizer_->save(cfg_->optim.file_optimized_graph.c_str());
+    if (i == iterations_outerloop-1)
+    {
+      if (cfg_->optim.save_optimized_graph) // save hypergraph only in the last iteration
+        optimizer_->save(cfg_->optim.file_optimized_graph.c_str());
 
-    if (compute_cost_afterwards && i == iterations_outerloop-1) // compute cost vec only in the last iteration
-      computeCurrentCost(obst_cost_scale, viapoint_cost_scale, alternative_time_cost);
+      if (compute_cost_afterwards) // compute cost vec only in the last iteration
+        computeCurrentCost(obst_cost_scale, viapoint_cost_scale, alternative_time_cost);
+    }
 
     clearGraph();
 
@@ -672,7 +676,7 @@ void TebPlanner::AddTEBVertices()
 
 void TebPlanner::AddEdgesNeighbors()
 {
-  if (cfg_->optim.weight_neighbor==0 || trajectories_ref_==nullptr || trajectories_ref_->size() < 2)
+  if (cfg_->optim.weight_neighbor == 0 || trajectories_ref_ == nullptr || trajectories_ref_->size() < 2)
     return; // if weight equals zero or single robot skip adding edges!
 
   Eigen::Matrix<double,1,1> information;
@@ -719,7 +723,7 @@ void TebPlanner::AddEdgesNeighbors()
 
 void TebPlanner::AddEdgesObstacles(size_t length, size_t offset, double weight_multiplier)
 {
-  if (cfg_->optim.weight_obstacle==0 || weight_multiplier==0 || obstacles_==nullptr)
+  if (obstacles_==nullptr || (cfg_->optim.weight_obstacle_influence==0 && (cfg_->optim.weight_obstacle==0 || weight_multiplier==0)))
     return; // if weight equals zero skip adding edges!
 
   const bool inflated    = cfg_->obstacles.inflation_dist > cfg_->obstacles.min_obstacle_dist && cfg_->optim.weight_obstacle_inflation > 0;

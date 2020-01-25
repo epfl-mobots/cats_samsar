@@ -331,20 +331,28 @@ public:
 
     // Original "straight line" obstacle cost.
     // The max possible value before weighting is min_obstacle_dist.
-    _error[0] = penaltyBoundFromBelow(dist, cfg_->obstacles.min_obstacle_dist, cfg_->optim.penalty_epsilon);
-
-    if (cfg_->optim.obstacle_cost_exponent != 1.0 && cfg_->obstacles.min_obstacle_dist > 0.0)
+    if (cfg_->optim.weight_obstacle > 0)
     {
-      // Optional non-linear cost. Note the max cost (before weighting) is
-      // the same as the straight line version and that all other costs are
-      // below the straight line (for positive exponent), so it may be
-      // necessary to increase weight_obstacle and/or the inflation_weight
-      // when using larger exponents.
-      _error[0] = cfg_->obstacles.min_obstacle_dist * std::pow(_error[0] / cfg_->obstacles.min_obstacle_dist, cfg_->optim.obstacle_cost_exponent);
+      _error[0] = penaltyBoundFromBelow(dist, cfg_->obstacles.min_obstacle_dist, cfg_->optim.penalty_epsilon);
+
+      if (cfg_->optim.obstacle_cost_exponent != 1.0 && cfg_->obstacles.min_obstacle_dist > 0.0)
+      {
+        // Optional non-linear cost. Note the max cost (before weighting) is
+        // the same as the straight line version and that all other costs are
+        // below the straight line (for positive exponent), so it may be
+        // necessary to increase weight_obstacle and/or the inflation_weight
+        // when using larger exponents.
+        _error[0] = cfg_->obstacles.min_obstacle_dist * std::pow(_error[0] / cfg_->obstacles.min_obstacle_dist, cfg_->optim.obstacle_cost_exponent);
+      }
     }
+    else
+      _error[0] = 0;
 
     // Additional linear inflation cost
-    _error[1] = penaltyBoundFromBelow(dist, cfg_->obstacles.inflation_dist, 0.0);
+    if (cfg_->optim.weight_obstacle_inflation > 0)
+      _error[1] = penaltyBoundFromBelow(dist, cfg_->obstacles.inflation_dist, 0.0);
+    else
+      _error[1] = 0;
 
     // Additional tangent influence cost
     // TODO: implement generic methods in obstacle classes to generate distance and normal/tangent vector

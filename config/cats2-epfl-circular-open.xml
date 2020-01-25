@@ -36,7 +36,7 @@
                 <body_length>0.03</body_length>
                 <!-- Parameters for two agents -->
                 <!--
-                <radius>0.24</radius>
+                <radius>0.25</radius>
                 <perceived_agents>1</perceived_agents>
                 <gamma_rand>0.45</gamma_rand>
                 <gamma_wall>0.15</gamma_wall>

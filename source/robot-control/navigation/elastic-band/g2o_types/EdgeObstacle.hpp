@@ -367,7 +367,8 @@ public:
                                        ? tangent_direction_left
                                        : tangent_direction_right;
         const double angle = std::abs(g2o::normalize_theta(robot_direction - tangent_direction));
-        _error[2] = std::pow((angle / angle_normalization) * angle_modulation, 2);
+        //_error[2] = std::pow((angle / angle_normalization) * angle_modulation, 2);
+        _error[2] = angle / angle_normalization * angle_modulation;
       }
       else
         _error[2] = 0;

@@ -235,7 +235,7 @@ callsub stopTimer
 if pwgnd &lt; 1 then
     emit PowerDown[IDControl]
 end
-ObstacleAvoidance = 3
+ObstacleAvoidance = 0#3 # TODO: re-enable obstacle avoidance
 if event.args[1] > motorCommandMax then
     return
 end

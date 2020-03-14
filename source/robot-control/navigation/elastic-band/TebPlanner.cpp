@@ -206,11 +206,15 @@ namespace {
     }
   }
 }
-
+#define NO_OPTIMIZATION true
 bool TebPlanner::optimizeTEB(int iterations_innerloop, int iterations_outerloop,
                              double end_condition_improvement, double end_condition_timeout, double end_condition_error,
                              double obst_cost_scale, double viapoint_cost_scale, bool compute_cost_afterwards, bool alternative_time_cost)
 {
+#if NO_OPTIMIZATION
+  optimized_ = true;
+  return true;
+#else
   if (!optimizer_ || !cfg_->optim.optimization_activate)
     return false;
 
@@ -320,6 +324,7 @@ bool TebPlanner::optimizeTEB(int iterations_innerloop, int iterations_outerloop,
   removeActions(&(*optimizer_), actions);
 
   return true;
+#endif
 }
 
 bool TebPlanner::optimizeTEB(int iterations_innerloop, int iterations_outerloop, bool compute_cost_afterwards,

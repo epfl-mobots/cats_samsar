@@ -571,7 +571,7 @@ public:
             vy = p.y() / timesteps.at(i)->count();
             v = g2o::sign(sx + sy) * p.norm() / timesteps.at(i)->count();
             w = g2o::normalize_theta(a)       / timesteps.at(i)->count();
-            o = g2o::normalize_theta(std::atan2(vx, vy));
+            o = g2o::normalize_theta(std::atan2(vy, vx));
             _trajectory.at(i)->velocity() = Velocity(r, d, v, w, o);
         }
     }

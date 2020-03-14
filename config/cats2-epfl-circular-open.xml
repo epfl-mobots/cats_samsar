@@ -13,7 +13,7 @@
     </experiment>
     <robots>
         <numberOfRobots>1</numberOfRobots>
-        <controlFrequencyHz>15</controlFrequencyHz>
+        <controlFrequencyHz>25</controlFrequencyHz>
         <fishModel>
             <agent>
                 <length>0.02</length>
@@ -120,7 +120,8 @@
             </circularSetup>
         </controllers>
         <fishBot_1>
-            <id>B</id>
+            <!--<id>B</id>-->
+            <id>L</id>
             <ledColor>
                 <r>207</r>
                 <g>91</g>
